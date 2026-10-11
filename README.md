@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏢 CampusIQ — Autonomous Multi-Sector Facility Intelligence OS
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/CodeByPrakash/CampusIQ)
@@ -42,3 +43,6 @@
 
 ## 🏛️ System Architecture & Data Flow
 
+=======
+# CampusMobilize
+>>>>>>> 67a1e7fcbafb2c50ee4d5497840eb65bf59c584c
