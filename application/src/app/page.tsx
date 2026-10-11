@@ -2,42 +2,45 @@
 
 import React from "react";
 import { usePersona } from "../context/PersonaContext";
-import LodgeComplaintView from "../components/views/LodgeComplaintView";
-import MyComplaintsView from "../components/views/MyComplaintsView";
-import HostelRepTriageView from "../components/views/HostelRepTriageView";
-import CaretakerKanbanView from "../components/views/CaretakerKanbanView";
-import WardenApprovalsView from "../components/views/WardenApprovalsView";
-import CampusCommandCenterView from "../components/views/CampusCommandCenterView";
+import LandingLoginView from "../components/LandingLoginView";
+import DashboardLayout from "../components/DashboardLayout";
+import StudentDashboard from "../components/views/StudentDashboard";
+import HostelRepDashboard from "../components/views/HostelRepDashboard";
+import CaretakerDashboard from "../components/views/CaretakerDashboard";
+import WardenDashboard from "../components/views/WardenDashboard";
+import AdminLeadershipDashboard from "../components/views/AdminLeadershipDashboard";
 
 export default function Home() {
-  const { activeTab } = usePersona();
+  const { isLoggedIn, activePersona } = usePersona();
 
-  switch (activeTab) {
-    case "lodge_complaint":
-      return <LodgeComplaintView />;
-
-    case "my_complaints":
-      return <MyComplaintsView />;
-
-    case "triage":
-      return <HostelRepTriageView />;
-
-    case "kanban":
-    case "scorecard":
-      return <CaretakerKanbanView />;
-
-    case "approvals":
-    case "hostel_intel":
-      return <WardenApprovalsView />;
-
-    case "command_center":
-    case "decision_dashboard":
-    case "utilities":
-    case "rewards":
-    case "reports":
-      return <CampusCommandCenterView />;
-
-    default:
-      return <MyComplaintsView />;
+  // 1. If not logged in, render Public Landing & Login Experience (Screens 1 & 2)
+  if (!isLoggedIn) {
+    return <LandingLoginView />;
   }
+
+  // 2. If logged in, render the Dedicated Role Dashboard inside DashboardLayout (Screens 3 - 9, 11)
+  const renderRoleDashboard = () => {
+    switch (activePersona.role) {
+      case "STUDENT":
+      case "CR":
+        return <StudentDashboard />;
+
+      case "HOSTEL_REP":
+        return <HostelRepDashboard />;
+
+      case "CARETAKER":
+        return <CaretakerDashboard />;
+
+      case "WARDEN":
+        return <WardenDashboard />;
+
+      case "CHIEF_WARDEN":
+      case "ESTATE_OFFICER":
+      case "DIRECTOR":
+      default:
+        return <AdminLeadershipDashboard />;
+    }
+  };
+
+  return <DashboardLayout>{renderRoleDashboard()}</DashboardLayout>;
 }
