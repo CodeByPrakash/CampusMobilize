@@ -22,6 +22,9 @@ import {
   Building2Icon,
 } from "lucide-react";
 
+import { NitRourkelaMap } from "@/components/sustainability/nit-rourkela-map";
+import { SustainabilityScoreCharts } from "@/components/sustainability/sustainability-score-charts";
+
 interface HallRanking {
   rank: number;
   hallName: string;
@@ -209,11 +212,21 @@ export function DirectorDashboard() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="rankings" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="rankings">Hall Living Standard Rankings</TabsTrigger>
-          <TabsTrigger value="governance">Executive Governance Audits</TabsTrigger>
+      <Tabs defaultValue="heatmap" className="space-y-4">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="heatmap" className="text-xs">Spatial Risk Heatmap (NIT Rourkela)</TabsTrigger>
+          <TabsTrigger value="sustainability" className="text-xs">Sustainability AI Score Graphs</TabsTrigger>
+          <TabsTrigger value="rankings" className="text-xs">Hall Living Standards</TabsTrigger>
+          <TabsTrigger value="governance" className="text-xs">Governance Audits</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="heatmap" className="space-y-4">
+          <NitRourkelaMap />
+        </TabsContent>
+
+        <TabsContent value="sustainability" className="space-y-4">
+          <SustainabilityScoreCharts />
+        </TabsContent>
 
         <TabsContent value="rankings" className="space-y-4">
           <Card>
