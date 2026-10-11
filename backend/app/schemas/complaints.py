@@ -34,6 +34,8 @@ class EventRequest(BaseModel):
     note: Optional[str] = None
     photo_url: Optional[str] = None
     assignee_id: Optional[str] = None      # Required on ASSIGNED / REASSIGNED
+    tradesman_name: Optional[str] = None
+    trade: Optional[str] = None
     severity: Optional[int] = None
     reason: Optional[str] = None           # Required on REJECTED / REJECTED_BACK
     actor_id: Optional[str] = None

@@ -33,13 +33,19 @@ TRANSITION_RULES: Dict[tuple, List[str]] = {
     ("OPEN", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],  # P1 skips verify (§3 Rule 1)
     ("VERIFIED", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("VERIFIED", "REJECTED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
-    ("ASSIGNED", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("ASSIGNED", "ASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("ASSIGNED", "REASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("ASSIGNED", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("REASSIGNED", "ASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("REASSIGNED", "REASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("REASSIGNED", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("IN_PROGRESS", "ASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("IN_PROGRESS", "REASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("IN_PROGRESS", "RESOLVED"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("RESOLVED", "CLOSED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("RESOLVED", "REJECTED_BACK"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("REJECTED_BACK", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("REJECTED_BACK", "ASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
 }
 
 CROSS_HOSTEL_ROLES = ["CHIEF_WARDEN", "DIRECTOR", "ESTATE_OFFICER", "ADMIN"]
@@ -495,6 +501,11 @@ def transition_complaint_state(
         new_assignee = req.assignee_id or complaint.assigned_to
         if new_assignee:
             ct_rec = db.query(User).filter(User.id == new_assignee).first()
+            if not ct_rec:
+                ct_rec = db.query(User).filter(User.role == "CARETAKER").first()
+            new_assignee = ct_rec.id if ct_rec else None
+        else:
+            ct_rec = db.query(User).filter(User.role == "CARETAKER").first()
             new_assignee = ct_rec.id if ct_rec else None
         complaint.assigned_to = new_assignee
         complaint.assigned_at = now
@@ -518,6 +529,14 @@ def transition_complaint_state(
     # Update complaint status
     complaint.status = to_status
 
+    meta_dict = {}
+    if req.assignee_id:
+        meta_dict["assignee_id"] = req.assignee_id
+    if getattr(req, "tradesman_name", None):
+        meta_dict["tradesman_name"] = req.tradesman_name
+    if getattr(req, "trade", None):
+        meta_dict["trade"] = req.trade
+
     # Record immutable timeline event (§3 Rule 3)
     event = ComplaintEvent(
         complaint_id=complaint.id,
@@ -527,7 +546,7 @@ def transition_complaint_state(
         actor_role=actor_role,
         note=req.note or req.reason or f"Status transitioned to {to_status}",
         photo_url=req.photo_url,
-        meta={"assignee_id": req.assignee_id} if req.assignee_id else {},
+        meta=meta_dict,
         created_at=now
     )
     db.add(event)
