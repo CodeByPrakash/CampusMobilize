@@ -1,0 +1,70 @@
+[
+  {
+    "id": "evt-innovision-2026",
+    "name": "Innovision 2026 (All-India Techno-Management Fest)",
+    "kind": "techfest",
+    "starts_on": "2026-11-06",
+    "ends_on": "2026-11-08",
+    "expected_footfall": 4500,
+    "water_surge_multiplier": 1.38,
+    "electricity_surge_multiplier": 1.22,
+    "hygiene_pressure_multiplier": 3.1,
+    "critical_hostels": [
+      "HB-3",
+      "CVR",
+      "KMS"
+    ],
+    "budget_estimate_inr": 52000,
+    "recommendations": [
+      "Pre-inspect all water pump rooms in HB-3 and KMS 48h prior",
+      "Deploy 4 additional sanitation workers per hostel block",
+      "Stage 2 emergency electrician kits at main control room",
+      "Verify backup diesel generators for all hostel dining halls"
+    ]
+  },
+  {
+    "id": "evt-nitrutsav-2027",
+    "name": "Nitrutsav 2027 (Annual Cultural Festival)",
+    "kind": "festival",
+    "starts_on": "2027-02-12",
+    "ends_on": "2027-02-14",
+    "expected_footfall": 3800,
+    "water_surge_multiplier": 1.3,
+    "electricity_surge_multiplier": 1.25,
+    "hygiene_pressure_multiplier": 2.8,
+    "critical_hostels": [
+      "HB-3",
+      "GDB",
+      "CVR"
+    ],
+    "budget_estimate_inr": 48000,
+    "recommendations": [
+      "Schedule continuous trash clearing around central lawn & dining halls",
+      "Test high-output floodlight fixtures in main corridors",
+      "Pre-stock replacement taps and plumbing washroom cartridges"
+    ]
+  },
+  {
+    "id": "evt-endsem-autumn-2026",
+    "name": "Autumn Semester End-Term Examinations",
+    "kind": "exam",
+    "starts_on": "2026-11-23",
+    "ends_on": "2026-12-04",
+    "expected_footfall": 0,
+    "water_surge_multiplier": 1.05,
+    "electricity_surge_multiplier": 1.15,
+    "hygiene_pressure_multiplier": 1.4,
+    "critical_hostels": [
+      "HB-3",
+      "KMS",
+      "CVR",
+      "GDB"
+    ],
+    "budget_estimate_inr": 20000,
+    "recommendations": [
+      "Enforce strict 24x7 silent hours electrical maintenance protocol",
+      "Ensure reading room air conditioning and illumination 100% operational",
+      "Night electrician on call 22:00 to 06:00 in all hostels"
+    ]
+  }
+]

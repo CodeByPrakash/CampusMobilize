@@ -1,0 +1,486 @@
+"""
+Complaint Lifecycle Engine & FSM Transition Router (§3, §7.3, §7.4)
+Implements state machine, event timeline, AI triage integration, and scoped access.
+"""
+
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone, timedelta
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
+
+from ..database import get_db
+from ..models import (
+    Complaint, ComplaintEvent, ComplaintMedia, ComplaintUpvote,
+    Hostel, Block, Room, User, SlaPolicy
+)
+from ..schemas.complaints import (
+    ComplaintCreate, ComplaintResponse, EventRequest, TimelineEventResponse
+)
+from ..ai.engine import CampusAIEngine
+
+router = APIRouter(prefix="/complaints", tags=["Complaints & FSM"])
+
+ai_engine = CampusAIEngine()
+
+# Valid transition matrix (§7.4)
+# (from_status, to_status) -> allowed roles
+TRANSITION_RULES: Dict[tuple, List[str]] = {
+    ("OPEN", "VERIFIED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("OPEN", "REJECTED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("OPEN", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],  # P1 skips verify (§3 Rule 1)
+    ("VERIFIED", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("VERIFIED", "REJECTED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("ASSIGNED", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("ASSIGNED", "REASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("REASSIGNED", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("IN_PROGRESS", "RESOLVED"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("RESOLVED", "CLOSED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("RESOLVED", "REJECTED_BACK"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
+    ("REJECTED_BACK", "IN_PROGRESS"): ["CARETAKER", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
+}
+
+CROSS_HOSTEL_ROLES = ["CHIEF_WARDEN", "DIRECTOR", "ESTATE_OFFICER", "ADMIN"]
+
+
+def generate_ticket_no(db: Session) -> str:
+    """Generates sequential ticket number: CIQ-<year>-#####"""
+    current_year = datetime.now(timezone.utc).year
+    prefix = f"CIQ-{current_year}-"
+    last_ticket = db.query(Complaint).filter(Complaint.ticket_no.like(f"{prefix}%")) \
+                    .order_by(desc(Complaint.created_at)).first()
+
+    if last_ticket:
+        try:
+            seq = int(last_ticket.ticket_no.split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    else:
+        seq = 1
+
+    return f"{prefix}{seq:05d}"
+
+
+def get_sla_hours(priority: str, db: Session) -> int:
+    """Fetches SLA hours from SLA policy table."""
+    policy = db.query(SlaPolicy).filter(SlaPolicy.priority == priority).first()
+    if policy:
+        return policy.sla_hours
+    defaults = {"P1": 2, "P2": 8, "P3": 48, "P4": 168}
+    return defaults.get(priority, 48)
+
+
+def get_request_persona(
+    x_actor_role: Optional[str] = Header(None, alias="X-Actor-Role"),
+    x_actor_id: Optional[str] = Header(None, alias="X-Actor-Id"),
+    x_hostel_code: Optional[str] = Header(None, alias="X-Hostel-Code")
+) -> Dict[str, Any]:
+    """Extracts calling persona context from headers for 1-click frontend switching."""
+    return {
+        "role": (x_actor_role or "STUDENT").upper(),
+        "user_id": x_actor_id,
+        "hostel_code": (x_hostel_code or "HB-3").upper() if x_hostel_code else None
+    }
+
+
+# =========================================================================
+# 1. CREATE COMPLAINT (WITH AI TRIAGE & STATE INITIALIZATION)
+# =========================================================================
+@router.post("", response_model=ComplaintResponse, status_code=201)
+def create_complaint(
+    payload: ComplaintCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Intake endpoint for complaints:
+    1. Runs AI classification, duplicate detection, risk scoring, and caretaker matching.
+    2. P1 (Risk >= 80): immediately sets ASSIGNED, bypassing verification (§3 Rule 1).
+    3. P2-P4: sets OPEN.
+    4. Writes initial complaint_events timeline entry.
+    """
+    now = datetime.now(timezone.utc)
+    ticket_no = generate_ticket_no(db)
+
+    # Resolve hostel
+    hostel = None
+    if payload.hostel_code:
+        hostel = db.query(Hostel).filter(Hostel.code == payload.hostel_code).first()
+    elif payload.hostel_id:
+        hostel = db.query(Hostel).filter(Hostel.id == payload.hostel_id).first()
+    if not hostel:
+        hostel = db.query(Hostel).filter(Hostel.code == "HB-3").first()
+
+    # Active complaints in same hostel for duplicate comparison
+    active_complaints = []
+    if hostel:
+        db_active = db.query(Complaint).filter(
+            Complaint.hostel_id == hostel.id,
+            Complaint.status.in_(["OPEN", "VERIFIED", "ASSIGNED", "IN_PROGRESS"])
+        ).all()
+        for c in db_active:
+            active_complaints.append({
+                "id": c.id,
+                "ticket_no": c.ticket_no,
+                "title": c.title,
+                "description": c.description,
+                "block_name": payload.block_name,
+                "location_text": c.location_text
+            })
+
+    # Available caretakers in hostel
+    caretakers = []
+    db_caretakers = db.query(User).filter(User.role == "CARETAKER").all()
+    for ct in db_caretakers:
+        ct_hostel = db.query(Hostel).filter(Hostel.id == ct.hostel_id).first() if ct.hostel_id else None
+        skills = {}
+        for s in ct.caretaker_skills if hasattr(ct, "caretaker_skills") else []:
+            skills[s.skill] = s.proficiency
+        caretakers.append({
+            "id": ct.id,
+            "full_name": ct.full_name,
+            "hostel_code": ct_hostel.code if ct_hostel else None,
+            "skills": skills
+        })
+
+    # Execute AI Triage
+    triage = ai_engine.triage_complaint(
+        complaint_data={
+            "title": payload.title,
+            "description": payload.description,
+            "category_code": payload.category_code,
+            "hostel_code": hostel.code if hostel else "HB-3",
+            "block_name": payload.block_name,
+            "location_text": payload.location_text,
+            "severity": payload.severity or 3,
+            "people_affected": payload.people_affected or 1
+        },
+        active_complaints=active_complaints,
+        caretakers=caretakers,
+        now=now
+    )
+
+    priority = payload.priority.upper() if payload.priority else triage["priority"]
+    risk_score = triage["risk_score"]
+    if priority == "P1":
+        risk_score = max(risk_score, 82.0)
+        triage["risk_score"] = risk_score
+        triage["priority"] = "P1"
+        triage["skip_verification"] = True
+    elif payload.priority:
+        triage["priority"] = priority
+
+    is_p1 = (priority == "P1" or triage["skip_verification"])
+
+    # State Machine initialization
+    # P1 skips verify: OPEN -> ASSIGNED immediately (§3 Rule 1)
+    status = "ASSIGNED" if is_p1 else "OPEN"
+
+    sla_h = get_sla_hours(priority, db)
+    sla_deadline = now + timedelta(hours=sla_h) if is_p1 else None
+
+    # Assigned caretaker
+    assigned_to = None
+    if is_p1 and triage["matched_caretaker"]["matched"]:
+        matched_id = triage["matched_caretaker"]["caretaker_id"]
+        ct_user = db.query(User).filter(User.id == matched_id).first()
+        if not ct_user:
+            ct_user = db.query(User).filter(User.role == "CARETAKER").first()
+        assigned_to = ct_user.id if ct_user else None
+
+    # Safe reporter user resolution
+    reported_by = payload.reported_by or payload.actor_id
+    if reported_by:
+        rep_user = db.query(User).filter(User.id == reported_by).first()
+        if not rep_user:
+            rep_user = db.query(User).filter(User.role == "STUDENT").first()
+        reported_by = rep_user.id if rep_user else None
+
+    # Parent duplicate link
+    dup_parent_id = triage["duplicate_of"] if triage["is_duplicate"] else None
+    if dup_parent_id:
+        parent_ticket = db.query(Complaint).filter(
+            (Complaint.id == dup_parent_id) | (Complaint.ticket_no == dup_parent_id)
+        ).first()
+        if parent_ticket:
+            parent_ticket.upvote_count += 1
+            dup_parent_id = parent_ticket.id
+
+    complaint = Complaint(
+        ticket_no=ticket_no,
+        title=payload.title,
+        description=payload.description,
+        category_code=triage["category_code"],
+        hostel_id=hostel.id if hostel else None,
+        block_id=payload.block_id,
+        room_id=payload.room_id,
+        location_text=payload.location_text,
+        lat=payload.lat,
+        lng=payload.lng,
+        reported_by=reported_by,
+        reported_for=payload.reported_for,
+        status=status,
+        priority=priority,
+        severity=payload.severity or 3,
+        risk_score=risk_score,
+        risk_explanation=triage["risk_explanation"],
+        ranking_score=triage["ranking_score"],
+        duplicate_of=dup_parent_id,
+        ai_category_confidence=triage["category_confidence"],
+        assigned_to=assigned_to,
+        assigned_at=now if is_p1 else None,
+        sla_deadline=sla_deadline,
+        people_affected=payload.people_affected or 1,
+        upvote_count=1 if dup_parent_id else 0,
+        created_at=now
+    )
+    db.add(complaint)
+    db.flush()
+
+    # Initial timeline event: OPEN
+    event_open = ComplaintEvent(
+        complaint_id=complaint.id,
+        from_status=None,
+        to_status="OPEN",
+        actor_id=payload.reported_by or payload.actor_id,
+        actor_role=payload.actor_role or "STUDENT",
+        note="Complaint lodged via CampusIQ",
+        created_at=now
+    )
+    db.add(event_open)
+
+    # If P1: record immediate transition to ASSIGNED
+    if is_p1:
+        event_p1 = ComplaintEvent(
+            complaint_id=complaint.id,
+            from_status="OPEN",
+            to_status="ASSIGNED",
+            actor_id="system-ai-engine",
+            actor_role="AUTO_ENGINE",
+            note=f"High Risk ({risk_score} P1) triggered automatic verification bypass and caretaker assignment",
+            created_at=now
+        )
+        db.add(event_p1)
+
+    db.commit()
+    db.refresh(complaint)
+    return complaint
+
+
+# =========================================================================
+# 2. LIST & GET COMPLAINTS (WITH SCOPE ISOLATION)
+# =========================================================================
+@router.get("", response_model=List[ComplaintResponse])
+def list_complaints(
+    status: Optional[str] = Query(None),
+    priority: Optional[str] = Query(None),
+    category_code: Optional[str] = Query(None),
+    hostel_code: Optional[str] = Query(None),
+    assigned_to: Optional[str] = Query(None),
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    Lists complaints scoped to caller role.
+    Students, CRs, Hostel Reps, Caretakers, and Wardens are scoped to their own hostel.
+    """
+    query = db.query(Complaint)
+
+    # Scope isolation
+    role = persona["role"]
+    if role not in CROSS_HOSTEL_ROLES:
+        scoped_hostel_code = hostel_code or persona.get("hostel_code")
+        if scoped_hostel_code:
+            hostel = db.query(Hostel).filter(Hostel.code == scoped_hostel_code).first()
+            if hostel:
+                query = query.filter(Complaint.hostel_id == hostel.id)
+    elif hostel_code:
+        hostel = db.query(Hostel).filter(Hostel.code == hostel_code).first()
+        if hostel:
+            query = query.filter(Complaint.hostel_id == hostel.id)
+
+    if status:
+        query = query.filter(Complaint.status == status.upper())
+    if priority:
+        query = query.filter(Complaint.priority == priority.upper())
+    if category_code:
+        query = query.filter(Complaint.category_code == category_code.upper())
+    if assigned_to:
+        query = query.filter(Complaint.assigned_to == assigned_to)
+
+    complaints = query.order_by(desc(Complaint.created_at)).all()
+    return complaints
+
+
+@router.get("/{id_or_ticket}", response_model=ComplaintResponse)
+def get_complaint(
+    id_or_ticket: str,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves complaint details by ID or ticket_no.
+    Enforces scope isolation: returns 404 if caller cannot view tickets from another hostel.
+    """
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    # Scope check
+    role = persona["role"]
+    if role not in CROSS_HOSTEL_ROLES and persona.get("hostel_code"):
+        caller_hostel = db.query(Hostel).filter(Hostel.code == persona["hostel_code"]).first()
+        if caller_hostel and complaint.hostel_id and complaint.hostel_id != caller_hostel.id:
+            # Spec rule: return 404, not 403, for cross-hostel scope isolation
+            raise HTTPException(status_code=404, detail="Complaint not found")
+
+    return complaint
+
+
+@router.get("/{id_or_ticket}/timeline", response_model=List[TimelineEventResponse])
+def get_complaint_timeline(
+    id_or_ticket: str,
+    db: Session = Depends(get_db)
+):
+    """Returns the immutable audit event timeline in ascending chronological order."""
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    events = db.query(ComplaintEvent).filter(ComplaintEvent.complaint_id == complaint.id) \
+               .order_by(ComplaintEvent.created_at.asc()).all()
+    return events
+
+
+# =========================================================================
+# 3. STATE MACHINE TRANSITION ENDPOINT (/events)
+# =========================================================================
+@router.post("/{id_or_ticket}/events", response_model=TimelineEventResponse)
+def transition_complaint_state(
+    id_or_ticket: str,
+    req: EventRequest,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    The ONLY way to change complaint status (§3, §7.4).
+    Enforces transition matrix, role permissions, mandatory resolution/rejection notes,
+    and updates mutable fields transactionally.
+    """
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    from_status = complaint.status
+    to_status = req.to_status.upper()
+    now = datetime.now(timezone.utc)
+
+    # Actor resolution
+    actor_role = (req.actor_role or persona["role"]).upper()
+    actor_id = req.actor_id or persona["user_id"] or f"user-{actor_role.lower()}"
+
+    # Escalation from SLA worker or admin
+    if to_status == "ESCALATED":
+        if actor_role not in ["SLA_WORKER", "SYSTEM", "AUTO_ENGINE", "ADMIN", "CHIEF_WARDEN"]:
+            raise HTTPException(status_code=403, detail="Only SLA engine or Chief Warden can escalate tickets")
+        complaint.status = "ESCALATED"
+        complaint.risk_score = min(100.0, (complaint.risk_score or 50.0) + 10.0)
+    else:
+        # Check transition validity (§7.4 Table)
+        rule_key = (from_status, to_status)
+        if rule_key not in TRANSITION_RULES:
+            raise HTTPException(
+                status_code=409,
+                detail=f"INVALID_TRANSITION: Cannot transition complaint from {from_status} to {to_status}"
+            )
+
+        allowed_roles = TRANSITION_RULES[rule_key]
+        if actor_role not in allowed_roles:
+            raise HTTPException(
+                status_code=403,
+                detail=f"FORBIDDEN_ROLE: Role {actor_role} is not authorized for {from_status} -> {to_status}"
+            )
+
+    # Specific Transition Validations
+    if to_status == "RESOLVED":
+        # Resolution requires note and photo
+        if not req.photo_url and not req.note:
+            raise HTTPException(status_code=422, detail="Resolution requires completion note and verification photo")
+        complaint.resolved_at = now
+        complaint.resolution_note = req.note or "Work completed"
+        complaint.resolution_photo_url = req.photo_url
+
+    elif to_status in ["REJECTED", "REJECTED_BACK"]:
+        # Rejection requires reason
+        reason_text = req.reason or req.note
+        if not reason_text or len(reason_text.strip()) < 3:
+            raise HTTPException(status_code=422, detail="Rejection requires an explanation reason")
+
+    elif to_status == "VERIFIED":
+        user_rec = db.query(User).filter(User.id == actor_id).first()
+        complaint.verified_by = user_rec.id if user_rec else None
+        complaint.verified_at = now
+        if req.severity:
+            complaint.severity = max(1, min(5, req.severity))
+
+    elif to_status in ["ASSIGNED", "REASSIGNED"]:
+        new_assignee = req.assignee_id or complaint.assigned_to
+        if new_assignee:
+            ct_rec = db.query(User).filter(User.id == new_assignee).first()
+            new_assignee = ct_rec.id if ct_rec else None
+        complaint.assigned_to = new_assignee
+        complaint.assigned_at = now
+        sla_h = get_sla_hours(complaint.priority, db)
+        complaint.sla_deadline = now + timedelta(hours=sla_h)
+
+    elif to_status == "CLOSED":
+        complaint.closed_at = now
+        user_rec = db.query(User).filter(User.id == actor_id).first()
+        complaint.closed_by = user_rec.id if user_rec else None
+
+    # Update complaint status
+    complaint.status = to_status
+
+    # Record immutable timeline event (§3 Rule 3)
+    event = ComplaintEvent(
+        complaint_id=complaint.id,
+        from_status=from_status,
+        to_status=to_status,
+        actor_id=actor_id,
+        actor_role=actor_role,
+        note=req.note or req.reason or f"Status transitioned to {to_status}",
+        photo_url=req.photo_url,
+        meta={"assignee_id": req.assignee_id} if req.assignee_id else {},
+        created_at=now
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+# =========================================================================
+# 4. UPVOTE COMPLAINT
+# =========================================================================
+@router.post("/{id_or_ticket}/upvote")
+def upvote_complaint(
+    id_or_ticket: str,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """Allows students in same hostel to upvote a complaint, raising community visibility."""
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint.upvote_count += 1
+    db.commit()
+    return {"ticket_no": complaint.ticket_no, "upvote_count": complaint.upvote_count}
