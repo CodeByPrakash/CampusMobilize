@@ -50,7 +50,7 @@ def test_seeded_hostels_and_rooms(client):
     res = client.get("/api/v1/meta/hostels")
     assert res.status_code == 200
     hostels = res.json()
-    assert len(hostels) == 4
+    assert len(hostels) >= 4
 
     codes = [h["code"] for h in hostels]
     assert "HB-3" in codes

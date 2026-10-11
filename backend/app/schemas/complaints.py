@@ -26,7 +26,7 @@ class ComplaintCreate(BaseModel):
     reported_by: Optional[str] = None
     reported_for: Optional[str] = None     # CR filing on behalf
     actor_id: Optional[str] = None
-    actor_role: Optional[str] = "STUDENT"
+    actor_role: Optional[str] = None
 
 
 class EventRequest(BaseModel):
@@ -37,7 +37,7 @@ class EventRequest(BaseModel):
     severity: Optional[int] = None
     reason: Optional[str] = None           # Required on REJECTED / REJECTED_BACK
     actor_id: Optional[str] = None
-    actor_role: Optional[str] = "STUDENT"
+    actor_role: Optional[str] = None
 
 
 class ComplaintResponse(BaseModel):

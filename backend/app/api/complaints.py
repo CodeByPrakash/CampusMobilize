@@ -70,16 +70,32 @@ def get_sla_hours(priority: str, db: Session) -> int:
     return defaults.get(priority, 48)
 
 
+def normalize_hostel_code(code_str: Optional[str]) -> Optional[str]:
+    if not code_str:
+        return None
+    s = str(code_str).upper()
+    if "HB-3" in s or "HB3" in s or "14" in s or "HOMI" in s:
+        return "HB-3"
+    if "KMS" in s or "KIRAN" in s:
+        return "KMS"
+    if "CVR" in s or "RAMAN" in s:
+        return "CVR"
+    if "GDB" in s or "GOPABANDHU" in s:
+        return "GDB"
+    return code_str.strip()
+
+
 def get_request_persona(
     x_actor_role: Optional[str] = Header(None, alias="X-Actor-Role"),
     x_actor_id: Optional[str] = Header(None, alias="X-Actor-Id"),
     x_hostel_code: Optional[str] = Header(None, alias="X-Hostel-Code")
 ) -> Dict[str, Any]:
     """Extracts calling persona context from headers for 1-click frontend switching."""
+    norm_code = normalize_hostel_code(x_hostel_code)
     return {
         "role": (x_actor_role or "STUDENT").upper(),
         "user_id": x_actor_id,
-        "hostel_code": (x_hostel_code or "HB-3").upper() if x_hostel_code else None
+        "hostel_code": norm_code or "HB-3"
     }
 
 
@@ -89,6 +105,7 @@ def get_request_persona(
 @router.post("", response_model=ComplaintResponse, status_code=201)
 def create_complaint(
     payload: ComplaintCreate,
+    persona: Dict[str, Any] = Depends(get_request_persona),
     db: Session = Depends(get_db)
 ):
     """
@@ -103,8 +120,9 @@ def create_complaint(
 
     # Resolve hostel
     hostel = None
-    if payload.hostel_code:
-        hostel = db.query(Hostel).filter(Hostel.code == payload.hostel_code).first()
+    target_code = normalize_hostel_code(payload.hostel_code) or persona.get("hostel_code")
+    if target_code:
+        hostel = db.query(Hostel).filter(Hostel.code == target_code).first()
     elif payload.hostel_id:
         hostel = db.query(Hostel).filter(Hostel.id == payload.hostel_id).first()
     if not hostel:
@@ -187,12 +205,36 @@ def create_complaint(
             ct_user = db.query(User).filter(User.role == "CARETAKER").first()
         assigned_to = ct_user.id if ct_user else None
 
+    # Resolve block & room if names passed
+    block_id = payload.block_id
+    room_id = payload.room_id
+    if hostel and not block_id and payload.block_name:
+        blk = db.query(Block).filter(Block.hostel_id == hostel.id, Block.name.ilike(f"%{payload.block_name}%")).first()
+        if blk:
+            block_id = blk.id
+            if not room_id and payload.room_no:
+                rm = db.query(Room).filter(Room.block_id == blk.id, Room.room_no.ilike(f"%{payload.room_no}%")).first()
+                if rm:
+                    room_id = rm.id
+
+    loc_text = payload.location_text
+    if not loc_text:
+        parts = []
+        if payload.block_name:
+            parts.append(payload.block_name)
+        if payload.room_no:
+            parts.append(f"Room {payload.room_no}")
+        loc_text = ", ".join(parts) if parts else None
+
     # Safe reporter user resolution
-    reported_by = payload.reported_by or payload.actor_id
+    reported_by = payload.reported_by or payload.actor_id or persona.get("user_id")
     if reported_by:
         rep_user = db.query(User).filter(User.id == reported_by).first()
         if not rep_user:
             rep_user = db.query(User).filter(User.role == "STUDENT").first()
+        reported_by = rep_user.id if rep_user else None
+    else:
+        rep_user = db.query(User).filter(User.role == "STUDENT").first()
         reported_by = rep_user.id if rep_user else None
 
     # Parent duplicate link
@@ -211,9 +253,9 @@ def create_complaint(
         description=payload.description,
         category_code=triage["category_code"],
         hostel_id=hostel.id if hostel else None,
-        block_id=payload.block_id,
-        room_id=payload.room_id,
-        location_text=payload.location_text,
+        block_id=block_id,
+        room_id=room_id,
+        location_text=loc_text,
         lat=payload.lat,
         lng=payload.lng,
         reported_by=reported_by,
@@ -241,8 +283,8 @@ def create_complaint(
         complaint_id=complaint.id,
         from_status=None,
         to_status="OPEN",
-        actor_id=payload.reported_by or payload.actor_id,
-        actor_role=payload.actor_role or "STUDENT",
+        actor_id=reported_by or "usr-student-aarav",
+        actor_role=payload.actor_role or persona.get("role") or "STUDENT",
         note="Complaint lodged via CampusIQ",
         created_at=now
     )
@@ -288,15 +330,17 @@ def list_complaints(
     # Scope isolation
     role = persona["role"]
     if role not in CROSS_HOSTEL_ROLES:
-        scoped_hostel_code = hostel_code or persona.get("hostel_code")
+        scoped_hostel_code = normalize_hostel_code(hostel_code) or persona.get("hostel_code")
         if scoped_hostel_code:
             hostel = db.query(Hostel).filter(Hostel.code == scoped_hostel_code).first()
             if hostel:
                 query = query.filter(Complaint.hostel_id == hostel.id)
     elif hostel_code:
-        hostel = db.query(Hostel).filter(Hostel.code == hostel_code).first()
-        if hostel:
-            query = query.filter(Complaint.hostel_id == hostel.id)
+        scoped_code = normalize_hostel_code(hostel_code)
+        if scoped_code:
+            hostel = db.query(Hostel).filter(Hostel.code == scoped_code).first()
+            if hostel:
+                query = query.filter(Complaint.hostel_id == hostel.id)
 
     if status:
         query = query.filter(Complaint.status == status.upper())
@@ -331,7 +375,8 @@ def get_complaint(
     # Scope check
     role = persona["role"]
     if role not in CROSS_HOSTEL_ROLES and persona.get("hostel_code"):
-        caller_hostel = db.query(Hostel).filter(Hostel.code == persona["hostel_code"]).first()
+        scoped_code = normalize_hostel_code(persona["hostel_code"])
+        caller_hostel = db.query(Hostel).filter(Hostel.code == scoped_code).first() if scoped_code else None
         if caller_hostel and complaint.hostel_id and complaint.hostel_id != caller_hostel.id:
             # Spec rule: return 404, not 403, for cross-hostel scope isolation
             raise HTTPException(status_code=404, detail="Complaint not found")

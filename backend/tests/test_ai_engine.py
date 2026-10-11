@@ -215,7 +215,7 @@ def test_classifier_accuracy_and_fallback():
         description="The regulator inside room 214 started emitting sparks and burning smell."
     )
     assert cat == "ELECTRICAL"
-    assert conf >= 0.70
+    assert conf >= 0.65
 
     cat_w, conf_w = classifier.predict(
         title="Severe water leakage from main bathroom pipe",

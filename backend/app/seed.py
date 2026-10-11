@@ -127,75 +127,92 @@ def seed_database(db: Session) -> Dict[str, int]:
     for h in HOSTELS_DATA:
         existing = db.query(Hostel).filter(Hostel.code == h["code"]).first()
         if not existing:
-            hostel = Hostel(
-                code=h["code"],
-                name=h["name"],
-                type=h["type"],
-                resident_count=h["resident_count"]
-            )
-            db.add(hostel)
-            db.flush()
-            hostel_map[h["code"]] = hostel.id
-            counts["hostels"] += 1
-
-            # Seed standard blocks
-            for b_name in ["A Block", "B Block", "C Block", "Pump Room Area", "Mess Block"]:
-                kind = "utility" if "Pump" in b_name else ("common" if "Mess" in b_name else "residential")
-                block = Block(hostel_id=hostel.id, name=b_name, kind=kind)
-                db.add(block)
+            try:
+                hostel = Hostel(
+                    code=h["code"],
+                    name=h["name"],
+                    type=h["type"],
+                    resident_count=h["resident_count"]
+                )
+                db.add(hostel)
                 db.flush()
+                hostel_map[h["code"]] = hostel.id
+                counts["hostels"] += 1
 
-                # Seed sample rooms
-                if kind == "residential":
-                    for r_no in ["101", "102", "201", "202", "214", "301", "302"]:
-                        db.add(Room(block_id=block.id, room_no=r_no))
+                # Seed standard blocks
+                for b_name in ["A Block", "B Block", "C Block", "Pump Room Area", "Mess Block"]:
+                    kind = "utility" if "Pump" in b_name else ("common" if "Mess" in b_name else "residential")
+                    block = Block(hostel_id=hostel.id, name=b_name, kind=kind)
+                    db.add(block)
+                    db.flush()
+
+                    # Seed sample rooms
+                    if kind == "residential":
+                        for r_no in ["101", "102", "201", "202", "214", "301", "302"]:
+                            db.add(Room(block_id=block.id, room_no=r_no))
+                db.commit()
+            except Exception:
+                db.rollback()
+                existing = db.query(Hostel).filter(Hostel.code == h["code"]).first()
+                if existing:
+                    hostel_map[h["code"]] = existing.id
         else:
             hostel_map[h["code"]] = existing.id
 
     # 2. Categories
     for c in CATEGORIES_DATA:
-        if not db.query(Category).filter(Category.code == c["code"]).first():
-            db.add(Category(**c))
-            counts["categories"] += 1
+        try:
+            if not db.query(Category).filter(Category.code == c["code"]).first():
+                db.add(Category(**c))
+                db.commit()
+                counts["categories"] += 1
+        except Exception:
+            db.rollback()
 
     # 3. SLA Policies
     for p in SLA_POLICIES_DATA:
-        if not db.query(SlaPolicy).filter(SlaPolicy.priority == p["priority"]).first():
-            db.add(SlaPolicy(**p))
-            counts["policies"] += 1
-
-    db.commit()
+        try:
+            if not db.query(SlaPolicy).filter(SlaPolicy.priority == p["priority"]).first():
+                db.add(SlaPolicy(**p))
+                db.commit()
+                counts["policies"] += 1
+        except Exception:
+            db.rollback()
 
     # 4. Canonical Personas
     for p in CANONICAL_PERSONAS:
-        existing = db.query(User).filter(User.email == p["email"]).first()
-        h_id = hostel_map.get(p.get("hostel_code")) if p.get("hostel_code") else None
-        
-        if not existing:
-            user = User(
-                id=p["id"],
-                email=p["email"],
-                full_name=p["full_name"],
-                phone=p["phone"],
-                role=p["role"],
-                hostel_id=h_id,
-                is_active=True
-            )
-            db.add(user)
-            db.flush()
-            counts["users"] += 1
+        try:
+            existing = db.query(User).filter(User.email == p["email"]).first()
+            h_id = hostel_map.get(p.get("hostel_code")) if p.get("hostel_code") else None
+            
+            if not existing:
+                user = User(
+                    id=p["id"],
+                    email=p["email"],
+                    full_name=p["full_name"],
+                    phone=p["phone"],
+                    role=p["role"],
+                    hostel_id=h_id,
+                    is_active=True
+                )
+                db.add(user)
+                db.flush()
+                counts["users"] += 1
 
-            # Add skills for caretaker
-            for skill_info in p.get("skills", []):
-                db.add(CaretakerSkill(
-                    user_id=user.id,
-                    skill=skill_info["skill"],
-                    proficiency=skill_info["proficiency"]
-                ))
-        else:
-            # Update hostel link if needed
-            if h_id and not existing.hostel_id:
-                existing.hostel_id = h_id
+                # Add skills for caretaker
+                for skill_info in p.get("skills", []):
+                    db.add(CaretakerSkill(
+                        user_id=user.id,
+                        skill=skill_info["skill"],
+                        proficiency=skill_info["proficiency"]
+                    ))
+                db.commit()
+            else:
+                if h_id and not existing.hostel_id:
+                    existing.hostel_id = h_id
+                    db.commit()
+        except Exception:
+            db.rollback()
 
     # Also seed additional caretakers for trades (Civil, Housekeeping) in HB-3
     extra_caretakers = [
@@ -213,60 +230,73 @@ def seed_database(db: Session) -> Dict[str, int]:
         }
     ]
     for ct in extra_caretakers:
-        if not db.query(User).filter(User.email == ct["email"]).first():
-            h_id = hostel_map.get(ct["hostel_code"])
-            user = User(
-                id=ct["id"],
-                email=ct["email"],
-                full_name=ct["full_name"],
-                phone=ct["phone"],
-                role=ct["role"],
-                hostel_id=h_id,
-                is_active=True
-            )
-            db.add(user)
-            db.flush()
-            for s in ct["skills"]:
-                db.add(CaretakerSkill(user_id=user.id, skill=s["skill"], proficiency=s["proficiency"]))
+        try:
+            if not db.query(User).filter(User.email == ct["email"]).first():
+                h_id = hostel_map.get(ct["hostel_code"])
+                user = User(
+                    id=ct["id"],
+                    email=ct["email"],
+                    full_name=ct["full_name"],
+                    phone=ct["phone"],
+                    role=ct["role"],
+                    hostel_id=h_id,
+                    is_active=True
+                )
+                db.add(user)
+                db.flush()
+                for s in ct["skills"]:
+                    db.add(CaretakerSkill(user_id=user.id, skill=s["skill"], proficiency=s["proficiency"]))
+                db.commit()
+        except Exception:
+            db.rollback()
 
     # 5. Campus Events
     events_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "seed_data", "campus_events.json")
-    if os.path.exists(events_file) and db.query(CampusEvent).count() == 0:
-        with open(events_file, "r", encoding="utf-8") as f:
-            events_data = json.load(f)
-            for ev in events_data:
-                db.add(CampusEvent(
-                    id=ev.get("id"),
-                    name=ev["name"],
-                    kind=ev["kind"],
-                    starts_on=date.fromisoformat(ev["starts_on"]),
-                    ends_on=date.fromisoformat(ev["ends_on"]),
-                    expected_footfall=ev.get("expected_footfall", 0),
-                    water_surge_multiplier=ev.get("water_surge_multiplier", 1.0),
-                    electricity_surge_multiplier=ev.get("electricity_surge_multiplier", 1.0),
-                    hygiene_pressure_multiplier=ev.get("hygiene_pressure_multiplier", 1.0)
-                ))
-            counts["events"] = len(events_data)
+    if os.path.exists(events_file):
+        try:
+            if db.query(CampusEvent).count() == 0:
+                with open(events_file, "r", encoding="utf-8") as f:
+                    events_data = json.load(f)
+                    for ev in events_data:
+                        db.add(CampusEvent(
+                            id=ev.get("id"),
+                            name=ev["name"],
+                            kind=ev["kind"],
+                            starts_on=date.fromisoformat(ev["starts_on"]),
+                            ends_on=date.fromisoformat(ev["ends_on"]),
+                            expected_footfall=ev.get("expected_footfall", 0),
+                            water_surge_multiplier=ev.get("water_surge_multiplier", 1.0),
+                            electricity_surge_multiplier=ev.get("electricity_surge_multiplier", 1.0),
+                            hygiene_pressure_multiplier=ev.get("hygiene_pressure_multiplier", 1.0)
+                        ))
+                    db.commit()
+                    counts["events"] = len(events_data)
+        except Exception:
+            db.rollback()
 
     # 6. 36 Months Utility Bills
     bills_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "seed_data", "utility_bills_36m.json")
-    if os.path.exists(bills_file) and db.query(UtilityBill).count() == 0:
-        with open(bills_file, "r", encoding="utf-8") as f:
-            bills_data = json.load(f)
-            for b in bills_data:
-                h_id = hostel_map.get(b.get("hostel_code"))
-                db.add(UtilityBill(
-                    hostel_id=h_id,
-                    utility=b["utility"],
-                    bill_month=date.fromisoformat(b["bill_month"]),
-                    units_consumed=b["units_consumed"],
-                    amount_inr=b["amount_inr"],
-                    tariff_rate=b.get("tariff_rate", 6.85),
-                    parsed_confidence=1.0
-                ))
-            counts["bills"] = len(bills_data)
+    if os.path.exists(bills_file):
+        try:
+            if db.query(UtilityBill).count() == 0:
+                with open(bills_file, "r", encoding="utf-8") as f:
+                    bills_data = json.load(f)
+                    for b in bills_data:
+                        h_id = hostel_map.get(b.get("hostel_code"))
+                        db.add(UtilityBill(
+                            hostel_id=h_id,
+                            utility=b["utility"],
+                            bill_month=date.fromisoformat(b["bill_month"]),
+                            units_consumed=b["units_consumed"],
+                            amount_inr=b["amount_inr"],
+                            tariff_rate=b.get("tariff_rate", 6.85),
+                            parsed_confidence=1.0
+                        ))
+                    db.commit()
+                    counts["bills"] = len(bills_data)
+        except Exception:
+            db.rollback()
 
-    db.commit()
     return counts
 
 

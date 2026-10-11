@@ -158,5 +158,45 @@
     "actor_role": "WARDEN",
     "weight": 3.0,
     "logged_at": "2026-10-11T13:44:24.791619+00:00"
+  },
+  {
+    "ticket_no": "CIQ-2026-00045",
+    "title": "Strange noise from corridor panel",
+    "description": "The panel on 1st floor corridor is humming loudly and feels hot.",
+    "category_code": "ELECTRICAL",
+    "severity": 4,
+    "actor_role": "WARDEN",
+    "weight": 3.0,
+    "logged_at": "2026-10-11T13:59:45.369331+00:00"
+  },
+  {
+    "ticket_no": "CIQ-2026-00045",
+    "title": "Strange noise from corridor panel",
+    "description": "The panel on 1st floor corridor is humming loudly and feels hot.",
+    "category_code": "ELECTRICAL",
+    "severity": 4,
+    "actor_role": "WARDEN",
+    "weight": 3.0,
+    "logged_at": "2026-10-11T14:02:19.631704+00:00"
+  },
+  {
+    "ticket_no": "CIQ-2026-00045",
+    "title": "Strange noise from corridor panel",
+    "description": "The panel on 1st floor corridor is humming loudly and feels hot.",
+    "category_code": "ELECTRICAL",
+    "severity": 4,
+    "actor_role": "WARDEN",
+    "weight": 3.0,
+    "logged_at": "2026-10-11T14:07:10.026850+00:00"
+  },
+  {
+    "ticket_no": "CIQ-2026-00045",
+    "title": "Strange noise from corridor panel",
+    "description": "The panel on 1st floor corridor is humming loudly and feels hot.",
+    "category_code": "ELECTRICAL",
+    "severity": 4,
+    "actor_role": "WARDEN",
+    "weight": 3.0,
+    "logged_at": "2026-10-11T14:12:21.605276+00:00"
   }
 ]

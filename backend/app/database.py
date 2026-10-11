@@ -20,26 +20,29 @@ def get_engine_and_session():
     db_name_match = re.search(r"/([^/?]+)(?:\?|$)", db_url)
     target_db = db_name_match.group(1) if db_name_match else "campusiq"
 
-    # Connect to default 'postgres' database to verify/create target database
-    server_url = re.sub(r"/[^/?]+(\?.*)?$", "/postgres\\1", db_url)
-    try:
-        root_engine = create_engine(server_url, isolation_level="AUTOCOMMIT")
-        with root_engine.connect() as conn:
-            check_sql = text("SELECT 1 FROM pg_database WHERE datname = :dname")
-            exists = conn.execute(check_sql, {"dname": target_db}).scalar()
-            if not exists:
-                conn.execute(text(f'CREATE DATABASE "{target_db}"'))
-                print(f"[PostgreSQL] Created database '{target_db}' successfully.")
-        root_engine.dispose()
-    except Exception as e:
-        print(f"[PostgreSQL Notice] Auto-database creation check: {e}")
+    # Only verify/create database on local PostgreSQL instances, not on cloud databases (e.g. Neon)
+    is_cloud_db = any(k in db_url.lower() for k in ["neon.tech", "supabase", "render", "cockroach", "aws", "azure", "gcp"])
+    if not is_cloud_db and ("localhost" in db_url or "127.0.0.1" in db_url):
+        server_url = re.sub(r"/[^/?]+(\?.*)?$", "/postgres\\1", db_url)
+        try:
+            root_engine = create_engine(server_url, isolation_level="AUTOCOMMIT")
+            with root_engine.connect() as conn:
+                check_sql = text("SELECT 1 FROM pg_database WHERE datname = :dname")
+                exists = conn.execute(check_sql, {"dname": target_db}).scalar()
+                if not exists:
+                    conn.execute(text(f'CREATE DATABASE "{target_db}"'))
+                    print(f"[PostgreSQL] Created database '{target_db}' successfully.")
+            root_engine.dispose()
+        except Exception as e:
+            print(f"[PostgreSQL Notice] Auto-database creation check: {e}")
 
-    # Create primary PostgreSQL engine
+    # Create primary PostgreSQL engine with UTC connection session
     pg_engine = create_engine(
         db_url,
         pool_size=15,
         max_overflow=25,
-        pool_pre_ping=True
+        pool_pre_ping=True,
+        connect_args={"options": "-c timezone=utc"}
     )
     with pg_engine.connect() as test_conn:
         test_conn.execute(text("SELECT 1"))

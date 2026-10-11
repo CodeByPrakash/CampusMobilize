@@ -13,11 +13,18 @@ from .api import meta, ai, complaints, sla, utilities, events, performance, repo
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initializes tables and seeds canonical personas and hostels if empty."""
-    init_db()
-    with SessionLocal() as session:
-        hostel_count = session.query(Hostel).count()
-        if hostel_count == 0:
-            seed_database(session)
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[Database Notice] Schema initialization notice: {e}")
+
+    try:
+        with SessionLocal() as session:
+            hostel_count = session.query(Hostel).count()
+            if hostel_count == 0:
+                seed_database(session)
+    except Exception as e:
+        print(f"[Database Notice] Seed verification notice: {e}")
     yield
 
 
