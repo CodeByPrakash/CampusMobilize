@@ -103,7 +103,7 @@ const INITIAL_BILLS: ReconciledBill[] = [
 ];
 
 export default function EstateOfficerBillsPage() {
-  const role = ROLES.find((r) => r.id === "estate-officer") || ROLES[6] || DEFAULT_ROLE;
+  const role = ROLES.find((r) => r.id === "estate-officer" || r.id === "estate_officer") || ROLES[6] || DEFAULT_ROLE;
   const navItems = getEstateOfficerNav();
 
   const [bills, setBills] = React.useState<ReconciledBill[]>(INITIAL_BILLS);
@@ -553,11 +553,10 @@ export default function EstateOfficerBillsPage() {
                       <tr
                         key={b.id}
                         onClick={() => setSelectedBill(b)}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected
+                        className={`cursor-pointer transition-colors ${isSelected
                             ? "bg-primary/10 border-l-2 border-primary"
                             : "hover:bg-muted/30 even:bg-muted/5"
-                        }`}
+                          }`}
                       >
                         {/* Invoice ID */}
                         <td className="px-3.5 py-2.5 font-mono text-[11px] font-semibold text-primary">
@@ -628,8 +627,8 @@ export default function EstateOfficerBillsPage() {
                               b.status === "RECONCILED"
                                 ? "outline"
                                 : b.status === "AUDIT_FLAGGED"
-                                ? "destructive"
-                                : "secondary"
+                                  ? "destructive"
+                                  : "secondary"
                             }
                             className="text-[10px] font-mono"
                           >
@@ -677,8 +676,8 @@ export default function EstateOfficerBillsPage() {
                       selectedBill.status === "RECONCILED"
                         ? "outline"
                         : selectedBill.status === "AUDIT_FLAGGED"
-                        ? "destructive"
-                        : "secondary"
+                          ? "destructive"
+                          : "secondary"
                     }
                     className="text-[10px] font-mono px-1.5 py-0"
                   >

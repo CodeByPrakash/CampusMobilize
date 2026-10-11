@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ROLES, DEFAULT_ROLE } from "@/lib/roles";
 import { RoleDashboardShell } from "@/components/dashboards/role-dashboard-shell";
-import { getDirectorNav } from "@/components/dashboards/nav-config";
+import { getNavForRoleId } from "@/components/dashboards/nav-config";
 import { AiInsightsView } from "@/components/ai/ai-insights-view";
 import { Badge } from "@/components/ui/badge";
 import { SparklesIcon, BotIcon, ShieldCheckIcon } from "lucide-react";
@@ -16,12 +16,12 @@ export default function AiInsightsPage() {
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("current_role_id");
-      const matched = ROLES.find((r) => r.id === saved);
+      const matched = ROLES.find((r) => r.id === saved || r.id === saved?.replace("-", "_"));
       if (matched) setCurrentRole(matched);
     }
   }, []);
 
-  const navItems = getDirectorNav();
+  const navItems = getNavForRoleId(currentRole.id);
 
   return (
     <RoleDashboardShell role={currentRole} navItems={navItems}>

@@ -3,25 +3,25 @@
 import * as React from "react";
 import { ROLES, DEFAULT_ROLE } from "@/lib/roles";
 import { RoleDashboardShell } from "@/components/dashboards/role-dashboard-shell";
-import { getEstateOfficerNav } from "@/components/dashboards/nav-config";
+import { getNavForRoleId } from "@/components/dashboards/nav-config";
 import { AssetManager } from "@/components/assets/asset-manager";
 import { Badge } from "@/components/ui/badge";
 import { WrenchIcon, SparklesIcon, ShieldCheckIcon } from "lucide-react";
 
 export default function AssetsPage() {
   const [currentRole, setCurrentRole] = React.useState(
-    ROLES.find((r) => r.id === "estate-officer") || DEFAULT_ROLE
+    ROLES.find((r) => r.id === "estate_officer") || DEFAULT_ROLE
   );
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("current_role_id");
-      const matched = ROLES.find((r) => r.id === saved);
+      const matched = ROLES.find((r) => r.id === saved || r.id === saved?.replace("-", "_"));
       if (matched) setCurrentRole(matched);
     }
   }, []);
 
-  const navItems = getEstateOfficerNav();
+  const navItems = getNavForRoleId(currentRole.id);
 
   return (
     <RoleDashboardShell role={currentRole} navItems={navItems}>

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { WrenchIcon, SparklesIcon, ShieldCheckIcon } from "lucide-react";
 
 export default function EstateOfficerAssetsPage() {
-  const role = ROLES.find((r) => r.id === "estate-officer") || ROLES[0];
+  const role = ROLES.find((r) => r.id === "estate-officer" || r.id === "estate_officer") || ROLES[6] || ROLES[0];
   const navItems = getEstateOfficerNav();
 
   return (
