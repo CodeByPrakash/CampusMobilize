@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGetUtilityForecasts } from "@/lib/api";
+import { NitRourkelaMap } from "@/components/sustainability/nit-rourkela-map";
+import { SustainabilityScoreCharts } from "@/components/sustainability/sustainability-score-charts";
 
 interface QuantileForecast {
   utility: string;
@@ -190,11 +192,21 @@ export function EstateOfficerDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="forecasts" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="forecasts">Quantile Forecasts (P10 / P50 / P90)</TabsTrigger>
-          <TabsTrigger value="alerts">Infrastructure Alerts (Substations & Pumps)</TabsTrigger>
+          <TabsTrigger value="heatmap">NIT Rourkela Spatial Risk Heatmap</TabsTrigger>
+          <TabsTrigger value="sustainability">Sustainability AI Score Graphs</TabsTrigger>
+          <TabsTrigger value="alerts">Infrastructure Alerts</TabsTrigger>
           <TabsTrigger value="baseline">36-Month Baselines</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="heatmap" className="space-y-4">
+          <NitRourkelaMap />
+        </TabsContent>
+
+        <TabsContent value="sustainability" className="space-y-4">
+          <SustainabilityScoreCharts />
+        </TabsContent>
 
         <TabsContent value="forecasts" className="space-y-4">
           <Card>

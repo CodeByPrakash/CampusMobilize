@@ -16,6 +16,12 @@ export default function EstateOfficerPage() {
 
   const navItems = [
     {
+      title: "Spatial Heatmap",
+      url: "/estate-officer/dashboard",
+      icon: <AlertTriangleIcon className="size-4" />,
+      badge: "Heatmap",
+    },
+    {
       title: "Utility Forecasts",
       url: "/estate-officer/dashboard",
       icon: <ZapIcon className="size-4" />,

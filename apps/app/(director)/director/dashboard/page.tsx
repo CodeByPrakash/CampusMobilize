@@ -16,10 +16,16 @@ export default function DirectorPage() {
 
   const navItems = [
     {
-      title: "Risk Index (CRI)",
+      title: "Spatial Heatmap & AI",
       url: "/director/dashboard",
       icon: <ActivityIcon className="size-4" />,
       isActive: true,
+      badge: "NIT RKL",
+    },
+    {
+      title: "Risk Index (CRI)",
+      url: "/director/dashboard",
+      icon: <ShieldCheckIcon className="size-4" />,
       badge: "31 / 100",
     },
     {
