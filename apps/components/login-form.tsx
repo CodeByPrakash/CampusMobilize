@@ -118,7 +118,7 @@ export function LoginForm({
           className="w-full text-xs h-9 gap-2"
         >
           <UserCheckIcon className="size-4" />
-          <span>Open Role Selector (§15)</span>
+          <span>Open Role Selector (15)</span>
         </Button>
 
         {/* Quick chip shortcuts */}
