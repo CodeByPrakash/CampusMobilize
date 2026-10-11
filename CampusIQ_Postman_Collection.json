@@ -72,6 +72,28 @@
             },
             "description": "Returns ELECTRICAL, WATER, HYGIENE, CIVIL, SECURITY, and MISC."
           }
+        },
+        {
+          "name": "Send Test Email (Resend)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_email\": \"delivered@resend.dev\",\n  \"subject\": \"CampusIQ Resend Integration Test\",\n  \"message\": \"Live verification email dispatched via Resend from NIT Rourkela CampusIQ Backend.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/meta/test-mail",
+              "host": ["{{baseUrl}}"],
+              "path": ["meta", "test-mail"]
+            },
+            "description": "Sends a live or simulated email using Resend and records audit row in email_log."
+          }
         }
       ]
     },

@@ -3,7 +3,8 @@ Reference & Metadata Endpoints (§7.2, §2.2, §15)
 Provides hostels, rooms, categories, SLA policies, and 1-click demo personas.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
@@ -139,3 +140,31 @@ def get_persona(role_or_id: str, db: Session = Depends(get_db)):
         "permissions": perms,
         "skills": skills
     }
+
+
+class TestMailRequest(BaseModel):
+    to_email: str = "delivered@resend.dev"
+    subject: str = "CampusIQ Resend Integration Test"
+    message: str = "This is a live test email sent via Resend from CampusIQ Backend (NIT Rourkela)."
+
+
+@router.post("/test-mail")
+def test_send_mail(payload: TestMailRequest, db: Session = Depends(get_db)):
+    """Allows testing Resend email integration directly from Postman or UI."""
+    from ..services.mail_service import MailService
+    log = MailService.send_custom_email(
+        db=db,
+        to_emails=[payload.to_email],
+        subject=payload.subject,
+        message=payload.message,
+        template="test_mail"
+    )
+    return {
+        "status": log.status,
+        "email_log_id": log.id,
+        "to": log.to_emails,
+        "subject": log.subject,
+        "sent_at": log.sent_at.isoformat() if log.sent_at else None,
+        "message": "Email logged and dispatched via Resend if RESEND_API_KEY is configured."
+    }
+

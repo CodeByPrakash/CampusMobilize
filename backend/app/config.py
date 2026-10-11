@@ -19,9 +19,11 @@ class Settings:
         "postgresql+psycopg://postgres:2006@localhost:5432/campusiq"
     )
     
-    # Mail settings
-    MAIL_ENABLED: bool = os.getenv("MAIL_ENABLED", "false").lower() in ("true", "1")
-    MAIL_FROM: str = os.getenv("MAIL_FROM", "CampusIQ Estate Office <no-reply@campusiq.in>")
+    # Mail & Resend settings
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    RESEND_FROM: str = os.getenv("RESEND_FROM", "CampusIQ <onboarding@resend.dev>")
+    MAIL_ENABLED: bool = os.getenv("MAIL_ENABLED", "true" if os.getenv("RESEND_API_KEY") else "false").lower() in ("true", "1")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", os.getenv("RESEND_FROM", "CampusIQ <onboarding@resend.dev>"))
     
     # AI & Models
     ML_MODELS_DIR: str = os.getenv(

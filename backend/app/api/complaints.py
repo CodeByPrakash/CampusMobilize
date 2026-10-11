@@ -19,6 +19,7 @@ from ..schemas.complaints import (
     MergeRequest, PriorityOverrideRequest
 )
 from ..ai.engine import CampusAIEngine
+from ..services.mail_service import MailService
 
 router = APIRouter(prefix="/complaints", tags=["Complaints & FSM"])
 
@@ -310,6 +311,10 @@ def create_complaint(
             created_at=now
         )
         db.add(event_p1)
+        try:
+            MailService.send_p1_urgent_alert(db=db, complaint=complaint)
+        except Exception as e:
+            print(f"[Resend Notice] P1 intake email error: {e}")
 
     db.commit()
     db.refresh(complaint)
@@ -468,6 +473,10 @@ def transition_complaint_state(
         complaint.resolved_at = now
         complaint.resolution_note = req.note or "Work completed"
         complaint.resolution_photo_url = req.photo_url
+        try:
+            MailService.send_resolution_pending(db=db, complaint=complaint)
+        except Exception as e:
+            print(f"[Resend Notice] Resolution pending email error: {e}")
 
     elif to_status in ["REJECTED", "REJECTED_BACK"]:
         # Rejection requires reason
@@ -496,6 +505,15 @@ def transition_complaint_state(
         complaint.closed_at = now
         user_rec = db.query(User).filter(User.id == actor_id).first()
         complaint.closed_by = user_rec.id if user_rec else None
+        try:
+            rep_email = "student.hb3@campusiq.in"
+            if complaint.reported_by:
+                rep_user = db.query(User).filter(User.id == complaint.reported_by).first()
+                if rep_user and rep_user.email:
+                    rep_email = rep_user.email
+            MailService.send_ticket_closed(db=db, complaint=complaint, reporter_email=rep_email)
+        except Exception as e:
+            print(f"[Resend Notice] Closure email error: {e}")
 
     # Update complaint status
     complaint.status = to_status
