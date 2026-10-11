@@ -62,6 +62,23 @@ class PreBriefGenerator:
             f"schedule extra sanitation staff; budget ≈ ₹{budget_inr:,}."
         )
 
+        structured_summary = {
+            "headline": f"{name} in {days_left} days: Major campus footfall influx requiring autonomous facility readiness across {hostels_str}.",
+            "water_analysis": f"Water demand surge of +{water_pct}%. Sump storage drawdowns will reach critical levels without 100% pre-fill 12h prior and standby tankers at Hall 14 & Hall 3.",
+            "electricity_analysis": f"Peak grid demand surge of +{elec_pct}%. Dual-feed breaker check scheduled; stage lighting cutover locked until 18:30 to shave coincident transformer peaks.",
+            "sanitation_analysis": f"Hygiene complaint load multiplying by ×{hygiene_x}. Washroom inspection cycle reduced from 8h to 4h with 2 roving emergency plumbers.",
+            "budget_analysis": f"Estate provisional contingency budget of ₹{budget_inr:,} approved for fuel top-up, tanker freight, and overtime maintenance squads."
+        }
+
+        key_actions = [
+            f"Pre-inspect pumps and overhead tanks in {hostels_str} 48h prior",
+            "Pre-fill all hostel overhead and underground sumps to 100% 12h prior",
+            "Position 2 standby 10,000L PHED tankers between Hall 14 & Hall 3",
+            "Lock non-essential chiller units during 18:30–22:00 peak hours",
+            "Deploy 4 additional sanitation sweepers per residential block",
+            f"Authorize provisional emergency contingency budget of ₹{budget_inr:,}"
+        ]
+
         full_brief = {
             "event_name": name,
             "event_kind": kind,
@@ -75,7 +92,9 @@ class PreBriefGenerator:
             "critical_hostels": critical_hostels,
             "budget_inr": budget_inr,
             "recommendations": custom_recs,
-            "summary_text": short_summary
+            "summary_text": short_summary,
+            "structured_summary": structured_summary,
+            "key_actions": key_actions
         }
 
         return full_brief

@@ -348,24 +348,107 @@ def simulate_facility_stress(
     ]
 
     # 8. Synthesized AI Executive Markdown Report
-    assessment_md = f"""## Executive Facility Engineering Assessment: {scenario_name}
+    import textwrap
 
-    ### 1. Primary Vulnerability & Digital Twin Telemetry
-    | Facility Subsystem | Nominal Baseline | Simulated Surge Trajectory | Critical Stress Status |
-    |---|---|---|---|
-    | **Electrical Substation 1 (33kV)** | 1,250 kW (50% Load) | **{net_grid_demand_kw:,} kW** ({transformer_load_pct}% Transformer Load) | {"🔴 OVERLOAD THREAT (>85%)" if transformer_load_pct > 85 else ("🟡 ELEVATED LOAD (>75%)" if transformer_load_pct > 75 else "🟢 NOMINAL MARGIN")} |
-    | **Campus Water Buffer** | +350 kL Daily Balance | **{net_water_balance:+} kL/day** (Net Drawdown) | {"🔴 DEFICIT - TANKERS REQUIRED" if net_water_balance < 0 else "🟢 POSITIVE BALANCE"} |
-    | **Reservoir Storage Autonomy** | 48.0 Hours | **{reservoir_hours} Hours Remaining** | {"🔴 CRITICAL RUNOUT (<20 hrs)" if reservoir_hours < 20 else "🟡 MANAGED BUFFER"} |
-    | **Sanitation & Hygiene Load** | 12 complaints/day | **{projected_hygiene_tickets} tickets/day** (×{hygiene_mult:.1f} surge) | {"🔴 RAPID SQUADS MANDATED" if hygiene_mult >= 2.5 else "🟡 MODERATE STRAIN"} |
-    | **DG Generator Backup** | Standby Reserve | **{dg_autonomy_hrs} hrs runtime** ({dg_burn_rate_l_hr} L/hr HSD burn) | {"🔴 GRID OUTAGE CUTOVER ACTIVE" if is_grid_outage else "🟢 TPWODL GRID STABLE"} |
+    assessment_md = textwrap.dedent(f"""## Executive Facility Engineering Assessment: {scenario_name}
 
-    ### 2. Chief Warden Contingency Directives
-    1. **Mandatory Storage Tank Pre-Fill:** Requisition PHED water supply wing to charge all hostel overhead and underground sumps to 100% capacity 12 hours prior to festival inauguration.
-    2. **Standby Water Tanker Logistics:** Position **{tankers_required_10kl} standby 10,000L PHED tankers** between Hall 14 and HB-3 to prevent pressure collapse during 07:00–09:30 morning peak.
-    3. **Substation Peak Demand Shaving:** Estate Electrical Wing must lock decorative lighting cutover until 18:30 and reschedule centralized air handling units to avoid coincident transformer tripping.
-    4. **Sanitation Rapid Flying Squads:** Deploy **{flying_squad_teams} roving sanitation units** operating on 4-hour cyclical inspections across HB-3, CVR, and KMS.
-    5. **Emergency Contingency Requisition:** Sanction provisional emergency buffer of **₹{total_contingency_cost:,}** for fuel reserves, tanker freight, and technician overtime.
-    """
+### 1. Primary Vulnerability & Digital Twin Telemetry
+| Facility Subsystem | Nominal Baseline | Simulated Surge Trajectory | Critical Stress Status |
+|---|---|---|---|
+| **Electrical Substation 1 (33kV)** | 1,250 kW (50% Load) | **{net_grid_demand_kw:,} kW** ({transformer_load_pct}% Transformer Load) | {"🔴 OVERLOAD THREAT (>85%)" if transformer_load_pct > 85 else ("🟡 ELEVATED LOAD (>75%)" if transformer_load_pct > 75 else "🟢 NOMINAL MARGIN")} |
+| **Campus Water Buffer** | +350 kL Daily Balance | **{net_water_balance:+} kL/day** (Net Drawdown) | {"🔴 DEFICIT - TANKERS REQUIRED" if net_water_balance < 0 else "🟢 POSITIVE BALANCE"} |
+| **Reservoir Storage Autonomy** | 48.0 Hours | **{reservoir_hours} Hours Remaining** | {"🔴 CRITICAL RUNOUT (<20 hrs)" if reservoir_hours < 20 else "🟡 MANAGED BUFFER"} |
+| **Sanitation & Hygiene Load** | 12 complaints/day | **{projected_hygiene_tickets} tickets/day** (×{hygiene_mult:.1f} surge) | {"🔴 RAPID SQUADS MANDATED" if hygiene_mult >= 2.5 else "🟡 MODERATE STRAIN"} |
+| **DG Generator Backup** | Standby Reserve | **{dg_autonomy_hrs} hrs runtime** ({dg_burn_rate_l_hr} L/hr HSD burn) | {"🔴 GRID OUTAGE CUTOVER ACTIVE" if is_grid_outage else "🟢 TPWODL GRID STABLE"} |
+
+### 2. Chief Warden Contingency Directives
+1. **Mandatory Storage Tank Pre-Fill:** Requisition PHED water supply wing to charge all hostel overhead and underground sumps to 100% capacity 12 hours prior to festival inauguration.
+2. **Standby Water Tanker Logistics:** Position **{tankers_required_10kl} standby 10,000L PHED tankers** between Hall 14 and HB-3 to prevent pressure collapse during 07:00–09:30 morning peak.
+3. **Substation Peak Demand Shaving:** Estate Electrical Wing must lock decorative lighting cutover until 18:30 and reschedule centralized air handling units to avoid coincident transformer tripping.
+4. **Sanitation Rapid Flying Squads:** Deploy **{flying_squad_teams} roving sanitation units** operating on 4-hour cyclical inspections across HB-3, CVR, and KMS.
+5. **Emergency Contingency Requisition:** Sanction provisional emergency buffer of **₹{total_contingency_cost:,}** for fuel reserves, tanker freight, and technician overtime.
+""").strip()
+
+    structured_vulnerabilities = [
+        {
+            "subsystem": "Electrical Substation 1 (33kV)",
+            "baseline": "1,250 kW (50% Load)",
+            "simulated": f"{net_grid_demand_kw:,} kW ({transformer_load_pct}% Transformer Load)",
+            "status": "OVERLOAD THREAT (>85%)" if transformer_load_pct > 85 else ("ELEVATED LOAD (>75%)" if transformer_load_pct > 75 else "NOMINAL MARGIN"),
+            "status_type": "danger" if transformer_load_pct > 85 else ("warning" if transformer_load_pct > 75 else "success"),
+            "icon": "zap"
+        },
+        {
+            "subsystem": "Campus Water Buffer",
+            "baseline": "+350 kL Daily Balance",
+            "simulated": f"{net_water_balance:+} kL/day (Net Drawdown)",
+            "status": "DEFICIT - TANKERS REQUIRED" if net_water_balance < 0 else "POSITIVE BALANCE",
+            "status_type": "danger" if net_water_balance < 0 else "success",
+            "icon": "droplets"
+        },
+        {
+            "subsystem": "Reservoir Storage Autonomy",
+            "baseline": "48.0 Hours",
+            "simulated": f"{reservoir_hours} Hours Remaining",
+            "status": "CRITICAL RUNOUT (<20 hrs)" if reservoir_hours < 20 else "MANAGED BUFFER",
+            "status_type": "danger" if reservoir_hours < 20 else "warning",
+            "icon": "clock"
+        },
+        {
+            "subsystem": "Sanitation & Hygiene Load",
+            "baseline": "12 complaints/day",
+            "simulated": f"{projected_hygiene_tickets} tickets/day (×{hygiene_mult:.1f} surge)",
+            "status": "RAPID SQUADS MANDATED" if hygiene_mult >= 2.5 else "MODERATE STRAIN",
+            "status_type": "danger" if hygiene_mult >= 2.5 else "warning",
+            "icon": "users"
+        },
+        {
+            "subsystem": "DG Generator Backup",
+            "baseline": "Standby Reserve",
+            "simulated": f"{dg_autonomy_hrs} hrs runtime ({dg_burn_rate_l_hr} L/hr HSD burn)",
+            "status": "GRID OUTAGE CUTOVER ACTIVE" if is_grid_outage else "TPWODL GRID STABLE",
+            "status_type": "danger" if is_grid_outage else "success",
+            "icon": "flame"
+        }
+    ]
+
+    structured_directives = [
+        {
+            "step_no": 1,
+            "title": "Mandatory Storage Tank Pre-Fill",
+            "description": "Requisition PHED water supply wing to charge all hostel overhead and underground sumps to 100% capacity 12 hours prior to festival inauguration.",
+            "category": "water",
+            "urgency": "High"
+        },
+        {
+            "step_no": 2,
+            "title": "Standby Water Tanker Logistics",
+            "description": f"Position {tankers_required_10kl} standby 10,000L PHED tankers between Hall 14 and HB-3 to prevent pressure collapse during 07:00–09:30 morning peak.",
+            "category": "water",
+            "urgency": "Critical" if tankers_required_10kl > 0 else "Standard"
+        },
+        {
+            "step_no": 3,
+            "title": "Substation Peak Demand Shaving",
+            "description": "Estate Electrical Wing must lock decorative lighting cutover until 18:30 and reschedule centralized air handling units to avoid coincident transformer tripping.",
+            "category": "power",
+            "urgency": "High" if transformer_load_pct > 75 else "Standard"
+        },
+        {
+            "step_no": 4,
+            "title": "Sanitation Rapid Flying Squads",
+            "description": f"Deploy {flying_squad_teams} roving sanitation units operating on 4-hour cyclical inspections across HB-3, CVR, and KMS.",
+            "category": "sanitation",
+            "urgency": "High"
+        },
+        {
+            "step_no": 5,
+            "title": "Emergency Contingency Requisition",
+            "description": f"Sanction provisional emergency buffer of ₹{total_contingency_cost:,} for fuel reserves, tanker freight, and technician overtime.",
+            "category": "finance",
+            "urgency": "Approved"
+        }
+    ]
 
     return {
         "status": "SUCCESS",
@@ -399,6 +482,8 @@ def simulate_facility_stress(
         "campus_risk_index": cri_res,
         "hourly_stress_curve": hourly_curve,
         "hostel_impact_matrix": hostel_matrix,
+        "vulnerabilities": structured_vulnerabilities,
+        "directives": structured_directives,
         "ai_executive_report_markdown": assessment_md,
     }
 @router.get("/safety/hotspots")

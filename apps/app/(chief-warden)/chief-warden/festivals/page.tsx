@@ -141,48 +141,39 @@ export default function ChiefWardenFestivalsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* View Mode Toggle Pill Buttons */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-full border border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setActiveTab("prebriefs")}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   activeTab === "prebriefs"
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <LayersIcon className="size-3.5" />
-                Pre-Briefs & Mandates
+                <LayersIcon className="size-3.5 text-indigo-600" />
+                <span>Pre-Briefs & Mandates</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("simulator")}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   activeTab === "simulator"
                     ? "bg-indigo-600 text-white shadow-xs"
                     : "text-indigo-700 hover:text-indigo-950"
                 }`}
               >
-                <SparklesIcon className="size-3.5" />
-                Stress Simulator
+                <SparklesIcon className="size-3.5 animate-pulse" />
+                <span>AI Stress Simulator</span>
+                <span className={`ml-1 text-[9px] font-mono py-0.5 px-1.5 rounded ${
+                  activeTab === "simulator" ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
+                }`}>
+                  Digital Twin
+                </span>
               </button>
             </div>
-
-            {/* Prominent Button from Screenshot */}
-            <Button
-              onClick={() => setActiveTab(activeTab === "simulator" ? "prebriefs" : "simulator")}
-              className={`${
-                activeTab === "simulator"
-                  ? "bg-slate-900 text-white hover:bg-slate-800"
-                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              } px-3.5 py-1 text-xs font-semibold gap-1.5 rounded-full shadow-xs transition-all`}
-            >
-              <SparklesIcon className="size-3.5 animate-pulse" />
-              {activeTab === "simulator" ? "Switch to Pre-Briefs" : "AI Facility Stress Simulator"}
-            </Button>
           </div>
         </div>
 

@@ -161,6 +161,8 @@ export async function apiTransitionComplaint(
     note?: string
     photo_url?: string
     assignee_id?: string
+    tradesman_name?: string
+    trade?: string
     severity?: number
     reason?: string
   }

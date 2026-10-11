@@ -12,14 +12,16 @@ import {
   CheckCircle2Icon,
   AlertTriangleIcon,
   PrinterIcon,
-  DownloadIcon,
+  CopyIcon,
+  CheckIcon,
   UsersIcon,
   WrenchIcon,
   ClockIcon,
   Building2Icon,
-  CheckIcon,
   FileTextIcon,
   ActivityIcon,
+  CheckSquareIcon,
+  CoinsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiIssueChiefWardenMandate, apiGetChiefWardenMandate } from "@/lib/api";
@@ -38,11 +40,13 @@ export function FestivalPreBriefPack({
   const [isIssuing, setIsIssuing] = React.useState(false);
   const [mandate, setMandate] = React.useState<any>(null);
   const [showOrderModal, setShowOrderModal] = React.useState(false);
+  const [copiedBrief, setCopiedBrief] = React.useState(false);
   const [checkedItems, setCheckedItems] = React.useState<Record<number, boolean>>({
     0: true,
     1: true,
     2: true,
     3: true,
+    4: true,
   });
 
   // Load existing mandate status
@@ -76,10 +80,12 @@ export function FestivalPreBriefPack({
         issuer_role: "CHIEF_WARDEN",
         target_hostels: prebrief?.critical_hostels || ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"],
         budget_approved_inr: prebrief?.estimated_budget_inr || prebrief?.budget_inr || 52000,
-        directives: prebrief?.recommendations || [
+        directives: prebrief?.key_actions || prebrief?.recommendations || [
           "Pre-inspect pumps and overhead tanks in target hostels 48h prior.",
-          "Schedule 4 additional sweepers per residential block during peak meal hours.",
-          "Stage emergency electrical repair kits with on-call technicians.",
+          "Pre-fill all rooftop storage tanks to 100% 12h prior to inauguration.",
+          "Position standby 10,000L PHED tankers between Hall 14 and HB-3.",
+          "Lock non-essential chiller units during 18:30–22:00 peak hours.",
+          "Deploy 4 additional sanitation workers per residential block.",
         ],
       };
       const res = await apiIssueChiefWardenMandate(selectedEvent.id, payload);
@@ -109,43 +115,74 @@ export function FestivalPreBriefPack({
   const eventName = selectedEvent.name;
   const daysUntil = prebrief?.days_until ?? 25;
   const surges = prebrief?.predicted_surges || {
-    water_surge_pct: Math.round(((selectedEvent.water_surge_multiplier || 1.3) - 1) * 100),
-    electricity_surge_pct: Math.round(((selectedEvent.electricity_surge_multiplier || 1.2) - 1) * 100),
-    hygiene_pressure_multiplier: selectedEvent.hygiene_pressure_multiplier || 2.8,
+    water_surge_pct: Math.round(((selectedEvent.water_surge_multiplier || 1.38) - 1) * 100),
+    electricity_surge_pct: Math.round(((selectedEvent.electricity_surge_multiplier || 1.22) - 1) * 100),
+    hygiene_pressure_multiplier: selectedEvent.hygiene_pressure_multiplier || 3.1,
   };
   const budgetInr = prebrief?.estimated_budget_inr ?? prebrief?.budget_inr ?? 52000;
   const criticalHostels = prebrief?.critical_hostels || ["HB-3", "CVR", "KMS", "Hall 14"];
-  const checklist = prebrief?.contingency_checklist || prebrief?.recommendations || [
+
+  const structuredSummary = prebrief?.structured_summary || {
+    headline: `${eventName} in ${daysUntil} days: Major campus footfall influx requiring autonomous facility readiness across ${criticalHostels.join(", ")}.`,
+    water_analysis: `Water demand surge of +${surges.water_surge_pct}%. Overhead sumps must be 100% pre-filled 12h prior with standby PHED tankers positioned at Hall 14 & Hall 3.`,
+    electricity_analysis: `Peak electrical demand surge of +${surges.electricity_surge_pct}%. Dual-feed breaker test scheduled; stage lighting cutover locked until 18:30 to shave coincident transformer peaks.`,
+    sanitation_analysis: `Hygiene complaint pressure multiplying by ×${surges.hygiene_pressure_multiplier}. Washroom inspection cycle reduced from 8h to 4h with 2 roving emergency plumbers.`,
+    budget_analysis: `Estate provisional contingency budget of ₹${budgetInr.toLocaleString()} approved for fuel top-up, tanker freight, and overtime maintenance squads.`,
+  };
+
+  const keyActions = prebrief?.key_actions || [
     `Pre-inspect pumps and overhead tanks in ${criticalHostels.join(", ")} 48h prior`,
-    "Schedule 4 additional sweepers per residential block during peak meal hours",
-    "Stage emergency electrical repair kits with on-call technicians",
-    `Reserve provisional emergency contingency budget of ₹${budgetInr.toLocaleString()}`,
+    "Pre-fill all rooftop storage tanks to 100% 12h prior to inauguration",
+    "Position 2 standby 10,000L PHED tankers between Hall 14 & Hall 3",
+    "Lock non-essential chiller units during 18:30–22:00 peak hours",
+    "Deploy 4 additional sanitation sweepers per residential block",
+    `Authorize provisional emergency contingency budget of ₹${budgetInr.toLocaleString()}`,
   ];
+
   const staffing = prebrief?.staffing_plan || {
     extra_sanitation_workers: 4,
     on_call_electricians: 2,
     pump_operators: 2,
   };
 
+  const handleCopySummary = () => {
+    const textToCopy = `CAMPUSIQ PRE-BRIEF MANDATE: ${eventName}
+Days Remaining: ${daysUntil} days
+Surges: Water +${surges.water_surge_pct}%, Power +${surges.electricity_surge_pct}%, Hygiene ×${surges.hygiene_pressure_multiplier}
+Contingency Budget: ₹${budgetInr.toLocaleString()}
+Critical Hostels: ${criticalHostels.join(", ")}
+
+EXECUTIVE DIRECTIVES:
+${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
+`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedBrief(true);
+    toast.success("Executive Pre-Brief copied to clipboard!");
+    setTimeout(() => setCopiedBrief(false), 2000);
+  };
+
   return (
-    <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+    <Card className="bg-white border-slate-200 shadow-xs overflow-hidden">
       {/* Card Header with Mandate Actions */}
-      <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
+      <CardHeader className="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-600 text-white text-xs font-semibold py-0.5 px-2">
+              <Badge className="bg-emerald-600 text-white text-xs font-semibold py-0.5 px-2.5">
                 Automated Pre-Brief Pack (§8.5)
               </Badge>
-              <Badge variant="outline" className="text-xs text-slate-500 font-mono">
-                Occasion Countdown: In {daysUntil} Days
+              <Badge variant="outline" className="text-xs text-slate-600 font-mono bg-white">
+                Countdown: In {daysUntil} Days
+              </Badge>
+              <Badge variant="outline" className="text-xs text-indigo-700 border-indigo-200 bg-indigo-50 font-mono">
+                {selectedEvent.kind?.toUpperCase()}
               </Badge>
             </div>
-            <CardTitle className="text-lg font-bold text-slate-900">
+            <CardTitle className="text-lg sm:text-xl font-bold text-slate-900">
               Hostel Preparedness Mandate — {eventName}
             </CardTitle>
             <p className="text-xs text-slate-500">
-              Synthesized by CampusIQ AI Pre-Brief Engine • Official directive for Hall Wardens & Estate Office.
+              Autonomous facility readiness package for Hall Wardens, Estate Office, and PHED utilities.
             </p>
           </div>
 
@@ -154,7 +191,7 @@ export function FestivalPreBriefPack({
               variant="outline"
               size="sm"
               onClick={onOpenSimulator}
-              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-xs gap-1.5 shadow-2xs"
+              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-xs gap-1.5 shadow-2xs font-semibold"
             >
               <SparklesIcon className="size-3.5 text-indigo-600" />
               Simulate Stress in Digital Twin
@@ -165,7 +202,7 @@ export function FestivalPreBriefPack({
                 size="sm"
                 variant="outline"
                 onClick={() => setShowOrderModal(true)}
-                className="bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 text-xs gap-1.5"
+                className="bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 text-xs gap-1.5 font-semibold"
               >
                 <CheckCircle2Icon className="size-3.5 text-emerald-600" />
                 View Mandate #{mandate.mandate_id?.slice(-8)}
@@ -175,9 +212,9 @@ export function FestivalPreBriefPack({
                 size="sm"
                 onClick={handleIssueMandate}
                 disabled={isIssuing}
-                className="bg-slate-900 text-white hover:bg-slate-800 text-xs gap-1.5 shadow-2xs"
+                className="bg-slate-900 text-white hover:bg-slate-800 text-xs gap-1.5 shadow-2xs font-semibold"
               >
-                <ShieldCheckIcon className="size-4" />
+                <ShieldCheckIcon className="size-4 text-emerald-400" />
                 {isIssuing ? "Dispatching Mandate..." : "Issue Chief Warden Mandate"}
               </Button>
             )}
@@ -186,31 +223,31 @@ export function FestivalPreBriefPack({
 
         {/* Issued Mandate Status Banner */}
         {mandate && (
-          <div className="mt-3 p-2.5 rounded-lg border border-emerald-300 bg-emerald-50/70 text-emerald-900 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
+          <div className="mt-3 p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2.5">
               <CheckCircle2Icon className="size-4 text-emerald-600 shrink-0" />
               <span>
-                <strong>Mandate {mandate.mandate_id} Dispatched:</strong> Acknowledged by Estate Officer & All 4 Hall Wardens. Requisition active.
+                <strong>Mandate #{mandate.mandate_id} Dispatched & Enacted:</strong> Officially registered by Prof. M. Mishra. Acknowledged by Estate Officer & Wardens of {criticalHostels.join(", ")}.
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => setShowOrderModal(true)}
-                className="h-6 text-[11px] text-emerald-800 hover:text-emerald-950 px-2"
+                className="h-6 text-[11px] bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-100 px-2.5"
               >
                 <FileTextIcon className="size-3 mr-1" />
                 Order Slip
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   window.print();
-                  toast.success("Printing Official Mandate Order Slip");
+                  toast.success("Printing Official Mandate Order");
                 }}
-                className="h-6 text-[11px] text-emerald-800 hover:text-emerald-950 px-2"
+                className="h-6 text-[11px] bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-100 px-2.5"
               >
                 <PrinterIcon className="size-3 mr-1" />
                 Print Order
@@ -220,99 +257,184 @@ export function FestivalPreBriefPack({
         )}
       </CardHeader>
 
-      <CardContent className="pt-5 space-y-6">
-        {/* Executive Summary Plain Language Box (§8.5) */}
-        {prebrief?.summary_text && (
-          <div className="p-3.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/70 to-slate-50 text-indigo-950 space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-900">
-              <SparklesIcon className="size-3.5 text-indigo-600" />
-              Autonomous Operational Synthesis (§8.5)
+      <CardContent className="p-4 sm:p-6 space-y-6">
+        {/* ========================================================================= */}
+        {/* Executive AI Briefing & Operational Synthesis Hub (§8.5) */}
+        {/* ========================================================================= */}
+        <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-white to-slate-50 p-4 sm:p-5 space-y-4 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-indigo-600 text-white">
+                <SparklesIcon className="size-3.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  CampusIQ AI Operational Synthesis (§8.5)
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Autonomous forecaster predictions & facility readiness guidance
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-indigo-900/90 leading-relaxed font-sans">
-              {prebrief.summary_text}
-            </p>
-          </div>
-        )}
 
-        {/* Surge Metric Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 rounded-lg border border-blue-200 bg-blue-50/30">
-            <div className="text-[11px] font-medium text-blue-700 flex items-center gap-1">
-              <DropletsIcon className="size-3 text-blue-600" />
-              Water Surge Demand
-            </div>
-            <div className="text-xl font-bold text-blue-950 mt-1">
-              +{surges.water_surge_pct}%
-            </div>
-            <p className="text-[10px] text-blue-700/80">Pre-fill 100% sumps 12h prior</p>
-          </div>
-
-          <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/30">
-            <div className="text-[11px] font-medium text-amber-700 flex items-center gap-1">
-              <ZapIcon className="size-3 text-amber-600" />
-              Electricity Surge
-            </div>
-            <div className="text-xl font-bold text-amber-950 mt-1">
-              +{surges.electricity_surge_pct}%
-            </div>
-            <p className="text-[10px] text-amber-700/80">Substation dual-feed ready</p>
-          </div>
-
-          <div className="p-3 rounded-lg border border-emerald-200 bg-emerald-50/30">
-            <div className="text-[11px] font-medium text-emerald-700 flex items-center gap-1">
-              <UsersIcon className="size-3 text-emerald-600" />
-              Hygiene Pressure
-            </div>
-            <div className="text-xl font-bold text-emerald-950 mt-1">
-              {surges.hygiene_pressure_multiplier}x
-            </div>
-            <p className="text-[10px] text-emerald-700/80">4-hour washroom cycles</p>
-          </div>
-
-          <div className="p-3 rounded-lg border border-purple-200 bg-purple-50/30">
-            <div className="text-[11px] font-medium text-purple-700 flex items-center gap-1">
-              <ShieldCheckIcon className="size-3 text-purple-600" />
-              Contingency Reserve
-            </div>
-            <div className="text-xl font-bold text-purple-950 mt-1">
-              ₹{budgetInr.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-purple-700/80">Estate contingency sanctioned</p>
-          </div>
-        </div>
-
-        {/* Critical Hostels Watchlist Chips */}
-        <div className="space-y-1.5">
-          <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-            <Building2Icon className="size-3.5 text-indigo-600" />
-            Critical Hostels Watchlist & Footfall Influx:
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {criticalHostels.map((code: string) => (
-              <Badge
-                key={code}
-                variant="outline"
-                className="bg-slate-50 border-slate-300 text-slate-800 text-xs py-1 px-2.5 font-medium flex items-center gap-1.5"
-              >
-                <span className="font-bold text-indigo-700">{code}</span>
-                <span className="text-[10px] text-slate-500 font-normal">
-                  {code === "HB-3"
-                    ? "Primary Guest Hub (+1,450)"
-                    : code === "CVR"
-                    ? "Dining & Mess Hub (+980)"
-                    : code === "KMS"
-                    ? "Girls Delegations (+820)"
-                    : "Mega Event Staging (+1,250)"}
-                </span>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] bg-white text-indigo-700 border-indigo-200 font-mono">
+                Neural Model v3.0
               </Badge>
-            ))}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCopySummary}
+                className="h-7 text-xs gap-1 text-indigo-700 hover:bg-indigo-100/60"
+              >
+                {copiedBrief ? (
+                  <>
+                    <CheckIcon className="size-3 text-emerald-600" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <CopyIcon className="size-3" />
+                    <span>Copy Brief</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Core Headline */}
+          <p className="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed bg-white/80 p-3 rounded-xl border border-indigo-100/80">
+            {structuredSummary.headline}
+          </p>
+
+          {/* 4 Pillars Operational Insights Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Water Pillar */}
+            <div className="bg-white p-3.5 rounded-xl border border-blue-100 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-blue-900 flex items-center gap-1">
+                  <DropletsIcon className="size-3.5 text-blue-600" />
+                  Water Buffer
+                </span>
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] font-mono">
+                  +{surges.water_surge_pct}% Surge
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {structuredSummary.water_analysis}
+              </p>
+            </div>
+
+            {/* Electrical Pillar */}
+            <div className="bg-white p-3.5 rounded-xl border border-amber-100 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
+                  <ZapIcon className="size-3.5 text-amber-600" />
+                  Electrical Grid
+                </span>
+                <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] font-mono">
+                  +{surges.electricity_surge_pct}% Peak
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {structuredSummary.electricity_analysis}
+              </p>
+            </div>
+
+            {/* Sanitation Pillar */}
+            <div className="bg-white p-3.5 rounded-xl border border-emerald-100 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-emerald-900 flex items-center gap-1">
+                  <UsersIcon className="size-3.5 text-emerald-600" />
+                  Sanitation Load
+                </span>
+                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-mono">
+                  {surges.hygiene_pressure_multiplier}x Frequency
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {structuredSummary.sanitation_analysis}
+              </p>
+            </div>
+
+            {/* Budget Pillar */}
+            <div className="bg-white p-3.5 rounded-xl border border-purple-100 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-purple-900 flex items-center gap-1">
+                  <CoinsIcon className="size-3.5 text-purple-600" />
+                  Estate Reserve
+                </span>
+                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] font-mono">
+                  ₹{budgetInr.toLocaleString()}
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {structuredSummary.budget_analysis}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* 3 Core Contingency Directive Boxes (Like user screenshot + enhanced) */}
+        {/* ========================================================================= */}
+        {/* Critical Hostels Deployment Watchlist */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <Building2Icon className="size-4 text-indigo-600" />
+              Critical Hostels Deployment Watchlist
+            </span>
+            <span className="text-[11px] text-slate-500 font-mono">
+              Priority Tier 1 Surveillance
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {criticalHostels.map((code: string) => {
+              const roleTitle =
+                code === "HB-3"
+                  ? "Primary Guest Hub"
+                  : code === "CVR"
+                  ? "Dining & Mess Hub"
+                  : code === "KMS"
+                  ? "Girls Delegations"
+                  : "Mega Event Staging";
+              const footfallBadge =
+                code === "HB-3" ? "+1,450" : code === "CVR" ? "+980" : code === "KMS" ? "+820" : "+1,250";
+
+              return (
+                <div
+                  key={code}
+                  className="p-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 transition-all space-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900">{code}</span>
+                    <Badge variant="outline" className="text-[10px] font-mono text-indigo-700 bg-indigo-50 border-indigo-200">
+                      {footfallBadge} guests
+                    </Badge>
+                  </div>
+                  <div className="text-xs font-semibold text-slate-700">{roleTitle}</div>
+                  <p className="text-[11px] text-slate-500 leading-normal">
+                    {code === "HB-3"
+                      ? "Pre-fill 50kL sumps 12h prior. Plumber rapid squad stationed."
+                      : code === "CVR"
+                      ? "Mess RO operating on 24h continuous filtration."
+                      : code === "KMS"
+                      ? "Booster pump bypass active during morning hours."
+                      : "Dual-feed automatic transfer switch verified."}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* Core Operational Directive Cards */}
+        {/* ========================================================================= */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-sm text-blue-900">
+            <div className="flex items-center gap-2 font-bold text-sm text-blue-900">
               <DropletsIcon className="size-4 text-blue-600" />
               Water Contingency Buffer
             </div>
@@ -322,7 +444,7 @@ export function FestivalPreBriefPack({
           </div>
 
           <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-sm text-amber-900">
+            <div className="flex items-center gap-2 font-bold text-sm text-amber-900">
               <ZapIcon className="size-4 text-amber-600" />
               Diesel Generator (DG) Reserves
             </div>
@@ -332,7 +454,7 @@ export function FestivalPreBriefPack({
           </div>
 
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-sm text-emerald-900">
+            <div className="flex items-center gap-2 font-bold text-sm text-emerald-900">
               <ShieldCheckIcon className="size-4 text-emerald-600" />
               Sanitation & Flying Squad
             </div>
@@ -342,32 +464,34 @@ export function FestivalPreBriefPack({
           </div>
         </div>
 
-        {/* Staffing Allocation Breakdown */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+        {/* ========================================================================= */}
+        {/* Emergency Staffing Roster */}
+        {/* ========================================================================= */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+            <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <WrenchIcon className="size-3.5 text-indigo-600" />
-              Mandated Emergency Support Staffing Allocation
+              Mandated Emergency Staffing Allocation
             </div>
             <Badge variant="outline" className="text-[10px] bg-white text-slate-600">
               Estate Deployment Roster
             </Badge>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
-              <span className="text-slate-600">Extra Sanitation Workers</span>
+            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+              <span className="text-slate-600 font-medium">Extra Sanitation Workers</span>
               <strong className="text-slate-900 font-mono text-sm">
                 +{staffing.extra_sanitation_workers} personnel
               </strong>
             </div>
-            <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
-              <span className="text-slate-600">On-Call Electricians</span>
+            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+              <span className="text-slate-600 font-medium">On-Call Electricians</span>
               <strong className="text-slate-900 font-mono text-sm">
                 +{staffing.on_call_electricians} technicians
               </strong>
             </div>
-            <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
-              <span className="text-slate-600">Pump & RO Operators</span>
+            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+              <span className="text-slate-600 font-medium">Pump & RO Operators</span>
               <strong className="text-slate-900 font-mono text-sm">
                 +{staffing.pump_operators} operators
               </strong>
@@ -375,26 +499,35 @@ export function FestivalPreBriefPack({
           </div>
         </div>
 
-        {/* Verified Action Checklist with Checkboxes */}
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-slate-800">
-            Chief Warden Verification Checklist:
+        {/* ========================================================================= */}
+        {/* Chief Warden Verification Checklist */}
+        {/* ========================================================================= */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <CheckSquareIcon className="size-4 text-emerald-600" />
+              Chief Warden Pre-Inauguration Verification Checklist
+            </span>
+            <span className="text-[11px] text-slate-500">
+              {Object.values(checkedItems).filter(Boolean).length} of {keyActions.length} Verified
+            </span>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            {checklist.map((item: string, idx: number) => {
+            {keyActions.map((item: string, idx: number) => {
               const isChecked = !!checkedItems[idx];
               return (
                 <div
                   key={idx}
                   onClick={() => toggleCheck(idx)}
-                  className={`p-2.5 rounded-lg border cursor-pointer transition-colors flex items-start gap-2.5 ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${
                     isChecked
-                      ? "border-emerald-200 bg-emerald-50/30 text-emerald-950"
+                      ? "border-emerald-200 bg-emerald-50/40 text-emerald-950"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                   }`}
                 >
                   <div
-                    className={`size-4 rounded mt-0.5 flex items-center justify-center shrink-0 ${
+                    className={`size-4 rounded mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
                       isChecked
                         ? "bg-emerald-600 text-white"
                         : "border border-slate-300 bg-slate-50"
@@ -402,7 +535,7 @@ export function FestivalPreBriefPack({
                   >
                     {isChecked && <CheckIcon className="size-3" />}
                   </div>
-                  <span className={`text-xs ${isChecked ? "line-through opacity-80" : ""}`}>
+                  <span className={`text-xs ${isChecked ? "line-through opacity-80" : "font-medium"}`}>
                     {item}
                   </span>
                 </div>
@@ -423,7 +556,7 @@ export function FestivalPreBriefPack({
                   Official Chief Warden Mandate Order Slip
                 </h3>
               </div>
-              <Badge variant="outline" className="text-xs font-mono">
+              <Badge variant="outline" className="text-xs font-mono bg-slate-50">
                 {mandate.mandate_id}
               </Badge>
             </div>
@@ -447,15 +580,14 @@ export function FestivalPreBriefPack({
               </div>
               <div className="flex justify-between border-b pb-2">
                 <span className="text-slate-500">Dispatched To:</span>
-                <span>HB-3, CVR, KMS, Hall 14 Wardens & Estate Officer</span>
+                <span>{criticalHostels.join(", ")} Wardens & Estate Officer</span>
               </div>
               <div className="pt-1">
                 <span className="text-slate-500 block mb-1">Directives Enacted:</span>
                 <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-800">
-                  <li>Overhead storage tanks 100% pre-filled 12h prior.</li>
-                  <li>Standby 10kL PHED tankers staged at Hall 14 & Hall 3.</li>
-                  <li>Substation 2 generator 800L fuel top-up confirmed.</li>
-                  <li>Washroom cleaning frequency set to 4-hour cyclical inspections.</li>
+                  {keyActions.slice(0, 4).map((action: string, i: number) => (
+                    <li key={i}>{action}</li>
+                  ))}
                 </ul>
               </div>
             </div>

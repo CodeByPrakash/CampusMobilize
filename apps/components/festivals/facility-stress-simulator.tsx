@@ -29,6 +29,10 @@ import {
   FileTextIcon,
   SlidersIcon,
   GaugeIcon,
+  PrinterIcon,
+  CopyIcon,
+  CheckIcon,
+  LayersIcon,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -44,7 +48,6 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { apiSimulateFacilityStress } from "@/lib/api";
-import { SimulationAiAssessment } from "@/components/simulation/simulation-ai-assessment";
 
 interface FacilityStressSimulatorProps {
   initialEvent?: any;
@@ -92,6 +95,8 @@ export function FacilityStressSimulator({
   const [isRunningAi, setIsRunningAi] = React.useState<boolean>(false);
   const [backendAiData, setBackendAiData] = React.useState<any>(null);
   const [activeCurveTab, setActiveCurveTab] = React.useState<string>("energy");
+  const [rawMarkdownMode, setRawMarkdownMode] = React.useState<boolean>(false);
+  const [copiedMd, setCopiedMd] = React.useState<boolean>(false);
 
   // Sync when initialEvent changes
   React.useEffect(() => {
@@ -329,6 +334,14 @@ export function FacilityStressSimulator({
     }
   };
 
+  const handleCopyMarkdown = () => {
+    if (!backendAiData?.ai_executive_report_markdown) return;
+    navigator.clipboard.writeText(backendAiData.ai_executive_report_markdown);
+    setCopiedMd(true);
+    toast.success("Copied AI Executive Assessment to clipboard!");
+    setTimeout(() => setCopiedMd(false), 2000);
+  };
+
   // Values from backend or fallback to local
   const liveMetrics = backendAiData?.metrics || localSimResults;
   const liveCri = backendAiData?.campus_risk_index || {
@@ -337,11 +350,86 @@ export function FacilityStressSimulator({
     badge_color: localSimResults.calculatedCri >= 70 ? "red" : localSimResults.calculatedCri >= 45 ? "amber" : "emerald",
   };
   const curveData = backendAiData?.hourly_stress_curve || localSimResults.hourlyPoints;
+  const vulnerabilities = backendAiData?.vulnerabilities || [
+    {
+      subsystem: "Electrical Substation 1 (33kV)",
+      baseline: "1,250 kW (50% Load)",
+      simulated: `${liveMetrics.net_grid_demand_kw || 1725} kW (${liveMetrics.transformer_load_percent || 70.3}% Load)`,
+      status: (liveMetrics.transformer_load_percent || 70.3) > 85 ? "OVERLOAD THREAT (>85%)" : (liveMetrics.transformer_load_percent || 70.3) > 75 ? "ELEVATED LOAD (>75%)" : "NOMINAL MARGIN",
+      status_type: (liveMetrics.transformer_load_percent || 70.3) > 85 ? "danger" : (liveMetrics.transformer_load_percent || 70.3) > 75 ? "warning" : "success"
+    },
+    {
+      subsystem: "Campus Water Buffer",
+      baseline: "+350 kL Daily Balance",
+      simulated: `${liveMetrics.net_water_balance_kl || -912.5} kL/day (Net Drawdown)`,
+      status: (liveMetrics.net_water_balance_kl || -912.5) < 0 ? "DEFICIT - TANKERS REQUIRED" : "POSITIVE BALANCE",
+      status_type: (liveMetrics.net_water_balance_kl || -912.5) < 0 ? "danger" : "success"
+    },
+    {
+      subsystem: "Reservoir Storage Autonomy",
+      baseline: "48.0 Hours",
+      simulated: `${liveMetrics.reservoir_buffer_hours || 20.8} Hours Remaining`,
+      status: (liveMetrics.reservoir_buffer_hours || 20.8) < 20 ? "CRITICAL RUNOUT (<20 hrs)" : "MANAGED BUFFER",
+      status_type: (liveMetrics.reservoir_buffer_hours || 20.8) < 20 ? "danger" : "warning"
+    },
+    {
+      subsystem: "Sanitation & Hygiene Load",
+      baseline: "12 complaints/day",
+      simulated: `${liveMetrics.projected_hygiene_tickets || 37} tickets/day (×${hygieneMultiplier} surge)`,
+      status: hygieneMultiplier >= 2.5 ? "RAPID SQUADS MANDATED" : "MODERATE STRAIN",
+      status_type: hygieneMultiplier >= 2.5 ? "danger" : "warning"
+    },
+    {
+      subsystem: "DG Generator Backup",
+      baseline: "Standby Reserve",
+      simulated: `${liveMetrics.dg_autonomy_hours || 24} hrs runtime`,
+      status: isGridOutage ? "GRID OUTAGE CUTOVER ACTIVE" : "TPWODL GRID STABLE",
+      status_type: isGridOutage ? "danger" : "success"
+    }
+  ];
+
+  const directives = backendAiData?.directives || [
+    {
+      step_no: 1,
+      title: "Mandatory Storage Tank Pre-Fill",
+      description: "Requisition PHED water supply wing to charge all hostel overhead and underground sumps to 100% capacity 12 hours prior to festival inauguration.",
+      category: "water",
+      urgency: "High"
+    },
+    {
+      step_no: 2,
+      title: "Standby Water Tanker Logistics",
+      description: `Position ${liveMetrics.tankers_required_10kl || 92} standby 10,000L PHED tankers between Hall 14 and HB-3 to prevent pressure collapse during 07:00–09:30 morning peak.`,
+      category: "water",
+      urgency: (liveMetrics.tankers_required_10kl || 92) > 0 ? "Critical" : "Standard"
+    },
+    {
+      step_no: 3,
+      title: "Substation Peak Demand Shaving",
+      description: "Estate Electrical Wing must lock decorative lighting cutover until 18:30 and reschedule centralized air handling units to avoid coincident transformer tripping.",
+      category: "power",
+      urgency: (liveMetrics.transformer_load_percent || 70.3) > 75 ? "High" : "Standard"
+    },
+    {
+      step_no: 4,
+      title: "Sanitation Rapid Flying Squads",
+      description: `Deploy ${liveMetrics.flying_squad_teams || 7} roving sanitation units operating on 4-hour cyclical inspections across HB-3, CVR, and KMS.`,
+      category: "sanitation",
+      urgency: "High"
+    },
+    {
+      step_no: 5,
+      title: "Emergency Contingency Requisition",
+      description: `Sanction provisional emergency buffer of ₹${(liveMetrics.total_contingency_cost_inr || 205600).toLocaleString()} for fuel reserves, tanker freight, and technician overtime.`,
+      category: "finance",
+      urgency: "Approved"
+    }
+  ];
 
   return (
     <div className="space-y-6">
       {/* Top Banner & Scenario Presets */}
-      <Card className="border-indigo-200 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white shadow-md">
+      <Card className="border-indigo-200 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white shadow-md overflow-hidden">
         <CardContent className="p-4 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/60 pb-4">
             <div className="space-y-1">
@@ -365,10 +453,9 @@ export function FacilityStressSimulator({
             <div className="flex items-center gap-2 self-start sm:self-center">
               <Button
                 size="sm"
-                variant="outline"
                 onClick={handleRunBackendAi}
                 disabled={isRunningAi}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 text-xs gap-1.5 shadow-sm"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs gap-1.5 shadow-sm"
               >
                 <SparklesIcon className={`size-3.5 ${isRunningAi ? "animate-spin" : ""}`} />
                 {isRunningAi ? "Running AI Forecasters..." : "Re-Calculate AI Analytics"}
@@ -458,13 +545,13 @@ export function FacilityStressSimulator({
       {/* KPI Tiles Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {/* Reservoir Water Autonomy */}
-        <Card className="border-blue-200 bg-blue-50/30 p-3 space-y-1">
+        <Card className="border-blue-200 bg-blue-50/40 p-3 space-y-1">
           <div className="flex items-center justify-between text-xs text-blue-700">
-            <span className="font-medium flex items-center gap-1">
+            <span className="font-semibold flex items-center gap-1">
               <DropletsIcon className="size-3.5 text-blue-600" />
               Water Autonomy
             </span>
-            <Badge variant="outline" className="text-[10px] bg-white border-blue-300">
+            <Badge variant="outline" className="text-[10px] bg-white border-blue-300 font-mono">
               {liveMetrics.net_water_balance_kl ?? localSimResults.netWaterBalance} kL/day
             </Badge>
           </div>
@@ -484,13 +571,13 @@ export function FacilityStressSimulator({
         </Card>
 
         {/* Electrical Substation Load */}
-        <Card className="border-amber-200 bg-amber-50/30 p-3 space-y-1">
+        <Card className="border-amber-200 bg-amber-50/40 p-3 space-y-1">
           <div className="flex items-center justify-between text-xs text-amber-700">
-            <span className="font-medium flex items-center gap-1">
+            <span className="font-semibold flex items-center gap-1">
               <ZapIcon className="size-3.5 text-amber-600" />
               Substation 1 Load
             </span>
-            <Badge variant="outline" className="text-[10px] bg-white border-amber-300">
+            <Badge variant="outline" className="text-[10px] bg-white border-amber-300 font-mono">
               {liveMetrics.net_grid_demand_kw ?? localSimResults.netGridDemandKw} kW
             </Badge>
           </div>
@@ -507,13 +594,13 @@ export function FacilityStressSimulator({
         </Card>
 
         {/* DG Generator Fuel Autonomy */}
-        <Card className="border-purple-200 bg-purple-50/30 p-3 space-y-1">
+        <Card className="border-purple-200 bg-purple-50/40 p-3 space-y-1">
           <div className="flex items-center justify-between text-xs text-purple-700">
-            <span className="font-medium flex items-center gap-1">
+            <span className="font-semibold flex items-center gap-1">
               <FlameIcon className="size-3.5 text-purple-600" />
               DG Fuel Autonomy
             </span>
-            <Badge variant="outline" className="text-[10px] bg-white border-purple-300">
+            <Badge variant="outline" className="text-[10px] bg-white border-purple-300 font-mono">
               800L HSD
             </Badge>
           </div>
@@ -532,13 +619,13 @@ export function FacilityStressSimulator({
         </Card>
 
         {/* Hygiene Surge Pressure */}
-        <Card className="border-emerald-200 bg-emerald-50/30 p-3 space-y-1">
+        <Card className="border-emerald-200 bg-emerald-50/40 p-3 space-y-1">
           <div className="flex items-center justify-between text-xs text-emerald-700">
-            <span className="font-medium flex items-center gap-1">
+            <span className="font-semibold flex items-center gap-1">
               <ShieldAlertIcon className="size-3.5 text-emerald-600" />
               Sanitation Load
             </span>
-            <Badge variant="outline" className="text-[10px] bg-white border-emerald-300">
+            <Badge variant="outline" className="text-[10px] bg-white border-emerald-300 font-mono">
               {hygieneMultiplier}x
             </Badge>
           </div>
@@ -553,13 +640,13 @@ export function FacilityStressSimulator({
         {/* Campus Risk Index (CRI) */}
         <Card className={`col-span-2 md:col-span-1 p-3 space-y-1 border ${
           (liveCri.campus_risk_index || localSimResults.calculatedCri) >= 70
-            ? "border-rose-300 bg-rose-50/50"
+            ? "border-rose-300 bg-rose-50/60"
             : (liveCri.campus_risk_index || localSimResults.calculatedCri) >= 45
-            ? "border-amber-300 bg-amber-50/50"
-            : "border-emerald-300 bg-emerald-50/50"
+            ? "border-amber-300 bg-amber-50/60"
+            : "border-emerald-300 bg-emerald-50/60"
         }`}>
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium flex items-center gap-1 text-slate-800">
+            <span className="font-semibold flex items-center gap-1 text-slate-800">
               <GaugeIcon className="size-3.5 text-indigo-600" />
               Campus Risk Index
             </span>
@@ -582,11 +669,13 @@ export function FacilityStressSimulator({
         </Card>
       </div>
 
-      {/* Main Simulation Workbench (2 Columns: Controls + Charts/AI) */}
+      {/* ========================================================================= */}
+      {/* Simulation Workbench (2 Columns: Controls + Curves/Hostels) */}
+      {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive Tuning Controls (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-slate-200 bg-white shadow-2xs">
             <CardHeader className="pb-3 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -732,7 +821,7 @@ export function FacilityStressSimulator({
                 />
               </div>
 
-              {/* Toggles */}
+              {/* Resiliency Toggles */}
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -777,10 +866,10 @@ export function FacilityStressSimulator({
 
           {/* Action to Apply Simulation as Live Mandate */}
           {onApplyAsMandate && (
-            <Card className="border-indigo-100 bg-indigo-50/40 p-4">
+            <Card className="border-indigo-100 bg-indigo-50/50 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-0.5">
-                  <div className="text-xs font-semibold text-indigo-950 flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
                     <CheckCircle2Icon className="size-4 text-indigo-600" />
                     Commit Simulated Parameters
                   </div>
@@ -791,7 +880,7 @@ export function FacilityStressSimulator({
                 <Button
                   size="sm"
                   onClick={() => onApplyAsMandate(backendAiData || localSimResults)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1 shrink-0"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1 shrink-0 font-semibold shadow-2xs"
                 >
                   Apply As Mandate
                 </Button>
@@ -800,10 +889,10 @@ export function FacilityStressSimulator({
           )}
         </div>
 
-        {/* Right Column: 24h Stress Curves + AI Executive Report (7 cols) */}
+        {/* Right Column: 24h Stress Curves & Hostel Matrix (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {/* 24-Hour Diurnal Recharts Curve */}
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-slate-200 bg-white shadow-2xs">
             <CardHeader className="pb-2 border-b border-slate-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -944,7 +1033,7 @@ export function FacilityStressSimulator({
 
           {/* Hostel Impact Matrix Table */}
           {backendAiData?.hostel_impact_matrix && (
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-slate-200 bg-white shadow-2xs">
               <CardHeader className="pb-2 border-b border-slate-100">
                 <CardTitle className="text-sm font-bold text-slate-900">
                   Hall-by-Hall Surge Impact Matrix
@@ -1003,24 +1092,207 @@ export function FacilityStressSimulator({
               </CardContent>
             </Card>
           )}
-
-          {/* AI Executive Report from Backend Engine */}
-          {backendAiData?.ai_executive_report_markdown && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <SparklesIcon className="size-3.5 text-indigo-600" />
-                  CampusIQ AI Engine — Executive Synthesis
-                </span>
-                <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200">
-                  Backend AI Model v3.0
-                </Badge>
-              </div>
-              <SimulationAiAssessment rawMarkdown={backendAiData.ai_executive_report_markdown} />
-            </div>
-          )}
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH AI EXECUTIVE ASSESSMENT & VULNERABILITY HUB */}
+      {/* ========================================================================= */}
+      <Card className="border-slate-200 bg-white shadow-xs overflow-hidden">
+        <CardHeader className="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-indigo-600 text-white text-xs font-semibold py-0.5 px-2.5">
+                  CampusIQ AI Engine — Executive Synthesis
+                </Badge>
+                <Badge variant="outline" className="text-xs text-indigo-700 border-indigo-200 bg-white font-mono">
+                  Scenario: {scenarioName}
+                </Badge>
+              </div>
+              <CardTitle className="text-base sm:text-lg font-bold text-slate-900">
+                Facility Engineering Vulnerability Analysis & Operational Directives
+              </CardTitle>
+              <p className="text-xs text-slate-500">
+                Synthesized by CampusIQ AI Neural Forecasters & Physics Simulation Engine
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setRawMarkdownMode(!rawMarkdownMode)}
+                className="h-7 text-xs gap-1.5 text-slate-600 hover:text-slate-900"
+              >
+                <LayersIcon className="size-3" />
+                <span>{rawMarkdownMode ? "Formatted UI" : "Raw Markdown"}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopyMarkdown}
+                className="h-7 text-xs gap-1.5 shadow-2xs"
+              >
+                {copiedMd ? (
+                  <>
+                    <CheckIcon className="size-3 text-emerald-600" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <CopyIcon className="size-3" />
+                    <span>Copy Assessment</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  window.print();
+                  toast.success("Printing Facility Assessment Report");
+                }}
+                className="h-7 text-xs gap-1.5 shadow-2xs"
+              >
+                <PrinterIcon className="size-3" />
+                <span>Print</span>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 sm:p-6 space-y-6">
+          {rawMarkdownMode ? (
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 font-mono text-xs text-slate-800 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+              {backendAiData?.ai_executive_report_markdown}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Section 1: Primary Vulnerability & Telemetry Table */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <AlertTriangleIcon className="size-4 text-amber-500" />
+                  <h4 className="text-sm font-bold text-slate-900">
+                    1. Primary Vulnerability & Digital Twin Telemetry Matrix
+                  </h4>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                        <tr>
+                          <th className="px-4 py-3 border-r border-slate-200">Facility Subsystem</th>
+                          <th className="px-4 py-3 border-r border-slate-200">Nominal Baseline</th>
+                          <th className="px-4 py-3 border-r border-slate-200">Simulated Surge Trajectory</th>
+                          <th className="px-4 py-3">Critical Stress Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {vulnerabilities.map((v: any, vIdx: number) => (
+                          <tr key={vIdx} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="px-4 py-3 font-semibold text-slate-900 border-r border-slate-100">
+                              {v.subsystem}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600 border-r border-slate-100 font-mono">
+                              {v.baseline}
+                            </td>
+                            <td className="px-4 py-3 font-bold text-slate-900 border-r border-slate-100 font-mono">
+                              {v.simulated}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge
+                                className={`text-[10px] font-semibold py-0.5 px-2 ${
+                                  v.status_type === "danger"
+                                    ? "bg-rose-100 text-rose-800 border-rose-300"
+                                    : v.status_type === "warning"
+                                    ? "bg-amber-100 text-amber-800 border-amber-300"
+                                    : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                }`}
+                              >
+                                {v.status}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Chief Warden Contingency Directives Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheckIcon className="size-4 text-emerald-600" />
+                  <h4 className="text-sm font-bold text-slate-900">
+                    2. Chief Warden Contingency Directives & Operational Action Plan
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {directives.map((dir: any) => (
+                    <div
+                      key={dir.step_no}
+                      className="p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-2xs transition-all space-y-2 flex flex-col justify-between"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Badge className="bg-slate-900 text-white text-[10px] size-5 rounded-full p-0 flex items-center justify-center font-bold">
+                            {dir.step_no}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-medium ${
+                              dir.category === "water"
+                                ? "text-blue-700 bg-blue-50 border-blue-200"
+                                : dir.category === "power"
+                                ? "text-amber-700 bg-amber-50 border-amber-200"
+                                : dir.category === "sanitation"
+                                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                                : "text-purple-700 bg-purple-50 border-purple-200"
+                            }`}
+                          >
+                            {dir.category?.toUpperCase()}
+                          </Badge>
+                        </div>
+                        <h5 className="text-xs font-bold text-slate-900">
+                          {dir.title}
+                        </h5>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          {dir.description}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Urgency Level:</span>
+                        <strong className="text-slate-700">{dir.urgency}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Commit Footer */}
+              {onApplyAsMandate && (
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <p className="text-xs text-slate-500">
+                    Commit these simulated directives and resource allocations directly to the active festival mandate pack.
+                  </p>
+                  <Button
+                    onClick={() => onApplyAsMandate(backendAiData || localSimResults)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold gap-1.5 shadow-2xs"
+                  >
+                    <CheckCircle2Icon className="size-3.5" />
+                    Commit Simulated Plan to Live Mandate
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
