@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ActivityIcon, SparklesIcon, ShieldCheckIcon } from "lucide-react";
 
 export default function EstateOfficerSimulationPage() {
-  const role = ROLES.find((r) => r.id === "estate-officer") || ROLES[0];
+  const role = ROLES.find((r) => r.id === "estate_officer") || ROLES[6];
   const navItems = getEstateOfficerNav();
 
   return (

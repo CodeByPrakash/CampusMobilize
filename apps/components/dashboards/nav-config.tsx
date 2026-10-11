@@ -270,7 +270,7 @@ export const getDirectorNav = (): NavItemConfig[] => [
   },
   {
     title: "Campus Simulation",
-    url: "/simulation",
+    url: "/director/simulation",
     icon: <PlayCircleIcon className="size-4" />,
     badge: "What-If",
   },
@@ -291,3 +291,31 @@ export const getDirectorNav = (): NavItemConfig[] => [
     badge: "4 Halls",
   },
 ];
+
+export const getNavForRoleId = (roleId?: string): NavItemConfig[] => {
+  switch (roleId) {
+    case "director":
+      return getDirectorNav();
+    case "estate_officer":
+    case "estate-officer":
+      return getEstateOfficerNav();
+    case "chief_warden":
+    case "chief-warden":
+      return getChiefWardenNav();
+    case "warden":
+      return getWardenNav();
+    case "caretaker":
+    case "care-taker":
+      return getCaretakerNav();
+    case "hostel_rep":
+    case "hostel-rep":
+      return getHostelRepNav();
+    case "cr":
+      return getCrNav();
+    case "student":
+      return getStudentNav();
+    default:
+      return getDirectorNav();
+  }
+};
+
