@@ -39,13 +39,38 @@ import {
 export function SustainabilityScoreCharts() {
   const [selectedMetric, setSelectedMetric] = React.useState<"composite" | "energy" | "water" | "carbon">("composite");
   const [timeRange, setTimeRange] = React.useState<"7d" | "all">("all");
+  const [scoreData, setScoreData] = React.useState<any[]>(DAILY_SCORE_TRENDS);
+  const [dbKpis, setDbKpis] = React.useState<any>({
+    sustainabilityScore: 86.4,
+    campusRiskIndex: 31,
+    cleanEnergyShare: 38.4,
+    waterRecoveryEfficiency: 84.2,
+    totalComplaints: 380,
+  });
+  const [isDbLoaded, setIsDbLoaded] = React.useState(false);
+
+  // Fetch real score data from Neon PostgreSQL database
+  React.useEffect(() => {
+    fetch("/api/sustainability/score-data")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.trends && data.trends.length > 0) {
+          setScoreData(data.trends);
+          if (data.kpis) setDbKpis(data.kpis);
+          setIsDbLoaded(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Score DB sync notice:", err);
+      });
+  }, []);
 
   const displayedData = React.useMemo(() => {
     if (timeRange === "7d") {
-      return DAILY_SCORE_TRENDS.slice(-7);
+      return scoreData.slice(-7);
     }
-    return DAILY_SCORE_TRENDS;
-  }, [timeRange]);
+    return scoreData;
+  }, [scoreData, timeRange]);
 
   return (
     <div className="space-y-6">
@@ -57,11 +82,11 @@ export function SustainabilityScoreCharts() {
               <CardDescription>Sustainability AI Score</CardDescription>
               <Badge variant="secondary" className="text-[10px] gap-1 font-mono">
                 <SparklesIcon className="size-3" />
-                AI Verified
+                {isDbLoaded ? "Live DB" : "AI Verified"}
               </Badge>
             </div>
             <CardTitle className="text-3xl font-extrabold tabular-nums tracking-tight">
-              86.4
+              {dbKpis.sustainabilityScore}
               <span className="text-sm font-normal text-muted-foreground"> / 100</span>
             </CardTitle>
           </CardHeader>
@@ -79,11 +104,11 @@ export function SustainabilityScoreCharts() {
             <div className="flex items-center justify-between">
               <CardDescription>Campus Risk Index (CRI)</CardDescription>
               <Badge variant="outline" className="text-[10px] font-mono">
-                Inverse Risk
+                {isDbLoaded ? "Live DB" : "Inverse Risk"}
               </Badge>
             </div>
             <CardTitle className="text-3xl font-extrabold tabular-nums tracking-tight">
-              31
+              {dbKpis.campusRiskIndex}
               <span className="text-sm font-normal text-muted-foreground"> / 100</span>
             </CardTitle>
           </CardHeader>
@@ -103,7 +128,7 @@ export function SustainabilityScoreCharts() {
               <ZapIcon className="size-3.5 text-muted-foreground" />
             </div>
             <CardTitle className="text-3xl font-extrabold tabular-nums tracking-tight">
-              38.4%
+              {dbKpis.cleanEnergyShare}%
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground flex items-center justify-between">
@@ -115,11 +140,11 @@ export function SustainabilityScoreCharts() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription>Water Recycling Efficiency</CardDescription>
+              <CardDescription>Water Recovery Efficiency</CardDescription>
               <DropletsIcon className="size-3.5 text-muted-foreground" />
             </div>
             <CardTitle className="text-3xl font-extrabold tabular-nums tracking-tight">
-              84.2%
+              {dbKpis.waterRecoveryEfficiency}%
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground flex items-center justify-between">

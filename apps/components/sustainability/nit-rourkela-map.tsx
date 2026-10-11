@@ -78,15 +78,40 @@ const BUILDINGS_25D: BuildingFootprint[] = [
 
 export function NitRourkelaMap() {
   const [selectedCategory, setSelectedCategory] = React.useState<SustainabilityCategory>("all");
+  const [places, setPlaces] = React.useState<CampusPlace[]>(CAMPUS_PLACES);
+  const [heatmapPoints, setHeatmapPoints] = React.useState<HeatmapPoint[]>(HEATMAP_POINTS);
+  const [dbSummary, setDbSummary] = React.useState<{ totalComplaints: number; openComplaints: number; highRiskComplaints: number } | null>(null);
+  const [dbConnected, setDbConnected] = React.useState(false);
   const [selectedPlace, setSelectedPlace] = React.useState<CampusPlace | null>(CAMPUS_PLACES[3]); // default: Substation 1
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showHeatmap, setShowHeatmap] = React.useState(true);
   const [mapTheme, setMapTheme] = React.useState<"uber-light" | "uber-dark">("uber-light");
   const [isSimulatingDispatch, setIsSimulatingDispatch] = React.useState(false);
 
+  // Fetch real data from backend / Neon PostgreSQL database
+  React.useEffect(() => {
+    fetch("/api/sustainability/map-data")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.places && data.places.length > 0) {
+          setPlaces(data.places);
+          if (data.heatmapPoints && data.heatmapPoints.length > 0) {
+            setHeatmapPoints(data.heatmapPoints);
+          }
+          if (data.summary) {
+            setDbSummary(data.summary);
+          }
+          setDbConnected(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Database sync notice:", err);
+      });
+  }, []);
+
   // Filter places based on category and search query
   const filteredPlaces = React.useMemo(() => {
-    return CAMPUS_PLACES.filter((place) => {
+    return places.filter((place) => {
       const matchCat = selectedCategory === "all" || place.category === selectedCategory;
       const matchSearch =
         searchQuery === "" ||
@@ -94,13 +119,13 @@ export function NitRourkelaMap() {
         place.sector.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [places, selectedCategory, searchQuery]);
 
   // Filter heatmap points based on category
   const filteredHeatmapPoints = React.useMemo(() => {
-    if (selectedCategory === "all") return HEATMAP_POINTS;
-    return HEATMAP_POINTS.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedCategory === "all") return heatmapPoints;
+    return heatmapPoints.filter((p) => p.category === selectedCategory);
+  }, [heatmapPoints, selectedCategory]);
 
   const geoToPercent = (lat: number, lng: number): { x: number; y: number } => {
     const minLat = 22.2498;
@@ -507,10 +532,16 @@ export function NitRourkelaMap() {
 
           {/* Floating Ola/Uber Map Overlay Controls */}
           {/* Top-Left Campus Pill */}
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-full bg-background/95 px-3 py-1.5 border border-border shadow-sm backdrop-blur-xs text-xs font-semibold text-foreground">
+          <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2 rounded-full bg-background/95 px-3 py-1.5 border border-border shadow-sm backdrop-blur-xs text-xs font-semibold text-foreground">
             <CompassIcon className="size-3.5 text-primary" />
             <span>NIT Rourkela • White & Shaded GIS</span>
             <span className="text-[11px] font-mono text-muted-foreground font-normal">462 Acres</span>
+            {dbConnected && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 font-mono text-primary border-primary/30 bg-primary/5">
+                <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                <span>DB: {dbSummary?.totalComplaints || 380} Tickets</span>
+              </Badge>
+            )}
           </div>
 
           {/* Bottom-Right Zoom / Reset Pill */}
