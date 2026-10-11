@@ -27,3 +27,5 @@ bcrypt>=4.0.0
 # Testing & HTTP Client
 pytest>=8.0.0
 httpx>=0.25.0
+
+resend
