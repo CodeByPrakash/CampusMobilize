@@ -6,7 +6,7 @@ and continuous learning predictions.
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, date
-from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File, Header
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -174,11 +174,20 @@ def get_utility_forecasts(
     utility: str = Query("electricity", description="electricity or water"),
     months_ahead: int = Query(3, ge=1, le=12),
     hostel_code: Optional[str] = Query("HB-3"),
+    x_actor_role: Optional[str] = Header(None, alias="X-Actor-Role"),
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
     Returns quantile forecast predictions with 90% confidence interval (§8.5).
     """
+    if x_actor_role:
+        caller_role = x_actor_role.upper()
+        if caller_role not in ["ESTATE_OFFICER", "CHIEF_WARDEN", "DIRECTOR", "ADMIN"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"FORBIDDEN_ROLE: Role {caller_role} is not authorized to access utility forecasts"
+            )
+
     # Fetch historical bills from db
     hostel = db.query(Hostel).filter(Hostel.code == hostel_code.upper()).first() if hostel_code else None
     query = db.query(UtilityBill).filter(UtilityBill.utility == utility.lower())

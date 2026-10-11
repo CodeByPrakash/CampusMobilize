@@ -15,7 +15,8 @@ from ..models import (
     Hostel, Block, Room, User, SlaPolicy
 )
 from ..schemas.complaints import (
-    ComplaintCreate, ComplaintResponse, EventRequest, TimelineEventResponse
+    ComplaintCreate, ComplaintResponse, EventRequest, TimelineEventResponse,
+    MergeRequest, PriorityOverrideRequest
 )
 from ..ai.engine import CampusAIEngine
 
@@ -115,6 +116,13 @@ def create_complaint(
     3. P2-P4: sets OPEN.
     4. Writes initial complaint_events timeline entry.
     """
+    caller_role = (payload.actor_role or persona.get("role") or "STUDENT").upper()
+    if caller_role in ["ESTATE_OFFICER", "DIRECTOR"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FORBIDDEN_ROLE: Role {caller_role} is not authorized to file complaints"
+        )
+
     now = datetime.now(timezone.utc)
     ticket_no = generate_ticket_no(db)
 
@@ -520,6 +528,13 @@ def upvote_complaint(
     db: Session = Depends(get_db)
 ):
     """Allows students in same hostel to upvote a complaint, raising community visibility."""
+    caller_role = persona.get("role", "STUDENT").upper()
+    if caller_role not in ["STUDENT", "CR", "HOSTEL_REP", "ADMIN"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FORBIDDEN_ROLE: Role {caller_role} is not authorized to upvote complaints"
+        )
+
     complaint = db.query(Complaint).filter(
         (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
     ).first()
@@ -529,3 +544,139 @@ def upvote_complaint(
     complaint.upvote_count += 1
     db.commit()
     return {"ticket_no": complaint.ticket_no, "upvote_count": complaint.upvote_count}
+
+
+# =========================================================================
+# 5. DEDUPLICATION / MERGE COMPLAINTS (§2.3)
+# =========================================================================
+@router.post("/{id_or_ticket}/merge", response_model=ComplaintResponse)
+def merge_duplicate_complaints(
+    id_or_ticket: str,
+    payload: MergeRequest,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    Deduplication endpoint (§2.3):
+    Allows HOSTEL_REP, WARDEN, CHIEF_WARDEN, or ADMIN to merge duplicate complaints
+    into a master parent ticket.
+    """
+    actor_role = persona["role"]
+    if actor_role not in ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FORBIDDEN_ROLE: Role {actor_role} is not authorized to merge duplicate complaints"
+        )
+
+    parent = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="Master complaint not found")
+
+    now = datetime.now(timezone.utc)
+    for child_id in payload.duplicate_ticket_ids:
+        child = db.query(Complaint).filter(
+            (Complaint.id == child_id) | (Complaint.ticket_no == child_id)
+        ).first()
+        if child and child.id != parent.id:
+            child.duplicate_of = parent.id
+            old_status = child.status
+            child.status = "REJECTED"
+            parent.upvote_count += (1 + child.upvote_count)
+
+            # Record child rejection/merge event
+            event_child = ComplaintEvent(
+                complaint_id=child.id,
+                from_status=old_status,
+                to_status="REJECTED",
+                actor_id=persona.get("user_id") or "usr-rep-rohan",
+                actor_role=actor_role,
+                note=f"Auto-merged into master ticket #{parent.ticket_no}. {payload.reason}",
+                created_at=now
+            )
+            db.add(event_child)
+
+            # Record parent merge timeline event
+            event_parent = ComplaintEvent(
+                complaint_id=parent.id,
+                from_status=parent.status,
+                to_status=parent.status,
+                actor_id=persona.get("user_id") or "usr-rep-rohan",
+                actor_role=actor_role,
+                note=f"Merged duplicate complaint #{child.ticket_no} into this ticket",
+                created_at=now
+            )
+            db.add(event_parent)
+
+    db.commit()
+    db.refresh(parent)
+    return parent
+
+
+# =========================================================================
+# 6. PRIORITY ESCALATION (§2.3)
+# =========================================================================
+@router.post("/{id_or_ticket}/priority", response_model=ComplaintResponse)
+def override_complaint_priority(
+    id_or_ticket: str,
+    payload: PriorityOverrideRequest,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    Priority escalation endpoint (§2.3):
+    Allows HOSTEL_REP to override/raise priority by exactly 1 class with logged justification.
+    WARDEN, CHIEF_WARDEN, and ADMIN can set any priority.
+    """
+    actor_role = persona["role"]
+    if actor_role not in ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FORBIDDEN_ROLE: Role {actor_role} is not authorized to override priority"
+        )
+
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    curr_priority = (complaint.priority or "P3").upper()
+    target_priority = payload.new_priority.upper()
+
+    priority_order = {"P4": 4, "P3": 3, "P2": 2, "P1": 1}
+    curr_rank = priority_order.get(curr_priority, 3)
+    target_rank = priority_order.get(target_priority, 3)
+
+    # HOSTEL_REP constraint: can only raise priority by EXACTLY 1 level (§2.3)
+    if actor_role == "HOSTEL_REP":
+        if target_rank != curr_rank - 1:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Hostel Representative can only escalate priority by exactly 1 class (current: {curr_priority}, requested: {target_priority})"
+            )
+
+    now = datetime.now(timezone.utc)
+    old_priority = complaint.priority
+    complaint.priority = target_priority
+
+    # Recalculate SLA deadline and risk score
+    sla_h = get_sla_hours(target_priority, db)
+    complaint.sla_deadline = now + timedelta(hours=sla_h)
+    if target_priority == "P1":
+        complaint.risk_score = max(complaint.risk_score or 50.0, 85.0)
+
+    event = ComplaintEvent(
+        complaint_id=complaint.id,
+        from_status=complaint.status,
+        to_status=complaint.status,
+        actor_id=persona.get("user_id") or f"user-{actor_role.lower()}",
+        actor_role=actor_role,
+        note=f"Priority escalated from {old_priority} to {target_priority}. Justification: {payload.justification}",
+        created_at=now
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(complaint)
+    return complaint

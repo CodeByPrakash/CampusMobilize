@@ -227,7 +227,13 @@ def approve_reward(
     x_actor_role: Optional[str] = Header(None, alias="X-Actor-Role"),
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
-    """Chief Warden approval endpoint for proposed rewards (§11.2)."""
+    caller_role = (x_actor_role or "CHIEF_WARDEN").upper()
+    if caller_role not in ["CHIEF_WARDEN", "ADMIN"]:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FORBIDDEN_ROLE: Role {caller_role} is not authorized to approve rewards"
+        )
+
     reward = db.query(RewardLedger).filter(RewardLedger.id == reward_id).first()
     if not reward:
         raise HTTPException(status_code=404, detail="Reward not found")

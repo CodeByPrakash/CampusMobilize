@@ -40,6 +40,16 @@ class EventRequest(BaseModel):
     actor_role: Optional[str] = None
 
 
+class MergeRequest(BaseModel):
+    duplicate_ticket_ids: List[str] = Field(..., min_length=1, description="List of ticket IDs to merge into master")
+    reason: Optional[str] = "Identified as duplicate by Hostel Representative"
+
+
+class PriorityOverrideRequest(BaseModel):
+    new_priority: str = Field(..., description="Target priority P1, P2, P3, or P4")
+    justification: str = Field(..., min_length=5, description="Logged justification for priority change")
+
+
 class ComplaintResponse(BaseModel):
     model_config = {"from_attributes": True}
 
