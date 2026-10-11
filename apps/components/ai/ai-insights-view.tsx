@@ -18,7 +18,6 @@ import {
   CopyIcon,
   CheckIcon,
   TrendingDownIcon,
-  ClockIcon,
   LightbulbIcon,
 } from "lucide-react";
 import { toast } from "sonner";

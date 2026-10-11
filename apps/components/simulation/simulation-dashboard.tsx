@@ -36,6 +36,7 @@ import {
   Area,
 } from "recharts";
 import { toast } from "sonner";
+import { SimulationAiAssessment } from "./simulation-ai-assessment";
 
 export function SimulationDashboard() {
   // Water simulation state
@@ -232,7 +233,28 @@ Provide:
     } catch {
       toast.error("Could not complete AI assessment");
       setAiAssessment(
-        "Simulation Diagnosis: Transformer load is approaching 78% of rated limit. Recommend shifting water pump schedule to off-peak hours (14:00 - 17:00) to balance grid draw and avoid tariff penalties."
+        `## 1. Primary Vulnerability Analysis
+| Domain | Current State | Risk Indicator | Immediate Vulnerability |
+|---|---|---|---|
+| **Electrical** | ${simResults.netGridDemandKw} kW Net Demand (${simResults.transformerLoadPercent}% Substation Load) | Elevated Transformer Stress | Potential breaker trip during peak evening hours |
+| **Water** | Net Balance: ${simResults.netWaterBalance} kL/day (Leakage: ${leakagePercent}%) | Reservoir Buffer ${simResults.reservoirHours} hrs | Supply disruption if recharge pump fails |
+
+## 2. Three Actionable Preventive Measures
+| # | Action | Implementation Step | Expected Outcome |
+|---|---|---|---|
+| **1** | **Off-Peak Water Pumping** | Shift booster cycle from 18:00 to 14:00 | Reduces peak coincidence by 85 kW |
+| **2** | **Acoustic Pipe Leak Audit** | Deploy works squad to Sector 2 branch line | Recovers up to 4% of lost water |
+| **3** | **Geyser Auto-Cutoff Tuning** | Cap thermostat at 58°C in HB-3 & CVR | Extends collector life & prevents degradation |
+
+## 3. Projected Resource Savings & Cost Risk
+| Parameter | Baseline | Simulated Trajectory | Financial Impact |
+|---|---|---|---|
+| **Daily Utility Cost** | ₹ 74,500 | ₹ ${Math.round(simResults.totalDailyCost).toLocaleString()} | Projected ₹ ${(Math.abs(simResults.totalDailyCost - 74500)).toLocaleString()} deviation |
+| **Composite Risk Index** | 32 / 100 | ${simResults.calculatedCri} / 100 | ${simResults.calculatedCri > 50 ? "High Risk Alert" : "Manageable Risk Margin"} |
+
+### TL;DR for Estate Office
+- Maintain transformer load under 80% to avoid TPWODL penalty tariffs.
+- Target water loss reduction below 10% through immediate gasket replacements in CVR.`
       );
     } finally {
       setIsAiAssessing(false);
@@ -565,7 +587,7 @@ Provide:
 
                 {/* Energy Tab */}
                 <TabsContent value="energy">
-                  <div className="h-64 w-full">
+                  <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={hourlyChartData}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -603,7 +625,7 @@ Provide:
 
                 {/* Water Tab */}
                 <TabsContent value="water">
-                  <div className="h-64 w-full">
+                  <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={hourlyChartData}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -641,7 +663,7 @@ Provide:
 
                 {/* Risk Tab */}
                 <TabsContent value="risk">
-                  <div className="h-64 w-full">
+                  <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={hourlyChartData}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -679,41 +701,43 @@ Provide:
               </Tabs>
             </CardContent>
           </Card>
-
-          {/* AI Simulation Assessment CTA & Result */}
-          <Card className="shadow-xs border-primary/20 bg-primary/5">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <SparklesIcon className="size-4 text-primary" />
-                  <CardTitle className="text-sm font-semibold">
-                    DeepBot AI Contingency Strategy
-                  </CardTitle>
-                </div>
-                <Button
-                  size="sm"
-                  disabled={isAiAssessing}
-                  onClick={handleRunAiAssessment}
-                  className="h-8 text-xs gap-1.5"
-                >
-                  <PlayCircleIcon className="size-3.5" />
-                  <span>{isAiAssessing ? "Simulating with AI..." : "Run AI Assessment"}</span>
-                </Button>
-              </div>
-              <CardDescription className="text-xs">
-                Dispatches your live simulated parameters to the DeepBot Ollama backend to generate an automated facility action plan.
-              </CardDescription>
-            </CardHeader>
-            {aiAssessment && (
-              <CardContent className="pt-0">
-                <div className="rounded-lg border bg-card p-3.5 text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                  {aiAssessment}
-                </div>
-              </CardContent>
-            )}
-          </Card>
         </div>
       </div>
+
+      {/* DeepBot AI Contingency Strategy Section (Full-Width Bottom Section Across Both Columns) */}
+      <Card className="shadow-xs border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="size-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                <SparklesIcon className="size-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-bold text-foreground">
+                  DeepBot AI Contingency Strategy
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Dispatches live simulated parameters to the DeepBot Ollama backend to generate an automated engineering action plan.
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              disabled={isAiAssessing}
+              onClick={handleRunAiAssessment}
+              className="h-8 text-xs gap-1.5 shrink-0 px-3"
+            >
+              <PlayCircleIcon className="size-3.5" />
+              <span>{isAiAssessing ? "Simulating with AI..." : "Run AI Assessment"}</span>
+            </Button>
+          </div>
+        </CardHeader>
+        {aiAssessment && (
+          <CardContent className="pt-0">
+            <SimulationAiAssessment rawMarkdown={aiAssessment} />
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }
