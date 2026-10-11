@@ -11,34 +11,11 @@ import {
   Building2Icon,
 } from "lucide-react";
 
+import { getDirectorNav } from "@/components/dashboards/nav-config";
+
 export default function DirectorPage() {
   const role = ROLES.find((r) => r.id === "director") || ROLES[7];
-
-  const navItems = [
-    {
-      title: "Risk Index (CRI)",
-      url: "/director/dashboard",
-      icon: <ActivityIcon className="size-4" />,
-      isActive: true,
-      badge: "31 / 100",
-    },
-    {
-      title: "Living Standards",
-      url: "/director/dashboard",
-      icon: <TrophyIcon className="size-4" />,
-    },
-    {
-      title: "Governance Audits",
-      url: "/director/dashboard",
-      icon: <ShieldCheckIcon className="size-4" />,
-    },
-    {
-      title: "Halls of Residence",
-      url: "/director/dashboard",
-      icon: <Building2Icon className="size-4" />,
-      badge: "4 Halls",
-    },
-  ];
+  const navItems = getDirectorNav();
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
@@ -46,3 +23,4 @@ export default function DirectorPage() {
     </RoleDashboardShell>
   );
 }
+

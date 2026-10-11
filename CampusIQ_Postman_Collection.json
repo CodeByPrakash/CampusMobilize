@@ -208,6 +208,32 @@
           }
         },
         {
+          "name": "Step 3b: Withdraw / Delete Complaint (Student Governance)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-student-aarav"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}"]
+            },
+            "description": "Submitting student can delete/retract their complaint as long as it has NOT been escalated to higher authorities."
+          }
+        },
+        {
           "name": "Step 4: Hostel Rep Verify (Rohan Mehta)",
           "request": {
             "method": "POST",

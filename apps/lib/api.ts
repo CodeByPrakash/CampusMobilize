@@ -235,6 +235,19 @@ export async function apiUpvoteComplaint(idOrTicket: string) {
   return res.json()
 }
 
+export async function apiDeleteComplaint(idOrTicket: string) {
+  const res = await fetch(`${API_BASE_URL}/complaints/${idOrTicket}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || `Delete failed: ${res.statusText}`)
+  }
+  return res.json()
+}
+
+
 /**
  * Analytics, Utilities & Rewards Endpoints
  */
@@ -276,3 +289,201 @@ export async function apiApproveReward(rewardId: string) {
   }
   return res.json()
 }
+
+export async function apiProposeReward(data: {
+  user_id: string
+  kind: string
+  note?: string
+  month?: string
+}) {
+  const res = await fetch(`${API_BASE_URL}/rewards/propose`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || "Failed to propose reward")
+  }
+  return res.json()
+}
+
+export async function apiGetHostels() {
+  const res = await fetch(`${API_BASE_URL}/meta/hostels`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load hostels")
+  return res.json()
+}
+
+export async function apiGetCategories() {
+  const res = await fetch(`${API_BASE_URL}/meta/categories`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load categories")
+  return res.json()
+}
+
+export async function apiGetCampusRatings() {
+  const res = await fetch(`${API_BASE_URL}/performance/campus`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load campus ratings")
+  return res.json()
+}
+
+export async function apiGetHostelPerformance(hostelCode: string = "HB-3") {
+  const res = await fetch(`${API_BASE_URL}/performance/hostel/${hostelCode}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load hostel staff performance")
+  return res.json()
+}
+
+export async function apiGetMyPerformance() {
+  const res = await fetch(`${API_BASE_URL}/performance/my`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load my performance")
+  return res.json()
+}
+
+export async function apiGetEvents() {
+  const res = await fetch(`${API_BASE_URL}/events`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load campus events")
+  return res.json()
+}
+
+export async function apiGetEventPrebrief(eventId: string) {
+  const res = await fetch(`${API_BASE_URL}/events/${eventId}/prebrief`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load event pre-brief")
+  return res.json()
+}
+
+export async function apiGetUtilityBills() {
+  const res = await fetch(`${API_BASE_URL}/utilities/bills`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load utility bills")
+  return res.json()
+}
+
+export async function apiGetContinuousLearningStatus() {
+  const res = await fetch(`${API_BASE_URL}/ai/continuous-learning/status`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load learning status")
+  return res.json()
+}
+
+export async function apiGetRankedQueue(hostelCode?: string) {
+  const url = hostelCode
+    ? `${API_BASE_URL}/ai/queue?hostel_code=${hostelCode}`
+    : `${API_BASE_URL}/ai/queue`
+  const res = await fetch(url, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load ranked queue")
+  return res.json()
+}
+
+export async function apiPredictCategory(title: string, description: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/ai/triage`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        title,
+        description,
+        hostel_code: "HB-3",
+      }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        predicted_category: data.category || data.predicted_category || "ELECTRICAL",
+        confidence: data.confidence || 0.88,
+      }
+    }
+  } catch {
+    // fallback
+  }
+
+  const text = `${title} ${description}`.toLowerCase()
+  if (
+    text.includes("water") ||
+    text.includes("leak") ||
+    text.includes("tap") ||
+    text.includes("flush") ||
+    text.includes("pipe") ||
+    text.includes("cooler") ||
+    text.includes("ro")
+  ) {
+    return { predicted_category: "PLUMBING", confidence: 0.92 }
+  }
+  if (
+    text.includes("light") ||
+    text.includes("fan") ||
+    text.includes("switch") ||
+    text.includes("spark") ||
+    text.includes("power") ||
+    text.includes("mcb") ||
+    text.includes("wire")
+  ) {
+    return { predicted_category: "ELECTRICAL", confidence: 0.95 }
+  }
+  if (
+    text.includes("door") ||
+    text.includes("lock") ||
+    text.includes("window") ||
+    text.includes("bed") ||
+    text.includes("cupboard") ||
+    text.includes("chair") ||
+    text.includes("desk")
+  ) {
+    return { predicted_category: "CARPENTRY", confidence: 0.9 }
+  }
+  return { predicted_category: "CIVIL", confidence: 0.85 }
+}
+
+export async function apiUploadToS3(
+  file: File,
+  folder: string = "complaints"
+): Promise<{ success: boolean; url: string; filename: string; bucket: string }> {
+  const persona = getActivePersona()
+  const formData = new FormData()
+  formData.append("file", file)
+
+  const res = await fetch(`${API_BASE_URL}/uploads?folder=${folder}`, {
+    method: "POST",
+    headers: {
+      "X-Actor-Role": persona.role,
+      "X-Actor-Id": persona.actor_id,
+      "X-Hostel-Code": persona.hostel_code,
+    },
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || "Failed to upload image to S3 bucket")
+  }
+  return res.json()
+}
+
+
+

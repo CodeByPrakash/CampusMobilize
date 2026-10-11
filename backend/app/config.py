@@ -25,6 +25,13 @@ class Settings:
     MAIL_ENABLED: bool = os.getenv("MAIL_ENABLED", "true" if os.getenv("RESEND_API_KEY") else "false").lower() in ("true", "1")
     MAIL_FROM: str = os.getenv("MAIL_FROM", os.getenv("RESEND_FROM", "CampusIQ <onboarding@resend.dev>"))
     
+    # S3 Object Storage
+    AWS_ENDPOINT_URL_S3: str = os.getenv("AWS_ENDPOINT_URL_S3", "")
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    AWS_REGION: str = os.getenv("AWS_REGION", "ap-southeast-1")
+    S3_BUCKET: str = os.getenv("S3_BUCKET", "evidences")
+
     # AI & Models
     ML_MODELS_DIR: str = os.getenv(
         "ML_MODELS_DIR",
@@ -34,6 +41,7 @@ class Settings:
         "SEED_DATA_DIR",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "seed_data"))
     )
+
 
 
 settings = Settings()

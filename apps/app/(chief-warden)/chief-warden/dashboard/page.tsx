@@ -11,34 +11,11 @@ import {
   SparklesIcon,
 } from "lucide-react";
 
+import { getChiefWardenNav } from "@/components/dashboards/nav-config";
+
 export default function ChiefWardenPage() {
   const role = ROLES.find((r) => r.id === "chief_warden") || ROLES[5];
-
-  const navItems = [
-    {
-      title: "Campus Command",
-      url: "/chief-warden/dashboard",
-      icon: <Building2Icon className="size-4" />,
-      isActive: true,
-      badge: "4 Halls",
-    },
-    {
-      title: "Rewards Ledger",
-      url: "/chief-warden/dashboard",
-      icon: <AwardIcon className="size-4" />,
-      badge: "2 Pending",
-    },
-    {
-      title: "Force Escalations",
-      url: "/chief-warden/dashboard",
-      icon: <ShieldAlertIcon className="size-4" />,
-    },
-    {
-      title: "Festival Pre-Briefs",
-      url: "/chief-warden/dashboard",
-      icon: <SparklesIcon className="size-4" />,
-    },
-  ];
+  const navItems = getChiefWardenNav();
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
@@ -46,3 +23,4 @@ export default function ChiefWardenPage() {
     </RoleDashboardShell>
   );
 }
+
