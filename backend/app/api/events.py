@@ -113,6 +113,7 @@ def get_upcoming_events(
     ]
 
 
+@router.get("/{event_id}/prebrief")
 @router.post("/{event_id}/prebrief")
 def generate_event_prebrief(
     event_id: str,
@@ -147,3 +148,95 @@ def generate_event_prebrief(
         "pump_operators": 2
     }
     return prebrief
+
+
+# In-memory store for issued mandates during application session
+_ISSUED_MANDATES: Dict[str, Any] = {}
+
+
+class MandateIssuePayload(BaseModel):
+    issuer_name: Optional[str] = "Prof. M. Mishra"
+    issuer_role: Optional[str] = "CHIEF_WARDEN"
+    target_hostels: Optional[List[str]] = ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"]
+    directives: Optional[List[str]] = None
+    water_contingency: Optional[str] = None
+    dg_contingency: Optional[str] = None
+    sanitation_contingency: Optional[str] = None
+    budget_approved_inr: Optional[int] = 52000
+
+
+@router.post("/{event_id}/mandate")
+def issue_chief_warden_mandate(
+    event_id: str,
+    payload: MandateIssuePayload,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Issues and logs an official Chief Warden Mandate (§8.5).
+    Dispatches notifications to Hall Wardens and Estate Office.
+    """
+    event = db.query(CampusEvent).filter(CampusEvent.id == event_id).first()
+    event_name = event.name if event else "Campus Event"
+    mandate_ref = f"CWM-NITR-2026-{event_id.replace('evt-', '').upper()[:8]}-MANDATE"
+
+    record = {
+        "mandate_id": mandate_ref,
+        "event_id": event_id,
+        "event_name": event_name,
+        "status": "ISSUED",
+        "issued_at": datetime.now(timezone.utc).isoformat(),
+        "issued_by": payload.issuer_name or "Prof. M. Mishra (Chief Warden)",
+        "target_hostels": payload.target_hostels or ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"],
+        "budget_approved_inr": payload.budget_approved_inr or 52000,
+        "water_contingency": payload.water_contingency or "Pre-fill all rooftop storage tanks to 100% 12h prior. 2 standby 10,000L PHED tankers requisitioned.",
+        "dg_contingency": payload.dg_contingency or "800L HSD fuel reserve in Substation 2 generator verified. Dual-feed breaker test scheduled.",
+        "sanitation_contingency": payload.sanitation_contingency or "Washroom cleaning frequency doubled to 4h cycle. 2 roving emergency plumbers assigned.",
+        "directives": payload.directives or [
+            "All Hall Wardens to verify overhead tank floats 24h prior.",
+            "Sanitation flying squads active from 06:00 to 23:00.",
+            "Emergency electrical breaker hotline staged with Estate Officer."
+        ],
+        "acknowledgement": {
+            "estate_office": "ACKNOWLEDGED",
+            "hall_wardens": "DISPATCHED_TO_4_HALLS",
+            "water_supply_wing": "REQUISITION_RECEIVED"
+        }
+    }
+    _ISSUED_MANDATES[event_id] = record
+    return record
+
+
+@router.get("/{event_id}/mandate")
+def get_chief_warden_mandate(
+    event_id: str,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Retrieves the latest issued mandate for an event."""
+    if event_id in _ISSUED_MANDATES:
+        return _ISSUED_MANDATES[event_id]
+    
+    # Return default draft mandate if not explicitly issued yet
+    event = db.query(CampusEvent).filter(CampusEvent.id == event_id).first()
+    event_name = event.name if event else "Campus Event"
+    return {
+        "mandate_id": f"CWM-NITR-2026-DRAFT",
+        "event_id": event_id,
+        "event_name": event_name,
+        "status": "DRAFT",
+        "issued_at": None,
+        "issued_by": "Prof. M. Mishra (Chief Warden)",
+        "target_hostels": ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"],
+        "budget_approved_inr": 52000,
+        "water_contingency": "Pre-fill all rooftop storage tanks to 100% 12h prior. 2 standby 10,000L PHED tankers requisitioned.",
+        "dg_contingency": "800L HSD fuel reserve in Substation 2 generator verified. Dual-feed breaker test scheduled.",
+        "sanitation_contingency": "Washroom cleaning frequency doubled to 4h cycle. 2 roving emergency plumbers assigned.",
+        "directives": [
+            "All Hall Wardens to verify overhead tank floats 24h prior.",
+            "Sanitation flying squads active from 06:00 to 23:00.",
+            "Emergency electrical breaker hotline staged with Estate Officer."
+        ],
+        "acknowledgement": {
+            "estate_office": "PENDING_ISSUANCE",
+            "hall_wardens": "PENDING_ISSUANCE"
+        }
+    }

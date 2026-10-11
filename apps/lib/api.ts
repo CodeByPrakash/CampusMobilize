@@ -367,7 +367,50 @@ export async function apiGetEventPrebrief(eventId: string) {
     method: "GET",
     headers: getAuthHeaders(),
   })
-  if (!res.ok) throw new Error("Failed to load event pre-brief")
+  if (!res.ok) {
+    // Retry with POST if GET fails
+    const postRes = await fetch(`${API_BASE_URL}/events/${eventId}/prebrief`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    })
+    if (!postRes.ok) throw new Error("Failed to load event pre-brief")
+    return postRes.json()
+  }
+  return res.json()
+}
+
+export async function apiIssueChiefWardenMandate(eventId: string, payload: Record<string, any> = {}) {
+  const res = await fetch(`${API_BASE_URL}/events/${eventId}/mandate`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to issue Chief Warden mandate")
+  return res.json()
+}
+
+export async function apiGetChiefWardenMandate(eventId: string) {
+  const res = await fetch(`${API_BASE_URL}/events/${eventId}/mandate`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load Chief Warden mandate")
+  return res.json()
+}
+
+export async function apiSimulateFacilityStress(payload: Record<string, any>) {
+  const res = await fetch(`${API_BASE_URL}/ai/facility-stress/simulate`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to run facility stress simulation")
   return res.json()
 }
 

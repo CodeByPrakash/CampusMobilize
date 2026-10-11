@@ -488,5 +488,14 @@
     "amount_inr": 674725.0,
     "resident_count": 850,
     "ingested_at": "2026-10-11T14:13:19.179638+00:00"
+  },
+  {
+    "hostel_code": "HB-3",
+    "utility": "electricity",
+    "bill_month": "2026-10-01",
+    "units_consumed": 98500.0,
+    "amount_inr": 674725.0,
+    "resident_count": 850,
+    "ingested_at": "2026-10-11T18:55:15.198994+00:00"
   }
 ]
