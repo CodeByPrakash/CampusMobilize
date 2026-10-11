@@ -1,7 +1,7 @@
 {
   "created_at": "2026-10-11T12:35:11.913708+00:00",
-  "last_retrained_at": "2026-10-11T13:35:37.198683+00:00",
-  "total_bills_imported": 35,
-  "total_feedback_logged": 15,
-  "drift_events_detected": 15
+  "last_retrained_at": "2026-10-11T13:44:26.617792+00:00",
+  "total_bills_imported": 38,
+  "total_feedback_logged": 16,
+  "drift_events_detected": 16
 }
