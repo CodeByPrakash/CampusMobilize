@@ -1,0 +1,490 @@
+{
+  "info": {
+    "_postman_id": "bput-campusiq-v3-collection",
+    "name": "CampusIQ NIT Rourkela - Backend API Collection",
+    "description": "Comprehensive Postman test collection for CampusIQ Facility Operations backend with Role-Based Personas and Complaint FSM Lifecycle.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. System Health & Metadata",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Checks backend operational status, PostgreSQL connection, and offline mode flag."
+          }
+        },
+        {
+          "name": "Get 8 Canonical Personas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meta/personas",
+              "host": ["{{baseUrl}}"],
+              "path": ["meta", "personas"]
+            },
+            "description": "Returns canonical demo accounts (Student, CR, Hostel Rep, Caretaker, Warden, Chief Warden, Estate Officer, Director)."
+          }
+        },
+        {
+          "name": "Get Hostels & Room Mapping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meta/hostels",
+              "host": ["{{baseUrl}}"],
+              "path": ["meta", "hostels"]
+            },
+            "description": "Returns HB-3, KMS, CVR, and GDB halls of residence with blocks and sample rooms."
+          }
+        },
+        {
+          "name": "Get Categories & Default SLAs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meta/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["meta", "categories"]
+            },
+            "description": "Returns ELECTRICAL, WATER, HYGIENE, CIVIL, SECURITY, and MISC."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Complaint Lifecycle (End-to-End)",
+      "item": [
+        {
+          "name": "Step 1: Lodge Complaint (Student)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.id) {",
+                  "    pm.collectionVariables.set('ticketId', jsonData.id);",
+                  "    console.log('Saved ticketId:', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-student-aarav"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Main ceiling fan sparking and regulator burnt\",\n  \"description\": \"Continuous sparks and burning odor coming from regulator inside room 204.\",\n  \"category_code\": \"ELECTRICAL\",\n  \"hostel_code\": \"HB-3\",\n  \"block_name\": \"B Block\",\n  \"room_no\": \"204\",\n  \"severity\": 4,\n  \"people_affected\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints"]
+            },
+            "description": "Student lodges a complaint. Automatically triggers ML categorization, priority SLA calculation, and deduplication check."
+          }
+        },
+        {
+          "name": "Step 2: List Complaints (Filtered by Hostel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-student-aarav"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints?hostel_code=HB-3",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints"],
+              "query": [
+                {
+                  "key": "hostel_code",
+                  "value": "HB-3"
+                }
+              ]
+            },
+            "description": "Lists all active complaints for HB-3."
+          }
+        },
+        {
+          "name": "Step 3: Upvote Complaint (Student / Peer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-student-aarav"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "upvote"]
+            },
+            "description": "Peers can upvote common or critical hostel issues."
+          }
+        },
+        {
+          "name": "Step 4: Hostel Rep Verify (Rohan Mehta)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "HOSTEL_REP"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-rep-rohan"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_status\": \"VERIFIED\",\n  \"note\": \"Inspected on-site; genuine electrical hazard requiring electrician repair.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "events"]
+            },
+            "description": "Hostel Representative performs first-line triage to verify genuineness."
+          }
+        },
+        {
+          "name": "Step 5: Assign to Caretaker (Warden / Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "WARDEN"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-warden-nanda"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_status\": \"ASSIGNED\",\n  \"assignee_id\": \"usr-caretaker-das\",\n  \"note\": \"Assigned to Senior Caretaker R. Das for immediate switchboard servicing.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "events"]
+            },
+            "description": "Warden assigns the complaint to the designated caretaker."
+          }
+        },
+        {
+          "name": "Step 6: Caretaker Start Work (R. Das)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "CARETAKER"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-caretaker-das"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_status\": \"IN_PROGRESS\",\n  \"note\": \"Work started: Replacing regulator module and securing high-amp wiring.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "events"]
+            },
+            "description": "Caretaker starts work on the assigned issue."
+          }
+        },
+        {
+          "name": "Step 7: Caretaker Resolve with Photo Proof",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "CARETAKER"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-caretaker-das"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_status\": \"RESOLVED\",\n  \"note\": \"Replaced burnt regulator with ISI-certified unit. Verified circuit voltage.\",\n  \"photo_url\": \"/proofs/hb3_room204_fixed.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "events"]
+            },
+            "description": "Caretaker resolves the complaint and attaches photographic evidence."
+          }
+        },
+        {
+          "name": "Step 8: Warden Approve & Close (Dr. S. Nanda)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "WARDEN"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-warden-nanda"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_status\": \"CLOSED\",\n  \"note\": \"Photo proof verified; room student signed off. Ticket closed.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "events"]
+            },
+            "description": "Warden inspects caretaker's photographic proof and closes the ticket."
+          }
+        },
+        {
+          "name": "Step 9: Get Full Timeline Audit Trail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-student-aarav"
+              },
+              {
+                "key": "X-Hostel-Code",
+                "value": "HB-3"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{ticketId}}/timeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["complaints", "{{ticketId}}", "timeline"]
+            },
+            "description": "Fetches immutable timestamped audit log of every transition event."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. AI Engines & Analytics",
+      "item": [
+        {
+          "name": "Predict Category (Local TF-IDF + SGDClassifier)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Water purifier in first floor leaking continuously\",\n  \"description\": \"The filter pipe is cracked and water is puddling near room 108 corridor.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/predict-category",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "predict-category"]
+            },
+            "description": "Runs local scikit-learn ML model without external cloud API dependencies."
+          }
+        },
+        {
+          "name": "Campus Risk Index (CRI)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "DIRECTOR"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-director-sahoo"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/risk-index",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "risk-index"]
+            },
+            "description": "Calculates composite 0-100 Campus Risk Index weighted by open critical issues and overdue SLAs."
+          }
+        },
+        {
+          "name": "Utility Forecasts (Electricity & Water)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "ESTATE_OFFICER"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-estate-rao"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/utilities/forecasts?utility=electricity&months_ahead=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["utilities", "forecasts"],
+              "query": [
+                {
+                  "key": "utility",
+                  "value": "electricity"
+                },
+                {
+                  "key": "months_ahead",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Generates 3-month p10, p50, p90 quantile utility forecasts based on 36 months of bills."
+          }
+        },
+        {
+          "name": "Campus Events & Surge Factors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Actor-Role",
+                "value": "CHIEF_WARDEN"
+              },
+              {
+                "key": "X-Actor-Id",
+                "value": "usr-chief-warden-mishra"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            },
+            "description": "Returns upcoming campus festivals (Innovision, ISM, Nitrutsav) and surge multipliers."
+          }
+        }
+      ]
+    }
+  ]
+}
