@@ -26,6 +26,7 @@ import {
   ActivityIcon,
   TrophyIcon,
   MapPinIcon,
+  FlameIcon,
 } from "lucide-react";
 
 export interface NavItemConfig {
@@ -151,6 +152,12 @@ export const getWardenNav = (): NavItemConfig[] => [
     badge: "Active",
   },
   {
+    title: "Safety & Hazards",
+    url: "/warden/hazards",
+    icon: <FlameIcon className="size-4" />,
+    badge: "AI Risk",
+  },
+  {
     title: "Assign Tradesmen",
     url: "/warden/assign",
     icon: <UserPlusIcon className="size-4" />,
@@ -177,6 +184,12 @@ export const getChiefWardenNav = (): NavItemConfig[] => [
     badge: "4 Halls",
   },
   {
+    title: "Safety & Hazards",
+    url: "/chief-warden/hazards",
+    icon: <FlameIcon className="size-4" />,
+    badge: "AI Hotspots",
+  },
+  {
     title: "Rewards Ledger",
     url: "/chief-warden/rewards",
     icon: <AwardIcon className="size-4" />,
@@ -200,6 +213,12 @@ export const getEstateOfficerNav = (): NavItemConfig[] => [
     url: "/estate-officer/dashboard",
     icon: <ZapIcon className="size-4" />,
     badge: "P10/50/90",
+  },
+  {
+    title: "Hazard Hotspots",
+    url: "/estate-officer/hazards",
+    icon: <FlameIcon className="size-4" />,
+    badge: "Safety SOPs",
   },
   {
     title: "Asset Management",
@@ -236,6 +255,12 @@ export const getDirectorNav = (): NavItemConfig[] => [
     url: "/director/dashboard",
     icon: <ActivityIcon className="size-4" />,
     badge: "31 / 100",
+  },
+  {
+    title: "Safety Hotspots",
+    url: "/director/hazards",
+    icon: <FlameIcon className="size-4" />,
+    badge: "Live Hotspots",
   },
   {
     title: "AI Insights",

@@ -528,5 +528,38 @@ export async function apiUploadToS3(
   return res.json()
 }
 
+export async function apiGetSafetyHotspots(sector?: string, minRisk?: number) {
+  const query = new URLSearchParams()
+  if (sector) query.set("sector", sector)
+  if (minRisk !== undefined) query.set("min_risk", minRisk.toString())
 
+  const url = `${API_BASE_URL}/ai/safety/hotspots?${query.toString()}`
+  const res = await fetch(url, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) throw new Error("Failed to load safety hazard hotspots")
+  return res.json()
+}
 
+export async function apiExecuteSafetyAction(data: {
+  action_type: string
+  hotspot_id?: string
+  step_num?: number
+  notes?: string
+}) {
+  const persona = getActivePersona()
+  const res = await fetch(`${API_BASE_URL}/ai/safety/action`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      ...data,
+      actor_role: persona.role,
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || "Failed to execute safety action")
+  }
+  return res.json()
+}
