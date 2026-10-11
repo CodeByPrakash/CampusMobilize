@@ -31,16 +31,22 @@ export default function SustainabilityPage() {
       badge: "NIT RKL",
     },
     {
-      title: "Sustainability AI",
-      url: "/sustainability",
+      title: "AI Insights",
+      url: "/ai-insights",
       icon: <SparklesIcon className="size-4" />,
-      badge: "86.4",
+      badge: "DeepBot",
     },
     {
-      title: "Risk Index",
-      url: "/sustainability",
+      title: "Campus Simulation",
+      url: "/simulation",
       icon: <ShieldCheckIcon className="size-4" />,
-      badge: "31",
+      badge: "What-If",
+    },
+    {
+      title: "Asset Management",
+      url: "/assets",
+      icon: <LineChartIcon className="size-4" />,
+      badge: "Fleet",
     },
   ];
 

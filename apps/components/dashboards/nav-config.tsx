@@ -25,6 +25,7 @@ import {
   UploadCloudIcon,
   ActivityIcon,
   TrophyIcon,
+  MapPinIcon,
 } from "lucide-react";
 
 export interface NavItemConfig {
@@ -47,7 +48,12 @@ export const getStudentNav = (): NavItemConfig[] => [
     icon: <PlusCircleIcon className="size-4" />,
     badge: "Kanban",
   },
-
+  {
+    title: "Map",
+    url: "/student/map",
+    icon: <MapPinIcon className="size-4" />,
+    badge: "Heatmap",
+  },
   {
     title: "Community Upvotes",
     url: "/student/upvotes",
@@ -196,6 +202,18 @@ export const getEstateOfficerNav = (): NavItemConfig[] => [
     badge: "P10/50/90",
   },
   {
+    title: "Asset Management",
+    url: "/estate-officer/assets",
+    icon: <WrenchIcon className="size-4" />,
+    badge: "Drag & Drop",
+  },
+  {
+    title: "Campus Simulation",
+    url: "/estate-officer/simulation",
+    icon: <ActivityIcon className="size-4" />,
+    badge: "What-If",
+  },
+  {
     title: "36-Mo Baseline",
     url: "/estate-officer/baseline",
     icon: <TrendingUpIcon className="size-4" />,
@@ -218,6 +236,18 @@ export const getDirectorNav = (): NavItemConfig[] => [
     url: "/director/dashboard",
     icon: <ActivityIcon className="size-4" />,
     badge: "31 / 100",
+  },
+  {
+    title: "AI Insights",
+    url: "/ai-insights",
+    icon: <SparklesIcon className="size-4" />,
+    badge: "DeepBot",
+  },
+  {
+    title: "Campus Simulation",
+    url: "/simulation",
+    icon: <PlayCircleIcon className="size-4" />,
+    badge: "What-If",
   },
   {
     title: "Living Standards",

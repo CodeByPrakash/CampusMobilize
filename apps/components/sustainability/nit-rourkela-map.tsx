@@ -443,29 +443,33 @@ export function NitRourkelaMap() {
             </g>
           </svg>
 
-          {/* 7. HEATMAP OVERLAY LAYER (Smooth Gradient Glow on White Shaded Canvas) */}
+          {/* 7. HEATMAP OVERLAY LAYER (Weather Heat Radar: Red Center -> Yellow Overlay -> Green Boundary) */}
           {showHeatmap && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-multiply dark:mix-blend-screen">
               {filteredHeatmapPoints.map((pt, idx) => {
                 const pos = geoToPercent(pt.lat, pt.lng);
-                const color =
-                  pt.intensity > 0.7
-                    ? "rgba(225, 29, 72, 0.40)" // high risk hotspot
-                    : pt.intensity > 0.4
-                    ? "rgba(234, 88, 12, 0.32)" // moderate risk
-                    : "rgba(16, 185, 129, 0.22)"; // safe green
+                const size = Math.max(pt.radius * 2.8, 80);
+                const alpha = Math.min(Math.max(pt.intensity, 0.45), 0.95);
 
                 return (
                   <div
                     key={idx}
-                    className="absolute rounded-full transition-all duration-700 blur-2xl"
+                    className="absolute rounded-full transition-all duration-700 pointer-events-none"
                     style={{
                       left: `${pos.x}%`,
                       top: `${pos.y}%`,
-                      width: `${pt.radius * 2.2}px`,
-                      height: `${pt.radius * 2.2}px`,
+                      width: `${size}px`,
+                      height: `${size}px`,
                       transform: "translate(-50%, -50%)",
-                      backgroundColor: color,
+                      background: `radial-gradient(circle closest-side,
+                        rgba(225, 29, 72, ${0.92 * alpha}) 0%,
+                        rgba(239, 68, 68, ${0.85 * alpha}) 22%,
+                        rgba(245, 158, 11, ${0.75 * alpha}) 42%,
+                        rgba(234, 179, 8, ${0.68 * alpha}) 62%,
+                        rgba(34, 197, 94, ${0.46 * alpha}) 80%,
+                        rgba(34, 197, 94, ${0.16 * alpha}) 92%,
+                        rgba(34, 197, 94, 0) 100%)`,
+                      filter: "blur(10px)",
                     }}
                   />
                 );
@@ -543,6 +547,26 @@ export function NitRourkelaMap() {
               </Badge>
             )}
           </div>
+
+          {/* Bottom-Left Doppler Weather Heat Scale Legend */}
+          {showHeatmap && (
+            <div className="absolute bottom-3 left-3 z-10 hidden sm:flex items-center gap-2 rounded-full bg-background/95 px-3 py-1.5 border border-border shadow-xs backdrop-blur-xs text-[11px] font-medium text-foreground">
+              <span className="font-semibold text-xs flex items-center gap-1">
+                <FlameIcon className="size-3 text-rose-500" />
+                <span>Heat Radar:</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-20 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-600 shadow-inner" />
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Green</span>
+                  <span>→</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-semibold">Yellow</span>
+                  <span>→</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-semibold">Red</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom-Right Zoom / Reset Pill */}
           <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">

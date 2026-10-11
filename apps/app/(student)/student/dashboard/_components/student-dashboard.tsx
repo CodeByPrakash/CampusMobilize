@@ -24,9 +24,11 @@ import {
   AlertCircleIcon,
   FileTextIcon,
   SparklesIcon,
+  MapPinIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiCreateComplaint, apiUpvoteComplaint } from "@/lib/api";
+import { NitRourkelaMap } from "@/components/sustainability/nit-rourkela-map";
 
 interface ComplaintItem {
   id: string;
@@ -415,6 +417,10 @@ export function StudentDashboard() {
           <TabsTrigger value="my-tickets">My Tickets ({myComplaints.length})</TabsTrigger>
           <TabsTrigger value="hostel-feed">Hostel Feed & Upvoting ({hostelFeed.length})</TabsTrigger>
           <TabsTrigger value="rewards">Dignity & Rewards</TabsTrigger>
+          <TabsTrigger value="heatmap" className="gap-1.5">
+            <MapPinIcon className="size-3.5" />
+            <span>Campus Heatmap</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: My Tickets */}
@@ -616,6 +622,11 @@ export function StudentDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Tab 4: Campus Heatmap */}
+        <TabsContent value="heatmap" className="space-y-4">
+          <NitRourkelaMap />
         </TabsContent>
       </Tabs>
     </div>
