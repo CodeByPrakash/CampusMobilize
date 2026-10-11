@@ -13,10 +13,10 @@ class Settings:
     API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:8000")
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     
-    # Database: defaults to PostgreSQL when configured, or SQLite local file
+    # Database: production PostgreSQL
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/campusiq"
+        "postgresql+psycopg://postgres:2006@localhost:5432/campusiq"
     )
     
     # Mail settings
