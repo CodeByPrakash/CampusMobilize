@@ -68,8 +68,15 @@ class S3StorageService:
                 Body=file_bytes,
                 ContentType=content_type,
             )
-            # Build public URL
-            public_url = f"{self.endpoint_url.rstrip('/')}/{self.bucket}/{s3_key}"
+            # Generate presigned URL (7 days) for secure object viewing
+            try:
+                public_url = self._client.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": self.bucket, "Key": s3_key},
+                    ExpiresIn=604800
+                )
+            except Exception:
+                public_url = f"{self.endpoint_url.rstrip('/')}/{self.bucket}/{s3_key}"
             return True, public_url
         except ClientError as ce:
             print(f"[S3 Error] ClientError during upload: {ce}")

@@ -31,6 +31,7 @@ class BillCreate(BaseModel):
     amount_inr: float = Field(..., gt=0)
     hostel_code: Optional[str] = "HB-3"
     tariff_rate: Optional[float] = None
+    source_file_url: Optional[str] = None
 
 
 @router.post("/bills", status_code=201)
@@ -52,6 +53,7 @@ def create_utility_bill(
         units_consumed=payload.units_consumed,
         amount_inr=payload.amount_inr,
         tariff_rate=payload.tariff_rate or round(payload.amount_inr / max(1.0, payload.units_consumed), 2),
+        source_file_url=payload.source_file_url,
         parsed_confidence=1.0,
         created_at=datetime.now(timezone.utc)
     )
@@ -78,6 +80,7 @@ def create_utility_bill(
         "units_consumed": bill.units_consumed,
         "amount_inr": bill.amount_inr,
         "tariff_rate": bill.tariff_rate,
+        "source_file_url": bill.source_file_url,
         "drift_detected": drift_detected,
         "created_at": bill.created_at.isoformat()
     }
@@ -164,6 +167,7 @@ def list_utility_bills(
             "units_consumed": b.units_consumed,
             "amount_inr": b.amount_inr,
             "tariff_rate": b.tariff_rate,
+            "source_file_url": b.source_file_url,
             "parsed_confidence": b.parsed_confidence
         })
     return result
