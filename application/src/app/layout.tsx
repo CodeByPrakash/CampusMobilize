@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CampusIQ — NIT Rourkela Campus Facility Intelligence",
-  description: "Autonomous Complaint Dispatch, SLA Monitoring, and Facility Operations for NIT Rourkela Halls of Residence",
+  title: "CampusIQ — NIT Rourkela Smart Campus Facility Operations",
+  description: "AI-Powered Autonomous Facility Intelligence, Role-Based Dashboards & Resource Planning for NIT Rourkela",
 };
 
 export default function RootLayout({
@@ -26,9 +26,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
+      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>
