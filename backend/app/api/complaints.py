@@ -698,3 +698,62 @@ def override_complaint_priority(
     db.commit()
     db.refresh(complaint)
     return complaint
+
+
+# =========================================================================
+# 7. DELETE / WITHDRAW COMPLAINT (STUDENT GOVERNANCE)
+# =========================================================================
+@router.delete("/{id_or_ticket}")
+def delete_complaint(
+    id_or_ticket: str,
+    persona: Dict[str, Any] = Depends(get_request_persona),
+    db: Session = Depends(get_db)
+):
+    """
+    Allows the submitting student (or admin) to delete their complaint IF IT IS NOT ESCALATED.
+    Once escalated to higher authorities (Warden/Chief Warden), deletion is strictly prohibited.
+    """
+    complaint = db.query(Complaint).filter(
+        (Complaint.id == id_or_ticket) | (Complaint.ticket_no == id_or_ticket)
+    ).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    # Check if complaint is escalated
+    is_escalated = (
+        (complaint.status or "").upper() == "ESCALATED"
+        or any("escalat" in (e.note or "").lower() for e in complaint.events)
+    )
+    if is_escalated:
+        raise HTTPException(
+            status_code=400,
+            detail="CANNOT_DELETE_ESCALATED: This complaint has already escalated to higher authorities. Deletion is prohibited."
+        )
+
+    caller_role = (persona.get("role") or "STUDENT").upper()
+    caller_id = persona.get("user_id")
+
+    # In student persona, verify authorization if reported_by is set
+    if caller_role == "STUDENT" and complaint.reported_by and caller_id:
+        if complaint.reported_by != caller_id:
+            raise HTTPException(
+                status_code=403,
+                detail="FORBIDDEN: You can only delete complaints submitted by yourself."
+            )
+
+    ticket_no = complaint.ticket_no
+
+    # Clean up associated media, upvotes, and events before deleting complaint
+    db.query(ComplaintMedia).filter(ComplaintMedia.complaint_id == complaint.id).delete(synchronize_session=False)
+    db.query(ComplaintUpvote).filter(ComplaintUpvote.complaint_id == complaint.id).delete(synchronize_session=False)
+    db.query(ComplaintEvent).filter(ComplaintEvent.complaint_id == complaint.id).delete(synchronize_session=False)
+
+    db.delete(complaint)
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"Complaint #{ticket_no} has been deleted successfully",
+        "ticket_no": ticket_no
+    }
+

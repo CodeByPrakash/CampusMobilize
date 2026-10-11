@@ -7,7 +7,8 @@ from .config import settings
 from .database import init_db, SessionLocal
 from .seed import seed_database
 from .models import Hostel
-from .api import meta, ai, complaints, sla, utilities, events, performance, reports
+from .api import meta, ai, complaints, sla, utilities, events, performance, reports, uploads
+
 
 
 @asynccontextmanager
@@ -68,6 +69,8 @@ app.include_router(utilities.router, prefix="/api/v1")
 app.include_router(events.router, prefix="/api/v1")
 app.include_router(performance.router, prefix="/api/v1")
 app.include_router(reports.router, prefix="/api/v1")
+app.include_router(uploads.router, prefix="/api/v1")
+
 
 
 

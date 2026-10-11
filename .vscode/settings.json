@@ -1,5 +1,6 @@
 {
     "codeLensGraph.includeFolders": [
+        "apps",
         "backend"
     ]
 }
