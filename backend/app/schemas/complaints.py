@@ -82,8 +82,8 @@ class ComplaintResponse(BaseModel):
     closed_at: Optional[datetime] = None
     resolution_note: Optional[str] = None
     resolution_photo_url: Optional[str] = None
-    people_affected: int
-    upvote_count: int
+    people_affected: Optional[int] = 1
+    upvote_count: Optional[int] = 0
     reported_by: Optional[str] = None
     created_at: datetime
 
