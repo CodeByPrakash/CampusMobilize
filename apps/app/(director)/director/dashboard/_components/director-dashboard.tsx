@@ -143,7 +143,7 @@ export function DirectorDashboard() {
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <ShieldCheckIcon className="size-4" />
-              <span>Campus Risk Gauge (§2.8)</span>
+              <span>Campus Risk Gauge (2.8)</span>
             </CardTitle>
             <CardDescription className="text-xs">
               Composite risk formulation across electrical hazards, sanitation, and pending complaints.
@@ -231,7 +231,7 @@ export function DirectorDashboard() {
         <TabsContent value="rankings" className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Hall Dignity & Living Standard Ranking (§2.8)</CardTitle>
+              <CardTitle className="text-sm font-semibold">Hall Dignity & Living Standard Ranking (2.8)</CardTitle>
               <CardDescription className="text-xs">
                 Performance across student satisfaction, cleanliness, and maintenance turnaround.
               </CardDescription>

@@ -1,5 +1,5 @@
 """
-Smart Caretaker Assignment Matcher (§2.2, §6, §8)
+Smart Caretaker Assignment Matcher (2.2, 6, 8)
 Matches complaints to the most qualified, available caretaker in the same hostel
 based on trade skills (electrical, plumbing, civil, housekeeping), proficiency, and active workload.
 """

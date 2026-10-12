@@ -1,5 +1,5 @@
 """
-Notification & Audit Email Log Models (§6, §10)
+Notification & Audit Email Log Models (6, 10)
 """
 
 import uuid

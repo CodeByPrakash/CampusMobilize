@@ -50,14 +50,14 @@ export default function ChiefWardenRewardsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Campus Staff Rewards & Incentive Approvals
             </h1>
             <p className="text-sm text-slate-500">
-              Statutory approval authority for caretaker performance stipends, certificates, and institutional commendations (§11.2).
+              Statutory approval authority for caretaker performance stipends, certificates, and institutional commendations (11.2).
             </p>
           </div>
           <Badge className="bg-amber-600 text-white px-3 py-1 text-sm font-semibold gap-1.5">

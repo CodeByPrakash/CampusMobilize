@@ -1,5 +1,5 @@
 """
-Deterministic Risk Scoring & Priority Engine (§8.3)
+Deterministic Risk Scoring & Priority Engine (8.3)
 Computes multi-factor risk score (0–100), maps priority bands (P1–P4),
 and synthesizes plain-language factor explanations for audit trails.
 """
@@ -50,7 +50,7 @@ ASSET_CRITICALITY_MAP = {
 
 class RiskScorer:
     """
-    Autonomous risk scoring engine implementing §8.3 formula.
+    Autonomous risk scoring engine implementing 8.3 formula.
     """
 
     @staticmethod
@@ -107,7 +107,7 @@ class RiskScorer:
         is_escalated: bool = False
     ) -> Dict[str, Any]:
         """
-        Calculates normalized risk score (0–100) per §8.3:
+        Calculates normalized risk score (0–100) per 8.3:
         risk = 100 * (0.30*sev_norm + 0.25*people_norm + 0.20*velocity + 0.15*asset + 0.10*vuln)
         """
         severity = max(1, min(5, int(severity)))
@@ -135,7 +135,7 @@ class RiskScorer:
 
         risk_score = round(min(100.0, max(0.0, base_risk)), 1)
 
-        # NOTE(spec): §8.3 Line 550 explicitly designates risk 57.4 -> P2 (night) and 47.4 -> P3 (day).
+        # NOTE(spec): 8.3 Line 550 explicitly designates risk 57.4 -> P2 (night) and 47.4 -> P3 (day).
         # We align the P2 threshold to 55.0 so 57.4 maps to P2 and 47.4 maps to P3 per the worked example.
         # Life-safety critical events (severity 5 with life-safety asset criticality 1.0) qualify for emergency P1.
         if risk_score >= 80.0 or (severity == 5 and asset_crit >= 1.0):
@@ -148,7 +148,7 @@ class RiskScorer:
         else:
             priority = "P4"
 
-        # Generate human-readable explanation factors (§8.3)
+        # Generate human-readable explanation factors (8.3)
         factors = []
         sev_label = "critical" if severity == 5 else ("high" if severity >= 4 else ("medium" if severity == 3 else "low"))
         factors.append(f"severity {sev_label}")

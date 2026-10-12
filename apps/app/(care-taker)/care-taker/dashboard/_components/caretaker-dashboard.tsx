@@ -103,7 +103,7 @@ export function CaretakerDashboard() {
       await apiTransitionComplaint(order.ticket_no, {
         to_status: "IN_PROGRESS",
         note: `Tradesman accepted ticket and arrived on site (${order.location}).`,
-      }).catch(() => {});
+      }).catch(() => { });
 
       setOrders((prev) =>
         prev.map((o) =>
@@ -120,11 +120,11 @@ export function CaretakerDashboard() {
   const handleConfirmResolve = async () => {
     if (!selectedOrder) return;
     if (!completionNote.trim()) {
-      toast.error("Completion note is required per §2.4");
+      toast.error("Completion note is required per 2.4");
       return;
     }
     if (!photoUrl.trim()) {
-      toast.error("Photo proof URL is mandatory for Caretaker resolution (§2.4)");
+      toast.error("Photo proof URL is mandatory for Caretaker resolution (2.4)");
       return;
     }
 
@@ -133,18 +133,18 @@ export function CaretakerDashboard() {
         to_status: "RESOLVED",
         note: completionNote,
         photo_url: photoUrl,
-      }).catch(() => {});
+      }).catch(() => { });
 
       setOrders((prev) =>
         prev.map((o) =>
           o.id === selectedOrder.id
             ? {
-                ...o,
-                status: "RESOLVED",
-                completionNote,
-                photoUrl,
-                slaRemaining: "Submitted for Warden review",
-              }
+              ...o,
+              status: "RESOLVED",
+              completionNote,
+              photoUrl,
+              slaRemaining: "Submitted for Warden review",
+            }
             : o
         )
       );
@@ -195,7 +195,7 @@ export function CaretakerDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Needs Re-Work (§2.4)</CardDescription>
+            <CardDescription>Needs Re-Work (2.4)</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums">
               {rejectedBackCount} Rejected Back
             </CardTitle>
@@ -255,7 +255,7 @@ export function CaretakerDashboard() {
                     <TableHead>Priority</TableHead>
                     <TableHead>SLA Timer</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action (§2.4)</TableHead>
+                    <TableHead className="text-right">Action (2.4)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -288,8 +288,8 @@ export function CaretakerDashboard() {
                             o.priority === "P1"
                               ? "destructive"
                               : o.priority === "P2"
-                              ? "default"
-                              : "secondary"
+                                ? "default"
+                                : "secondary"
                           }
                           className="text-[10px]"
                         >
@@ -308,10 +308,10 @@ export function CaretakerDashboard() {
                             o.status === "IN_PROGRESS"
                               ? "default"
                               : o.status === "REJECTED_BACK"
-                              ? "destructive"
-                              : o.status === "RESOLVED"
-                              ? "secondary"
-                              : "outline"
+                                ? "destructive"
+                                : o.status === "RESOLVED"
+                                  ? "secondary"
+                                  : "outline"
                           }
                           className="text-[10px]"
                         >
@@ -460,7 +460,7 @@ export function CaretakerDashboard() {
             <div>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <CameraIcon className="size-4" />
-                <span>Mark Work Complete with Photo Proof (§2.4)</span>
+                <span>Mark Work Complete with Photo Proof (2.4)</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
                 Order: <strong>{selectedOrder.ticket_no}</strong> ({selectedOrder.title})
@@ -489,7 +489,7 @@ export function CaretakerDashboard() {
                   required
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Per §2.4 FSM rules, Warden cannot approve closure without photo evidence.
+                  Per 2.4 FSM rules, Warden cannot approve closure without photo evidence.
                 </p>
               </div>
             </div>

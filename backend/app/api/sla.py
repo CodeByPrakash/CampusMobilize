@@ -1,5 +1,5 @@
 """
-SLA Operations & Email Audit Router (§7, §9, §10)
+SLA Operations & Email Audit Router (7, 9, 10)
 Exposes on-demand SLA tick execution and email log retrieval.
 """
 
@@ -35,7 +35,7 @@ def list_email_logs(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
-    """Returns the immutable append-only email logs for audit inspections (§10.1)."""
+    """Returns the immutable append-only email logs for audit inspections (10.1)."""
     query = db.query(EmailLog)
     if template:
         query = query.filter(EmailLog.template == template)

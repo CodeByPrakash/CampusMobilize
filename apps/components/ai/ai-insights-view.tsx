@@ -33,7 +33,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: "msg-1",
     sender: "ai",
-    text: "Hello! I am your CampusMobilize AI Intelligence Assistant, connected to NIT Rourkela's real-time facility telemetry and Neon database. I monitor energy grids, water distribution, and student issue density across all 462 acres.\n\nHow can I assist your maintenance or sustainability operations today?",
+    text: "Hello! I am your CampusIQ AI Intelligence Assistant, connected to NIT Rourkela's real-time facility telemetry and Neon database. I monitor energy grids, water distribution, and student issue density across all 462 acres.\n\nHow can I assist your maintenance or sustainability operations today?",
     timestamp: "Just now",
   },
 ];
@@ -366,7 +366,7 @@ export function AiInsightsView() {
           >
             <Input
               type="text"
-              placeholder="Ask CampusMobilize AI about water pressure, energy spikes, maintenance schedules..."
+              placeholder="Ask Ca AI about water pressure, energy spikes, maintenance schedules..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading}

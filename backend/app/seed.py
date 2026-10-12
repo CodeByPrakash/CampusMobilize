@@ -1,5 +1,5 @@
 """
-Database Seeding Script (§15)
+Database Seeding Script (15)
 Seeds canonical hostels, blocks, rooms, categories, SLA policies, and 8 demonstration personas.
 Can be executed standalone or called during application startup.
 """

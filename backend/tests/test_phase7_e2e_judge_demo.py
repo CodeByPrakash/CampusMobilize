@@ -14,7 +14,7 @@ client = TestClient(app)
 
 def test_judge_demo_step1_and_step2_complaint_and_duplicate_merge():
     """
-    Step 1 & 2 of §16 Judge Demo Script:
+    Step 1 & 2 of 16 Judge Demo Script:
     1. Student files water leak complaint at HB-3 pump room.
     2. AI classifies WATER with high confidence.
     3. Second similar complaint filed -> merges with parent, upvote increments.
@@ -68,7 +68,7 @@ def test_judge_demo_step1_and_step2_complaint_and_duplicate_merge():
 
 def test_judge_demo_step3_and_step4_caretaker_to_warden_closure():
     """
-    Step 3 & 4 of §16 Judge Demo Script:
+    Step 3 & 4 of 16 Judge Demo Script:
     1. Student lodges complaint in HB-3 -> starts in OPEN.
     2. Hostel Rep verifies: OPEN -> VERIFIED.
     3. Warden assigns caretaker: VERIFIED -> ASSIGNED.
@@ -177,7 +177,7 @@ def test_judge_demo_step3_and_step4_caretaker_to_warden_closure():
 
 def test_judge_demo_step5_and_step6_innovision_prebrief_and_cri():
     """
-    Step 5 & 6 of §16 Judge Demo Script:
+    Step 5 & 6 of 16 Judge Demo Script:
     1. Chief Warden / Estate Officer generates Innovision pre-brief.
     2. Director checks Campus Risk Index and Inter-Hostel Efficiency Ratings.
     """
@@ -222,7 +222,7 @@ def test_judge_demo_step5_and_step6_innovision_prebrief_and_cri():
 
 def test_judge_demo_step7_rewards_and_sla_simulation():
     """
-    Step 7 of §16 Judge Demo Script:
+    Step 7 of 16 Judge Demo Script:
     1. SLA background tick simulation executes idempotently.
     2. Proposes and approves caretaker reward ledger entry.
     """

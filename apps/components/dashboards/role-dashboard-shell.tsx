@@ -152,7 +152,7 @@ export function RoleDashboardShell({
             >
               <div className="flex items-center gap-2">
                 <UserCheckIcon className="size-3.5 text-muted-foreground" />
-                <span>Switch Role (§15)</span>
+                <span>Switch Role (15)</span>
               </div>
               <ChevronRightIcon className="size-3.5 text-muted-foreground" />
             </Button>

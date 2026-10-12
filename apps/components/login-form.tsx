@@ -55,7 +55,7 @@ export function LoginForm({
         <FieldGroup>
           <div className="flex flex-col items-center gap-1.5 text-center">
             <h1 className="text-2xl font-bold tracking-tight">
-              Login to CampusMobilize
+              Login to CampusIQ
             </h1>
             <p className="text-xs text-balance text-muted-foreground">
               NIT Rourkela grievance, facility &amp; administrative portal
@@ -104,7 +104,7 @@ export function LoginForm({
       {/* Demonstration Role Switcher Banner */}
       <div className="mt-6 rounded-lg border border-border bg-card p-4 text-center">
         <div className="text-xs font-semibold text-foreground">
-          Switch Demonstration Role (§15)
+          Switch Demonstration Role (15)
         </div>
         <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
           1-click instant login as Student, CR, Rep, Caretaker, Warden, or

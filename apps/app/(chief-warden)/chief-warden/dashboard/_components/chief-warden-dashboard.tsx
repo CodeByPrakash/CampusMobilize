@@ -123,10 +123,10 @@ export function ChiefWardenDashboard() {
   const [rewards, setRewards] = React.useState<RewardLedgerItem[]>(INITIAL_REWARDS);
   const [escalatingTicket, setEscalatingTicket] = React.useState<string | null>(null);
 
-  // Approve Caretaker Reward (§2.6)
+  // Approve Caretaker Reward (2.6)
   const handleApproveBonus = async (item: RewardLedgerItem) => {
     try {
-      await apiApproveReward(item.id).catch(() => {});
+      await apiApproveReward(item.id).catch(() => { });
       setRewards((prev) =>
         prev.map((r) =>
           r.id === item.id ? { ...r, status: "APPROVED" } : r
@@ -145,7 +145,7 @@ export function ChiefWardenDashboard() {
       await apiTransitionComplaint(ticketNo, {
         to_status: "ESCALATED",
         note: "Force escalated campus-wide by Chief Warden Prof. M. Mishra due to critical threshold breach.",
-      }).catch(() => {});
+      }).catch(() => { });
       toast.success(`Emergency ticket ${ticketNo} FORCE ESCALATED to Campus Works!`);
     } catch {
       toast.error("Failed to force escalate");
@@ -222,7 +222,7 @@ export function ChiefWardenDashboard() {
               Critical Watch: CVR Hall 3rd Floor Water Main Pressure Surge
             </div>
             <div className="text-xs text-muted-foreground">
-              Overdue by 1.5 hrs. Chief Warden force-escalate authority available (§2.6).
+              Overdue by 1.5 hrs. Chief Warden force-escalate authority available (2.6).
             </div>
           </div>
         </div>
@@ -312,7 +312,7 @@ export function ChiefWardenDashboard() {
         <TabsContent value="rewards" className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Caretaker Performance Bonus Ledger (§2.6)</CardTitle>
+              <CardTitle className="text-sm font-semibold">Caretaker Performance Bonus Ledger (2.6)</CardTitle>
               <CardDescription className="text-xs">
                 Chief Warden authority to approve monthly rewards based on zero-SLA breach performance.
               </CardDescription>

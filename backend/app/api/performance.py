@@ -1,9 +1,9 @@
 """
-Caretaker Performance, Hostel Efficiency & Rewards Router (§7.7, §11)
+Caretaker Performance, Hostel Efficiency & Rewards Router (7.7, 11)
 Implements:
-- Caretaker Performance Index (PI) calculation (§11.1)
-- Hostel Efficiency Rating (ER) cross-hostel table (§11.3)
-- Professional rewards proposals and Chief Warden approvals (§11.2)
+- Caretaker Performance Index (PI) calculation (11.1)
+- Hostel Efficiency Rating (ER) cross-hostel table (11.3)
+- Professional rewards proposals and Chief Warden approvals (11.2)
 """
 
 from typing import List, Optional, Dict, Any
@@ -31,7 +31,7 @@ class RewardProposeRequest(BaseModel):
 
 def compute_caretaker_pi(db: Session, caretaker_id: str, month_str: Optional[str] = None) -> Dict[str, Any]:
     """
-    Computes Caretaker Performance Index (PI) per §11.1:
+    Computes Caretaker Performance Index (PI) per 11.1:
     PI = 100 * (0.45*sla + 0.30*ftr + 0.15*(rating/5) + 0.10*throughput) - 5*rework_rate
     """
     ct = db.query(User).filter(User.id == caretaker_id).first()
@@ -138,7 +138,7 @@ def get_campus_hostel_ratings(
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """
-    Computes and returns the dignified Hostel Efficiency Rating (ER) cross-hostel comparison (§11.3)
+    Computes and returns the dignified Hostel Efficiency Rating (ER) cross-hostel comparison (11.3)
     for the Chief Warden and Director dashboards.
     """
     hostels = db.query(Hostel).all()
@@ -184,7 +184,7 @@ def get_campus_hostel_ratings(
 
 
 # =========================================================================
-# REWARDS LEDGER (§11.2)
+# REWARDS LEDGER (11.2)
 # =========================================================================
 @router.post("/rewards/propose", status_code=201)
 def propose_reward(

@@ -1,5 +1,5 @@
 """
-Complaint Lifecycle Engine & FSM Transition Router (§3, §7.3, §7.4)
+Complaint Lifecycle Engine & FSM Transition Router (3, 7.3, 7.4)
 Implements state machine, event timeline, AI triage integration, and scoped access.
 """
 
@@ -25,12 +25,12 @@ router = APIRouter(prefix="/complaints", tags=["Complaints & FSM"])
 
 ai_engine = CampusAIEngine()
 
-# Valid transition matrix (§7.4)
+# Valid transition matrix (7.4)
 # (from_status, to_status) -> allowed roles
 TRANSITION_RULES: Dict[tuple, List[str]] = {
     ("OPEN", "VERIFIED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("OPEN", "REJECTED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
-    ("OPEN", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],  # P1 skips verify (§3 Rule 1)
+    ("OPEN", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],  # P1 skips verify (3 Rule 1)
     ("VERIFIED", "ASSIGNED"): ["SYSTEM", "AUTO", "AUTO_ENGINE", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("VERIFIED", "REJECTED"): ["HOSTEL_REP", "WARDEN", "CHIEF_WARDEN", "ADMIN"],
     ("ASSIGNED", "ASSIGNED"): ["WARDEN", "CHIEF_WARDEN", "ADMIN"],
@@ -119,7 +119,7 @@ def create_complaint(
     """
     Intake endpoint for complaints:
     1. Runs AI classification, duplicate detection, risk scoring, and caretaker matching.
-    2. P1 (Risk >= 80): immediately sets ASSIGNED, bypassing verification (§3 Rule 1).
+    2. P1 (Risk >= 80): immediately sets ASSIGNED, bypassing verification (3 Rule 1).
     3. P2-P4: sets OPEN.
     4. Writes initial complaint_events timeline entry.
     """
@@ -205,7 +205,7 @@ def create_complaint(
     is_p1 = (priority == "P1" or triage["skip_verification"])
 
     # State Machine initialization
-    # P1 skips verify: OPEN -> ASSIGNED immediately (§3 Rule 1)
+    # P1 skips verify: OPEN -> ASSIGNED immediately (3 Rule 1)
     status = "ASSIGNED" if is_p1 else "OPEN"
 
     sla_h = get_sla_hours(priority, db)
@@ -431,7 +431,7 @@ def transition_complaint_state(
     db: Session = Depends(get_db)
 ):
     """
-    The ONLY way to change complaint status (§3, §7.4).
+    The ONLY way to change complaint status (3, 7.4).
     Enforces transition matrix, role permissions, mandatory resolution/rejection notes,
     and updates mutable fields transactionally.
     """
@@ -456,7 +456,7 @@ def transition_complaint_state(
         complaint.status = "ESCALATED"
         complaint.risk_score = min(100.0, (complaint.risk_score or 50.0) + 10.0)
     else:
-        # Check transition validity (§7.4 Table)
+        # Check transition validity (7.4 Table)
         rule_key = (from_status, to_status)
         if rule_key not in TRANSITION_RULES:
             raise HTTPException(
@@ -537,7 +537,7 @@ def transition_complaint_state(
     if getattr(req, "trade", None):
         meta_dict["trade"] = req.trade
 
-    # Record immutable timeline event (§3 Rule 3)
+    # Record immutable timeline event (3 Rule 3)
     event = ComplaintEvent(
         complaint_id=complaint.id,
         from_status=from_status,
@@ -584,7 +584,7 @@ def upvote_complaint(
 
 
 # =========================================================================
-# 5. DEDUPLICATION / MERGE COMPLAINTS (§2.3)
+# 5. DEDUPLICATION / MERGE COMPLAINTS (2.3)
 # =========================================================================
 @router.post("/{id_or_ticket}/merge", response_model=ComplaintResponse)
 def merge_duplicate_complaints(
@@ -594,7 +594,7 @@ def merge_duplicate_complaints(
     db: Session = Depends(get_db)
 ):
     """
-    Deduplication endpoint (§2.3):
+    Deduplication endpoint (2.3):
     Allows HOSTEL_REP, WARDEN, CHIEF_WARDEN, or ADMIN to merge duplicate complaints
     into a master parent ticket.
     """
@@ -652,7 +652,7 @@ def merge_duplicate_complaints(
 
 
 # =========================================================================
-# 6. PRIORITY ESCALATION (§2.3)
+# 6. PRIORITY ESCALATION (2.3)
 # =========================================================================
 @router.post("/{id_or_ticket}/priority", response_model=ComplaintResponse)
 def override_complaint_priority(
@@ -662,7 +662,7 @@ def override_complaint_priority(
     db: Session = Depends(get_db)
 ):
     """
-    Priority escalation endpoint (§2.3):
+    Priority escalation endpoint (2.3):
     Allows HOSTEL_REP to override/raise priority by exactly 1 class with logged justification.
     WARDEN, CHIEF_WARDEN, and ADMIN can set any priority.
     """
@@ -686,7 +686,7 @@ def override_complaint_priority(
     curr_rank = priority_order.get(curr_priority, 3)
     target_rank = priority_order.get(target_priority, 3)
 
-    # HOSTEL_REP constraint: can only raise priority by EXACTLY 1 level (§2.3)
+    # HOSTEL_REP constraint: can only raise priority by EXACTLY 1 level (2.3)
     if actor_role == "HOSTEL_REP":
         if target_rank != curr_rank - 1:
             raise HTTPException(

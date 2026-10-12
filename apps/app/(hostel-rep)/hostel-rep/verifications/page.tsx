@@ -59,7 +59,7 @@ export default function HostelRepVerificationsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -78,7 +78,7 @@ export default function HostelRepVerificationsPage() {
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 text-xs text-emerald-950 flex items-start gap-3">
           <CheckCircle2Icon className="size-5 text-emerald-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="font-semibold text-emerald-900">FSM State Machine Handshake (§3.1)</span>
+            <span className="font-semibold text-emerald-900">FSM State Machine Handshake (3.1)</span>
             <p className="text-emerald-800">
               Hostel Rep physical sign-off prevents duplicate tradesmen dispatch and protects Caretakers from spurious complaints. Verifying immediately updates the SLA timer.
             </p>
@@ -106,8 +106,8 @@ export default function HostelRepVerificationsPage() {
                           c.priority === "P1"
                             ? "bg-rose-50 text-rose-700 border-rose-200 text-xs"
                             : c.priority === "P2"
-                            ? "bg-amber-50 text-amber-700 border-amber-200 text-xs"
-                            : "bg-slate-50 text-slate-700 border-slate-200 text-xs"
+                              ? "bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                              : "bg-slate-50 text-slate-700 border-slate-200 text-xs"
                         }
                       >
                         {c.priority || "P3"}

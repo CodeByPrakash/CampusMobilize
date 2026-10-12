@@ -1,5 +1,5 @@
 """
-Autonomous SLA Engine & Background Worker (§7.4, §9, §12)
+Autonomous SLA Engine & Background Worker (7.4, 9, 12)
 Runs periodic or on-demand checks on active tickets:
 - Issues warning at 75% SLA deadline elapsed.
 - Auto-escalates at 100% SLA breach (+10 risk penalty, event log, email to Chief Warden).
@@ -43,7 +43,7 @@ class SlaWorker:
         p1_alerts_count = 0
 
         for ticket in active_tickets:
-            # 1. P1 45-Minute Inactivity Escalation (§6.2, §7.4, §10.2)
+            # 1. P1 45-Minute Inactivity Escalation (6.2, 7.4, 10.2)
             if ticket.priority == "P1" and ticket.status in ["OPEN", "ASSIGNED"]:
                 inactivity_mins = (now - ticket.created_at.replace(tzinfo=timezone.utc if ticket.created_at.tzinfo is None else ticket.created_at.tzinfo)).total_seconds() / 60.0
                 if inactivity_mins >= 45.0 and ticket.status != "ESCALATED":

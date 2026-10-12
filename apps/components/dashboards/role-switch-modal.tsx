@@ -57,7 +57,7 @@ export function RoleSwitchModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
-                Switch Demonstration Role (§15)
+                Switch Demonstration Role (15)
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Instantaneous switch between Student, Rep, Caretaker, Warden, and Admin dashboards.
@@ -82,11 +82,10 @@ export function RoleSwitchModal({
               <div
                 key={role.id}
                 onClick={() => handleSelectRole(role)}
-                className={`flex flex-col justify-between rounded-lg border p-4.5 transition-colors cursor-pointer ${
-                  isActive
+                className={`flex flex-col justify-between rounded-lg border p-4.5 transition-colors cursor-pointer ${isActive
                     ? "border-primary bg-accent/40 shadow-xs"
                     : "border-border bg-card hover:bg-accent/30"
-                }`}
+                  }`}
               >
                 <div>
                   <div className="flex items-center gap-3">

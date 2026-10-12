@@ -1,5 +1,5 @@
 """
-Models Package Initialization (§6)
+Models Package Initialization (6)
 Exports all database models.
 """
 

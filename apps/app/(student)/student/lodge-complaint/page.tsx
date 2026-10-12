@@ -250,8 +250,8 @@ export default function StudentComplaintsKanbanPage() {
               item.category_code === "ELECTRICAL"
                 ? "Electrician"
                 : item.category_code === "WATER"
-                ? "Plumber"
-                : "Tradesman",
+                  ? "Plumber"
+                  : "Tradesman",
             sla_deadline: item.sla_deadline
               ? new Date(item.sla_deadline).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
               : "Standard Window",
@@ -453,7 +453,7 @@ export default function StudentComplaintsKanbanPage() {
 
     setIsDeleting(true);
     try {
-      await apiDeleteComplaint(card.id).catch(() => {});
+      await apiDeleteComplaint(card.id).catch(() => { });
       setTickets((prev) => prev.filter((t) => t.id !== card.id));
       if (selectedTicket?.id === card.id) {
         setSelectedTicket(null);
@@ -468,7 +468,7 @@ export default function StudentComplaintsKanbanPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-8xl mx-auto">
         {/* Top Header & Action */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -481,7 +481,7 @@ export default function StudentComplaintsKanbanPage() {
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Live status tracking across Hall 14. Status updates are managed exclusively by facility officers & tradesmen (§3.1 FSM).
+              Live status tracking across Hall 14. Status updates are managed exclusively by facility officers & tradesmen (3.1 FSM).
             </p>
           </div>
 
@@ -505,7 +505,7 @@ export default function StudentComplaintsKanbanPage() {
             </span>
           </div>
           <Badge variant="secondary" className="font-mono text-[11px] shrink-0 hidden sm:inline-flex">
-            FSM §3.1 Active
+            FSM 3.1 Active
           </Badge>
         </div>
 
@@ -532,11 +532,10 @@ export default function StudentComplaintsKanbanPage() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    selectedCategory === cat
-                      ? "bg-background text-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${selectedCategory === cat
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {cat}
                 </button>
@@ -549,11 +548,10 @@ export default function StudentComplaintsKanbanPage() {
                 <button
                   key={pri}
                   onClick={() => setSelectedPriority(pri)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    selectedPriority === pri
-                      ? "bg-background text-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${selectedPriority === pri
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {pri === "ALL" ? "All Pri" : pri}
                 </button>
@@ -610,8 +608,8 @@ export default function StudentComplaintsKanbanPage() {
                                   card.priority === "P1"
                                     ? "destructive"
                                     : card.priority === "P2"
-                                    ? "default"
-                                    : "secondary"
+                                      ? "default"
+                                      : "secondary"
                                 }
                                 className="text-[10px] font-bold px-1.5 py-0"
                               >
@@ -681,11 +679,10 @@ export default function StudentComplaintsKanbanPage() {
 
                             <button
                               onClick={(e) => handleCardUpvote(e, card)}
-                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors ${
-                                card.hasUpvoted
-                                  ? "bg-primary/10 text-primary"
-                                  : "text-muted-foreground hover:bg-muted"
-                              }`}
+                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors ${card.hasUpvoted
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted"
+                                }`}
                             >
                               <ThumbsUpIcon className="size-3" />
                               <span>{card.upvotes}</span>
@@ -724,8 +721,8 @@ export default function StudentComplaintsKanbanPage() {
                           selectedTicket.priority === "P1"
                             ? "destructive"
                             : selectedTicket.priority === "P2"
-                            ? "default"
-                            : "secondary"
+                              ? "default"
+                              : "secondary"
                         }
                         className="text-xs font-bold"
                       >
@@ -747,7 +744,7 @@ export default function StudentComplaintsKanbanPage() {
                 {/* Status & Governance Card */}
                 <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">State Machine Phase (§3.1):</span>
+                    <span className="text-muted-foreground font-medium">State Machine Phase (3.1):</span>
                     <Badge variant="default" className="text-xs">{selectedTicket.status}</Badge>
                   </div>
                   <div className="text-xs text-muted-foreground leading-relaxed">
@@ -762,7 +759,7 @@ export default function StudentComplaintsKanbanPage() {
                     <div>
                       <p className="font-bold">Locked: Escalated to Higher Authority</p>
                       <p className="text-[11px] mt-0.5 opacity-90">
-                        This complaint has breached SLA thresholds and has been escalated to executive oversight (Warden/Chief Warden). It can no longer be deleted or withdrawn by students (§3.4).
+                        This complaint has breached SLA thresholds and has been escalated to executive oversight (Warden/Chief Warden). It can no longer be deleted or withdrawn by students (3.4).
                       </p>
                     </div>
                   </div>

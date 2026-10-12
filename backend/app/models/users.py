@@ -1,5 +1,5 @@
 """
-User & Persona Data Models (§2.2, §6, §15)
+User & Persona Data Models (2.2, 6, 15)
 """
 
 import uuid

@@ -247,7 +247,7 @@ export default function StudentUpvotesPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl pb-12">
+      <div className="space-y-6 max-w-8xl pb-12">
         {/* Top Header & Community Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -257,7 +257,7 @@ export default function StudentUpvotesPage() {
                 <span>Hostel 14 Voice</span>
               </Badge>
               <span className="text-xs text-slate-500 font-mono">
-                Peer Endorsements &amp; Live Triage (§2.2)
+                Peer Endorsements &amp; Live Triage (2.2)
               </span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -364,18 +364,16 @@ export default function StudentUpvotesPage() {
               <button
                 type="button"
                 onClick={() => setFilterCategory("ALL")}
-                className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                  filterCategory === "ALL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1 rounded-lg font-medium transition-all ${filterCategory === "ALL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 All Feed
               </button>
               <button
                 type="button"
                 onClick={() => setFilterCategory("TRENDING")}
-                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                  filterCategory === "TRENDING" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${filterCategory === "TRENDING" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 <FlameIcon className="size-3 text-rose-500" />
                 Trending
@@ -383,9 +381,8 @@ export default function StudentUpvotesPage() {
               <button
                 type="button"
                 onClick={() => setFilterCategory("ELECTRICAL")}
-                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                  filterCategory === "ELECTRICAL" ? "bg-white text-amber-800 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${filterCategory === "ELECTRICAL" ? "bg-white text-amber-800 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 <ZapIcon className="size-3 text-amber-500" />
                 Electrical
@@ -393,9 +390,8 @@ export default function StudentUpvotesPage() {
               <button
                 type="button"
                 onClick={() => setFilterCategory("WATER")}
-                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                  filterCategory === "WATER" ? "bg-white text-blue-800 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${filterCategory === "WATER" ? "bg-white text-blue-800 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 <DropletsIcon className="size-3 text-blue-500" />
                 Plumbing
@@ -403,9 +399,8 @@ export default function StudentUpvotesPage() {
               <button
                 type="button"
                 onClick={() => setFilterCategory("P1")}
-                className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                  filterCategory === "P1" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1 rounded-lg font-medium transition-all ${filterCategory === "P1" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 🚨 P1 Critical
               </button>
@@ -419,27 +414,24 @@ export default function StudentUpvotesPage() {
               <button
                 type="button"
                 onClick={() => setSortBy("upvotes")}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  sortBy === "upvotes" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
-                }`}
+                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${sortBy === "upvotes" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
+                  }`}
               >
                 Most Upvoted
               </button>
               <button
                 type="button"
                 onClick={() => setSortBy("newest")}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  sortBy === "newest" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
-                }`}
+                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${sortBy === "newest" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
+                  }`}
               >
                 Newest
               </button>
               <button
                 type="button"
                 onClick={() => setSortBy("risk")}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  sortBy === "risk" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
-                }`}
+                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${sortBy === "risk" ? "bg-white text-slate-900 font-bold shadow-2xs" : "text-slate-600"
+                  }`}
               >
                 Highest Risk
               </button>
@@ -477,11 +469,10 @@ export default function StudentUpvotesPage() {
                 <div
                   key={item.id}
                   onClick={() => handleOpenDetail(item)}
-                  className={`group bg-white rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md cursor-pointer flex flex-col justify-between overflow-hidden relative ${
-                    isP1
-                      ? "border-rose-200 hover:border-rose-300"
-                      : "border-slate-200 hover:border-indigo-300"
-                  }`}
+                  className={`group bg-white rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md cursor-pointer flex flex-col justify-between overflow-hidden relative ${isP1
+                    ? "border-rose-200 hover:border-rose-300"
+                    : "border-slate-200 hover:border-indigo-300"
+                    }`}
                 >
                   {/* Top Emergency Highlight Stripe for P1 */}
                   {isP1 && (
@@ -493,13 +484,12 @@ export default function StudentUpvotesPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className={`size-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-2xs ${
-                            isElectrical
-                              ? "bg-amber-500"
-                              : isWater
+                          className={`size-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-2xs ${isElectrical
+                            ? "bg-amber-500"
+                            : isWater
                               ? "bg-blue-600"
                               : "bg-indigo-600"
-                          }`}
+                            }`}
                         >
                           {item.title.charAt(0).toUpperCase()}
                         </div>
@@ -515,15 +505,14 @@ export default function StudentUpvotesPage() {
 
                       <Badge
                         variant="outline"
-                        className={`text-[10px] font-mono ${
-                          item.status === "RESOLVED" || item.status === "CLOSED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : item.status === "IN_PROGRESS"
+                        className={`text-[10px] font-mono ${item.status === "RESOLVED" || item.status === "CLOSED"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : item.status === "IN_PROGRESS"
                             ? "bg-blue-50 text-blue-700 border-blue-200"
                             : item.status === "ASSIGNED"
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                            : "bg-slate-100 text-slate-700 border-slate-200"
-                        }`}
+                              ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                              : "bg-slate-100 text-slate-700 border-slate-200"
+                          }`}
                       >
                         {item.status}
                       </Badge>
@@ -533,13 +522,12 @@ export default function StudentUpvotesPage() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge
                         variant="outline"
-                        className={`text-[10px] uppercase font-mono ${
-                          isElectrical
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
-                            : isWater
+                        className={`text-[10px] uppercase font-mono ${isElectrical
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : isWater
                             ? "bg-blue-50 text-blue-800 border-blue-200"
                             : "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
+                          }`}
                       >
                         {isElectrical && <ZapIcon className="size-2.5 mr-1 text-amber-500 inline" />}
                         {isWater && <DropletsIcon className="size-2.5 mr-1 text-blue-500 inline" />}
@@ -608,11 +596,10 @@ export default function StudentUpvotesPage() {
                     <Button
                       size="sm"
                       onClick={(e) => handleUpvote(item.id || item.ticket_no, e)}
-                      className={`text-xs gap-1.5 font-bold px-3 py-1.5 rounded-xl transition-all shadow-2xs ${
-                        hasUpvoted
-                          ? "bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-600/20"
-                          : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
-                      }`}
+                      className={`text-xs gap-1.5 font-bold px-3 py-1.5 rounded-xl transition-all shadow-2xs ${hasUpvoted
+                        ? "bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-600/20"
+                        : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
                     >
                       <ThumbsUpIcon
                         className={`size-3.5 ${hasUpvoted ? "fill-white text-white" : "text-slate-500"}`}
@@ -652,7 +639,7 @@ export default function StudentUpvotesPage() {
         upvoteCount={
           selectedTicket
             ? complaints.find((c) => c.id === selectedTicket.id || c.ticket_no === selectedTicket.ticket_no)
-                ?.upvote_count || selectedTicket.upvote_count || 0
+              ?.upvote_count || selectedTicket.upvote_count || 0
             : 0
         }
         onToggleUpvote={(ticketId) => handleUpvote(ticketId)}

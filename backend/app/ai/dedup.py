@@ -1,5 +1,5 @@
 """
-Duplicate Complaint Detection Engine (§8.2)
+Duplicate Complaint Detection Engine (8.2)
 100% Offline duplicate detection using TF-IDF n-gram cosine similarity + location token overlap.
 Rule: similarity >= 0.85 AND (same block OR same location_text) -> duplicate flag.
 """

@@ -186,7 +186,7 @@ export default function StudentRewardsPage() {
               Recent Points Activity
             </CardTitle>
             <CardDescription className="text-xs">
-              Autonomous points ledger synced with facility resolution lifecycle (§11)
+              Autonomous points ledger synced with facility resolution lifecycle (11)
             </CardDescription>
           </CardHeader>
           <CardContent>

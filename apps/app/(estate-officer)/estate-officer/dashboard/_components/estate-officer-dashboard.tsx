@@ -154,7 +154,7 @@ export function EstateOfficerDashboard() {
       {/* Bill Ingestion Box */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
         <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold text-foreground">Utility Bills Parsing & Reconciliation Engine (§2.7)</h3>
+          <h3 className="text-sm font-semibold text-foreground">Utility Bills Parsing & Reconciliation Engine (2.7)</h3>
           <p className="text-xs text-muted-foreground">
             Upload electricity (TPWODL) or water bills (PDF / CSV) for automatic tariff verification & baseline tuning.
           </p>
@@ -211,7 +211,7 @@ export function EstateOfficerDashboard() {
         <TabsContent value="forecasts" className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Probabilistic Utility Consumption Forecasts (§2.7)</CardTitle>
+              <CardTitle className="text-sm font-semibold">Probabilistic Utility Consumption Forecasts (2.7)</CardTitle>
               <CardDescription className="text-xs">
                 Derived from 36 months historical telemetry and academic festival calendar surges.
               </CardDescription>

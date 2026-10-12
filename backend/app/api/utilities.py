@@ -1,5 +1,5 @@
 """
-Utilities & Forecasting Router (§7.6, §8.5)
+Utilities & Forecasting Router (7.6, 8.5)
 Handles bill parsing & ingestion, quantile consumption forecasting,
 and continuous learning predictions.
 """
@@ -93,7 +93,7 @@ def upload_bills_text(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Parses electricity or water bills from document text using regex/heuristic extractor (§8.5).
+    Parses electricity or water bills from document text using regex/heuristic extractor (8.5).
     """
     if not text_content:
         # Default mock document test text
@@ -182,7 +182,7 @@ def get_utility_forecasts(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Returns quantile forecast predictions with 90% confidence interval (§8.5).
+    Returns quantile forecast predictions with 90% confidence interval (8.5).
     """
     if x_actor_role:
         caller_role = x_actor_role.upper()

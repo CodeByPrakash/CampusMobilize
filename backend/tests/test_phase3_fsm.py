@@ -1,5 +1,5 @@
 """
-Phase 3 Test Suite: Complaint Lifecycle FSM & Timeline Engine (§3, §7.3, §7.4)
+Phase 3 Test Suite: Complaint Lifecycle FSM & Timeline Engine (3, 7.3, 7.4)
 Tests intake with AI triage, P1 bypass, duplicate auto-merge, FSM transition matrix,
 role constraints, audit timeline, and scope isolation.
 """
@@ -77,7 +77,7 @@ def test_complaint_intake_p3_standard_flow(client):
 def test_p1_auto_assignment_bypasses_verify(client):
     """
     Test high-risk P1 complaint:
-    - High risk triggers immediate ASSIGNED status, bypassing VERIFIED (§3 Rule 1).
+    - High risk triggers immediate ASSIGNED status, bypassing VERIFIED (3 Rule 1).
     - Sets SLA deadline to 2 hours.
     - Automatically matches a qualified caretaker.
     - Timeline has 2 events (OPEN, then ASSIGNED by AUTO_ENGINE).
@@ -298,7 +298,7 @@ def test_fsm_resolution_requires_note_or_photo(client):
 
 def test_scope_isolation_returns_404_for_unauthorized_hostel(client):
     """
-    Scope isolation (§2.2):
+    Scope isolation (2.2):
     A student/rep in HB-3 attempting to view a complaint in KMS returns 404.
     A Chief Warden or Director can view across all hostels.
     """

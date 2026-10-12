@@ -6,13 +6,13 @@
 
 ## 0. HOW TO USE THIS DOCUMENT WITH AGENTIC AI
 
-This is a **build bible**, not a pitch. Each phase in §14 is a self-contained, copy-paste-ready master prompt. Workflow:
+This is a **build bible**, not a pitch. Each phase in 14 is a self-contained, copy-paste-ready master prompt. Workflow:
 
 1. Create a fresh git repo `campusiq-campus`.
 2. Work through **Phases 1→7 in order**. Do not parallelize — each phase depends on the previous.
 3. After every phase, run the phase's **Acceptance Tests** before prompting the next phase.
-4. Paste the **Standing Rules** (§14.1) at the top of every agent session.
-5. If an agent drifts, re-anchor it: *"Re-read §<n> of BUILD_SPEC.md. You violated rule #<k>."*
+4. Paste the **Standing Rules** (14.1) at the top of every agent session.
+5. If an agent drifts, re-anchor it: *"Re-read <n> of BUILD_SPEC.md. You violated rule #<k>."*
 
 **Definition of done (whole project):** a judge can log in as each of the 8 personas, file a complaint as a student, watch it get auto-risk-scored and auto-assigned, receive a real email, move across a kanban, get closed by a warden, and see the hostel's Efficiency Rating change — with zero hardcoded data in any production code path.
 
@@ -48,7 +48,7 @@ CampusIQ Campus Edition is an autonomous facility-intelligence and complaint-ope
 | **Risk Score** | How dangerous/urgent is this *issue*? | 0–100 | Everyone |
 | **Ranking Score** | Where does this ticket sit in the *work queue right now*? | 0–100 + queue position | Caretaker, Warden, Chief Warden |
 
-A P2 ticket at queue-rank #2 outranks a P2 at rank #19. A P1 always outranks everything. Details in §8.
+A P2 ticket at queue-rank #2 outranks a P2 at rank #19. A P1 always outranks everything. Details in 8.
 
 ---
 
@@ -139,11 +139,11 @@ Rules:
 │                    FastAPI v3 Backend  (Render / Railway)             │
 │  ┌─────────────┐ ┌───────────────┐ ┌───────────────┐ ┌─────────────┐  │
 │  │ Auth (JWT + │ │ Complaint     │ │ AI Engine     │ │ Reports &   │  │
-│  │ role guard) │ │ Engine (FSM)  │ │ (§8)          │ │ Exporters   │  │
+│  │ role guard) │ │ Engine (FSM)  │ │ (8)          │ │ Exporters   │  │
 │  └─────────────┘ └──────┬────────┘ └──────┬────────┘ └─────────────┘  │
 │  ┌─────────────┐ ┌──────▼────────┐ ┌──────▼────────┐ ┌─────────────┐  │
 │  │ Mail Service│ │ SLA Worker    │ │ Reward Engine │ │ Forecast &  │  │
-│  │ (SMTP queue)│ │ (APScheduler) │ │ (§11)         │ │ Bill Parser │  │
+│  │ (SMTP queue)│ │ (APScheduler) │ │ (11)         │ │ Bill Parser │  │
 │  └─────────────┘ └───────────────┘ └───────────────┘ └─────────────┘  │
 └───────┬──────────────────┬───────────────────┬────────────────────────┘
         │                  │                   │
@@ -342,7 +342,7 @@ CREATE TABLE performance_scores (       -- snapshot per staff user per month
   first_time_resolution_pct NUMERIC(5,2),
   avg_resolution_hours NUMERIC(8,2),
   rating_avg NUMERIC(3,2),
-  performance_index NUMERIC(5,2),       -- 0–100, see §11
+  performance_index NUMERIC(5,2),       -- 0–100, see 11
   hostel_rank INT,
   UNIQUE (user_id, month)
 );
@@ -357,7 +357,7 @@ CREATE TABLE reward_ledger (
 CREATE TABLE hostel_ratings (           -- monthly, per hostel
   hostel_id UUID REFERENCES hostels(id),
   month DATE NOT NULL,
-  efficiency_rating NUMERIC(5,2),       -- 0–100, see §11
+  efficiency_rating NUMERIC(5,2),       -- 0–100, see 11
   resolution_time_score NUMERIC(5,2),
   per_resident_energy NUMERIC(10,3),
   per_resident_water NUMERIC(10,3),
@@ -416,7 +416,7 @@ Base path `/api/v1`. Auth: `Authorization: Bearer <access_token>`. All list endp
 | Method | Route | Body / Query | Permission |
 |---|---|---|---|
 | POST | `/complaints` | ComplaintCreate (below) | any active user |
-| GET | `/complaints` | `status, priority, category, hostel_id, q, mine, assigned_to_me` | scope-limited (§2.2) |
+| GET | `/complaints` | `status, priority, category, hostel_id, q, mine, assigned_to_me` | scope-limited (2.2) |
 | GET | `/complaints/{id}` | – | scope-limited |
 | GET | `/complaints/{id}/timeline` | – | events ordered asc |
 | POST | `/complaints/{id}/media` | multipart file | uploader |
@@ -440,7 +440,7 @@ Base path `/api/v1`. Auth: `Authorization: Bearer <access_token>`. All list endp
 ### 7.4 Workflow events (the ONLY way to change status)
 | Method | Route | Body | Permission |
 |---|---|---|---|
-| POST | `/complaints/{id}/events` | `EventRequest` (below) | per transition matrix (§7.5) |
+| POST | `/complaints/{id}/events` | `EventRequest` (below) | per transition matrix (7.5) |
 
 **EventRequest**
 ```json
@@ -474,7 +474,7 @@ Any other transition → `409 INVALID_TRANSITION`. Each valid one: write event, 
 | GET | `/ai/queue?hostel_id=` | ranked work queue with risk + ranking scores |
 | GET | `/analytics/hostel/{code}?months=6` | complaint volumes, SLA compliance, category mix, top recurring locations |
 | GET | `/analytics/campus?months=6` | cross-hostel comparison (CHIEF_WARDEN, DIRECTOR, ADMIN) |
-| GET | `/analytics/risk-index` | campus risk index 0–100 (§8.6) |
+| GET | `/analytics/risk-index` | campus risk index 0–100 (8.6) |
 
 ### 7.6 Utilities, bills, forecasts
 | Method | Route | Notes |
@@ -485,7 +485,7 @@ Any other transition → `409 INVALID_TRANSITION`. Each valid one: write event, 
 | GET | `/utilities/forecasts?utility=electricity&months_ahead=3` | predictions + CI |
 | POST | `/events` | create event (CHIEF_WARDEN) |
 | GET | `/events/upcoming` | events in next 90 days |
-| POST | `/events/{id}/prebrief` | generate festival pre-brief (§8.5) |
+| POST | `/events/{id}/prebrief` | generate festival pre-brief (8.5) |
 
 ### 7.7 Performance & rewards
 | Method | Route | Notes |
@@ -587,7 +587,7 @@ Each sub-metric normalized 0–100; store history for trend chart.
 ## 9. FRONTEND SPECIFICATION (Next.js 16 + Tailwind v4 + shadcn/ui)
 
 ### 9.1 Global
-- **Role-routed shell:** after login, the sidebar renders ONLY the modules the role may use (§2.2). All data fetches send the JWT; the API enforces scope anyway.
+- **Role-routed shell:** after login, the sidebar renders ONLY the modules the role may use (2.2). All data fetches send the JWT; the API enforces scope anyway.
 - **Design language:** clean, official, trustworthy. Light mode default, dark mode supported. Dense data tables, no cartoon gamification. Colors: slate neutrals + one accent (emerald). Severity chips: P1 red, P2 amber, P3 blue, P4 slate.
 - **PWA:** installable; student flow must work on a 360px screen.
 
@@ -729,21 +729,21 @@ CI: GitHub Actions — backend pytest + ruff, frontend tsc + build + lint; deplo
 You are building CampusIQ Campus Edition (NIT Rourkela) from BUILD_SPEC.md.
 Hard rules:
 1. Zero hardcoded demo data in any production code path. Seed data lives only in seed scripts.
-2. Every endpoint enforces server-side RBAC per §2.2. Never trust the UI.
-3. All status changes go through the event endpoint + complaint_events (§3).
+2. Every endpoint enforces server-side RBAC per 2.2. Never trust the UI.
+3. All status changes go through the event endpoint + complaint_events (3).
 4. Every feature ships with its acceptance tests (pytest for backend, vitest for frontend). Write tests FIRST.
 5. If the spec is ambiguous, choose the simplest option consistent with the spec and leave a `NOTE(spec):` comment.
 6. Run the phase acceptance tests and paste results before claiming done.
-7. Never modify the state machine (§3) without explicit instruction.
+7. Never modify the state machine (3) without explicit instruction.
 ```
 
 ### 14.2 PHASE 1 — Backend foundation & auth
 ```
 [PASTE STANDING RULES]
-Phase 1 task: repo scaffold + PostgreSQL schema (§6) via Alembic + config (§5) +
-FastAPI app skeleton with health check. Implement auth (§7.1): register (first user
+Phase 1 task: repo scaffold + PostgreSQL schema (6) via Alembic + config (5) +
+FastAPI app skeleton with health check. Implement auth (7.1): register (first user
 → ADMIN), login, refresh, /auth/me returning role + permissions array.
-Seed script: 8 demo personas per §15 with real relationships (hostels, wardens,
+Seed script: 8 demo personas per 15 with real relationships (hostels, wardens,
 caretakers with skills).
 Acceptance tests:
 - pytest: register→login→/auth/me returns role; second user cannot self-assign ADMIN.
@@ -755,12 +755,12 @@ Acceptance tests:
 ### 14.3 PHASE 2 — Complaint engine (FSM)
 ```
 [PASTE STANDING RULES]
-Phase 2 task: implement §7.3–7.4 fully: ComplaintCreate, scoped list/get, media
+Phase 2 task: implement 7.3–7.4 fully: ComplaintCreate, scoped list/get, media
 upload, upvote, and the /events endpoint enforcing the transition matrix exactly
-as §7.4's table (409 on invalid). Every transition writes complaint_events and
+as 7.4's table (409 on invalid). Every transition writes complaint_events and
 updates mutable fields transactionally. Implement ticket_no sequence CIQ-<year>-#####.
 Acceptance tests:
-- pytest matrix: for EVERY (from,to) pair in §7.4, allowed roles succeed (201) and
+- pytest matrix: for EVERY (from,to) pair in 7.4, allowed roles succeed (201) and
   forbidden roles get 403; invalid pairs get 409.
 - pytest: timeline endpoint returns events in order; no direct status write exists.
 - pytest: scope — student from HB-3 cannot GET a ticket from HB-5 (404, not 403).
@@ -770,13 +770,13 @@ Acceptance tests:
 ### 14.4 PHASE 3 — AI engine
 ```
 [PASTE STANDING RULES]
-Phase 3 task: implement §8. Deterministic heuristics FIRST exactly as specified
-(they are the guaranteed fallback), then the ML models (§8.1 classifier, §8.2
-embeddings dedup, §8.5 forecaster) trained from seed data. Wire: complaint create →
-classify → dedup → risk → priority → auto-assign (§8 matcher) → emails (§10).
-Queue endpoints §7.5. Recompute risk on escalation (+10, cap 100).
+Phase 3 task: implement 8. Deterministic heuristics FIRST exactly as specified
+(they are the guaranteed fallback), then the ML models (8.1 classifier, 8.2
+embeddings dedup, 8.5 forecaster) trained from seed data. Wire: complaint create →
+classify → dedup → risk → priority → auto-assign (8 matcher) → emails (10).
+Queue endpoints 7.5. Recompute risk on escalation (+10, cap 100).
 Acceptance tests:
-- pytest: the §8.3 worked example inputs produce risk 57.4 (night) / 47.4 (day) / 82 (P1).
+- pytest: the 8.3 worked example inputs produce risk 57.4 (night) / 47.4 (day) / 82 (P1).
 - pytest: duplicate with sim≥0.85 same block → merged, upvote++.
 - pytest: P1 skips verification (OPEN→ASSIGNED) and emails trigger (mail dev log).
 - pytest: ranking: as SLA deadline approaches, ranking_score rises; queue order stable.
@@ -787,8 +787,8 @@ Acceptance tests:
 ### 14.5 PHASE 4 — SLA worker & mail worker
 ```
 [PASTE STANDING RULES]
-Phase 4 task: APScheduler SLA worker (60s, idempotent, SKIP LOCKED) implementing §3
-rules 1–2; Redis mail queue + worker with all §10.2 templates; notifications table
+Phase 4 task: APScheduler SLA worker (60s, idempotent, SKIP LOCKED) implementing 3
+rules 1–2; Redis mail queue + worker with all 10.2 templates; notifications table
 writes. MAIL_ENABLED=false path prints bodies.
 Acceptance tests:
 - pytest (time-mocked): ticket at 75% SLA → warning email; at 100% → ESCALATED +
@@ -801,11 +801,11 @@ Acceptance tests:
 ### 14.6 PHASE 5 — Frontend
 ```
 [PASTE STANDING RULES]
-Phase 5 task: Next.js 16 app per §9. Role-routed shell, all pages in §9.2 for all 8
-personas, components in §9.3. Kanban via dnd-kit with optimistic update + rollback.
+Phase 5 task: Next.js 16 app per 9. Role-routed shell, all pages in 9.2 for all 8
+personas, components in 9.3. Kanban via dnd-kit with optimistic update + rollback.
 Ticket page timeline from events API. Decision dashboard for DIRECTOR with export buttons.
 Acceptance tests:
-- vitest: role-routed nav renders exactly §2.2 modules per persona.
+- vitest: role-routed nav renders exactly 2.2 modules per persona.
 - e2e (playwright): student files complaint → appears in Hostel Rep triage →
   verified → appears in caretaker kanban → resolved → approved by warden → CLOSED;
   timeline shows every step with correct actor.
@@ -817,10 +817,10 @@ Acceptance tests:
 ### 14.7 PHASE 6 — Utilities, forecasts, events, rewards
 ```
 [PASTE STANDING RULES]
-Phase 6 task: §7.6 bills upload + parser + manual-confirm queue; forecast training +
-predictions + CI; events CRUD + pre-brief generator; §7.7 performance computation
-worker (monthly) + rewards propose/approve; §7.9 report pack + PDF + CSV exports;
-§8.6 campus risk index.
+Phase 6 task: 7.6 bills upload + parser + manual-confirm queue; forecast training +
+predictions + CI; events CRUD + pre-brief generator; 7.7 performance computation
+worker (monthly) + rewards propose/approve; 7.9 report pack + PDF + CSV exports;
+8.6 campus risk index.
 Acceptance tests:
 - pytest: sample NIT-R bill PDF (provided in fixtures) parses to expected units/amount;
   low-confidence parse queues for confirm.
@@ -832,11 +832,11 @@ Acceptance tests:
 ### 14.8 PHASE 7 — Hardening & deployment
 ```
 [PASTE STANDING RULES]
-Phase 7 task: §12 security items, §13 deployment (Vercel + Render + Neon + Upstash +
-Resend + R2), CI workflow, README with run instructions, demo script (§16) rehearsed.
+Phase 7 task: 12 security items, 13 deployment (Vercel + Render + Neon + Upstash +
+Resend + R2), CI workflow, README with run instructions, demo script (16) rehearsed.
 Acceptance tests:
-- Full §15 demo script executed end-to-end on the deployed URL.
-- CI green on main. Security checklist §12 verified (rate limits, CORS, RBAC spot checks).
+- Full 15 demo script executed end-to-end on the deployed URL.
+- CI green on main. Security checklist 12 verified (rate limits, CORS, RBAC spot checks).
 - Lighthouse ≥ 90 on /file (mobile).
 ```
 
@@ -883,7 +883,7 @@ campusiq-campus/
 │   │   ├── main.py  config.py  deps.py
 │   │   ├── auth/  users/  complaints/  events/  ai/  mail/  workers/
 │   │   ├── utilities/  performance/  reports/  admin/
-│   │   └── models/          # SQLAlchemy models mirroring §6
+│   │   └── models/          # SQLAlchemy models mirroring 6
 │   ├── alembic/
 │   ├── tests/
 │   ├── seed_data/
@@ -892,11 +892,11 @@ campusiq-campus/
 │   ├── data_generators/     # synthetic cold-start generators (kept from v2)
 │   ├── training/            # train scripts + evaluation reports
 │   └── models/              # artifacts (gitignored)
-├── app/                     # Next.js 16 frontend (§9)
+├── app/                     # Next.js 16 frontend (9)
 │   ├── app/  components/  lib/  e2e/
 └── .github/workflows/
 ```
 
 ---
 
-*End of specification. Any conflict: §3 (state machine) and §2.2 (permissions) always win.*
+*End of specification. Any conflict: 3 (state machine) and 2.2 (permissions) always win.*

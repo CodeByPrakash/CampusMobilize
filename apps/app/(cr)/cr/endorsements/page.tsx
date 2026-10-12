@@ -41,7 +41,7 @@ export default function CrEndorsementsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -60,7 +60,7 @@ export default function CrEndorsementsPage() {
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-xs text-indigo-900 flex items-start gap-3">
           <FileCheckIcon className="size-5 text-indigo-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="font-semibold text-indigo-950">Statutory Role: CR Verification Authority (§2.2)</span>
+            <span className="font-semibold text-indigo-950">Statutory Role: CR Verification Authority (2.2)</span>
             <p className="text-indigo-800">
               When you endorse a ticket, it attaches your cryptographic actor stamp (Diya Patel, CR), increases the dynamic AI queue urgency by +15 points, and marks the issue as physically confirmed.
             </p>
@@ -119,8 +119,8 @@ export default function CrEndorsementsPage() {
                                 c.priority === "P1"
                                   ? "bg-rose-50 text-rose-700 border-rose-200"
                                   : c.priority === "P2"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                                  : "bg-slate-50 text-slate-700 border-slate-200"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-slate-50 text-slate-700 border-slate-200"
                               }
                             >
                               {c.priority || "P3"}

@@ -107,7 +107,7 @@ export function WardenDashboard() {
         to_status: "ASSIGNED",
         assignee_id: selectedAssignee,
         note: `Assigned to ${selectedAssignee} by Warden Dr. S. Nanda`,
-      }).catch(() => {});
+      }).catch(() => { });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -132,7 +132,7 @@ export function WardenDashboard() {
       await apiTransitionComplaint(selectedTicket.ticket_no, {
         to_status: "CLOSED",
         note: "Photo proof inspected and approved. Ticket marked CLOSED by Warden Dr. S. Nanda.",
-      }).catch(() => {});
+      }).catch(() => { });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -151,7 +151,7 @@ export function WardenDashboard() {
   const handleRejectBack = async () => {
     if (!selectedTicket) return;
     if (!rejectFeedback.trim()) {
-      toast.error("Mandatory feedback required when rejecting resolution (§2.5)");
+      toast.error("Mandatory feedback required when rejecting resolution (2.5)");
       return;
     }
 
@@ -160,7 +160,7 @@ export function WardenDashboard() {
         to_status: "REJECTED_BACK",
         note: rejectFeedback,
         reason: rejectFeedback,
-      }).catch(() => {});
+      }).catch(() => { });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -265,7 +265,7 @@ export function WardenDashboard() {
                     <TableHead>Priority</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Assignee</TableHead>
-                    <TableHead className="text-right">Warden Decision (§2.5)</TableHead>
+                    <TableHead className="text-right">Warden Decision (2.5)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -291,8 +291,8 @@ export function WardenDashboard() {
                             t.priority === "P1"
                               ? "destructive"
                               : t.priority === "P2"
-                              ? "default"
-                              : "secondary"
+                                ? "default"
+                                : "secondary"
                           }
                           className="text-[10px]"
                         >
@@ -305,10 +305,10 @@ export function WardenDashboard() {
                             t.status === "CLOSED"
                               ? "outline"
                               : t.status === "RESOLVED"
-                              ? "secondary"
-                              : t.status === "ASSIGNED"
-                              ? "outline"
-                              : "default"
+                                ? "secondary"
+                                : t.status === "ASSIGNED"
+                                  ? "outline"
+                                  : "default"
                           }
                           className="text-[10px]"
                         >

@@ -266,9 +266,8 @@ export function NitRourkelaMap() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Ola/Uber Style White & Shaded Vector Map */}
         <div
-          className={`relative min-h-[580px] rounded-xl border overflow-hidden shadow-sm transition-colors duration-300 lg:col-span-2 ${
-            isDark ? "bg-[#181a1f]" : "bg-[#f8f9fa]"
-          }`}
+          className={`relative min-h-[580px] rounded-xl border overflow-hidden shadow-sm transition-colors duration-300 lg:col-span-2 ${isDark ? "bg-[#181a1f]" : "bg-[#f8f9fa]"
+            }`}
         >
           {/* Base SVG Rendering: Parks, Roads, Shaded 2.5D Buildings */}
           <svg className="absolute inset-0 size-full select-none" xmlns="http://www.w3.org/2000/svg">
@@ -365,8 +364,8 @@ export function NitRourkelaMap() {
                 const borderStroke = isSelected
                   ? "var(--primary)"
                   : isDark
-                  ? "#2d3340"
-                  : "#cbd5e1";
+                    ? "#2d3340"
+                    : "#cbd5e1";
 
                 return (
                   <g
@@ -488,9 +487,8 @@ export function NitRourkelaMap() {
                 <button
                   key={place.id}
                   onClick={() => setSelectedPlace(place)}
-                  className={`group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 focus:outline-none ${
-                    isSelected ? "scale-125 z-40" : "hover:scale-115 z-20"
-                  }`}
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 focus:outline-none ${isSelected ? "scale-125 z-40" : "hover:scale-115 z-20"
+                    }`}
                   style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 >
                   {/* Subtle Radar Pulse on Hotspots */}
@@ -500,15 +498,14 @@ export function NitRourkelaMap() {
 
                   {/* Clean Circular Uber-style Pin with White Rim */}
                   <div
-                    className={`flex items-center justify-center size-7 rounded-full shadow-lg border-2 transition-all ${
-                      isCritical
-                        ? "bg-destructive text-destructive-foreground border-white ring-2 ring-destructive/40"
-                        : isSelected
+                    className={`flex items-center justify-center size-7 rounded-full shadow-lg border-2 transition-all ${isCritical
+                      ? "bg-destructive text-destructive-foreground border-white ring-2 ring-destructive/40"
+                      : isSelected
                         ? "bg-primary text-primary-foreground border-white ring-2 ring-primary"
                         : isDark
-                        ? "bg-[#252a36] text-[#e6edf3] border-[#383f4f]"
-                        : "bg-white text-foreground border-slate-300 hover:border-foreground"
-                    }`}
+                          ? "bg-[#252a36] text-[#e6edf3] border-[#383f4f]"
+                          : "bg-white text-foreground border-slate-300 hover:border-foreground"
+                      }`}
                   >
                     {getCategoryIcon(place.category)}
                   </div>
@@ -606,8 +603,8 @@ export function NitRourkelaMap() {
                       selectedPlace.riskLevel === "high"
                         ? "destructive"
                         : selectedPlace.riskLevel === "moderate"
-                        ? "default"
-                        : "secondary"
+                          ? "default"
+                          : "secondary"
                     }
                     className="text-[10px] font-mono font-semibold"
                   >
@@ -645,8 +642,8 @@ export function NitRourkelaMap() {
                         selectedPlace.telemetry.status === "critical"
                           ? "destructive"
                           : selectedPlace.telemetry.status === "warning"
-                          ? "default"
-                          : "secondary"
+                            ? "default"
+                            : "secondary"
                       }
                       className="text-[10px]"
                     >
@@ -706,7 +703,7 @@ export function NitRourkelaMap() {
                   >
                     <NavigationIcon className="size-3.5" />
                     <span>
-                      {isSimulatingDispatch ? "Dispatching Patrol Buggy..." : "Dispatch Works Squad (§14)"}
+                      {isSimulatingDispatch ? "Dispatching Patrol Buggy..." : "Dispatch Works Squad (14)"}
                     </span>
                   </Button>
                 </div>

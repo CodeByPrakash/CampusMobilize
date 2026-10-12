@@ -1,5 +1,5 @@
 """
-CampusIQ AI Engine Facade (§8)
+CampusIQ AI Engine Facade (8)
 Autonomous Facility Intelligence Engine coordinating offline classification,
 duplicate detection, risk scoring, ranking, caretaker matching, and utility forecasting.
 Runs 100% offline with zero external API calls.
@@ -58,11 +58,11 @@ class CampusAIEngine:
     ) -> Dict[str, Any]:
         """
         Executes complete intelligent intake triage in a single call:
-        1. Classifies category and confidence (§8.1)
-        2. Detects duplicate complaints in the same hostel (§8.2)
-        3. Calculates risk score, priority (P1–P4), and factor explanation (§8.3)
-        4. Matches suitable caretaker by skill and workload (§2.2, §6)
-        5. Computes ranking score and initial work queue metrics (§8.4)
+        1. Classifies category and confidence (8.1)
+        2. Detects duplicate complaints in the same hostel (8.2)
+        3. Calculates risk score, priority (P1–P4), and factor explanation (8.3)
+        4. Matches suitable caretaker by skill and workload (2.2, 6)
+        5. Computes ranking score and initial work queue metrics (8.4)
         """
         now = now or datetime.now(timezone.utc)
         title = complaint_data.get("title", "")
@@ -97,7 +97,7 @@ class CampusAIEngine:
             active_complaints=active_complaints
         )
 
-        # 3. Risk Scoring (§8.3)
+        # 3. Risk Scoring (8.3)
         asset_crit = self.risk_scorer.get_asset_criticality(
             location_text=location_text,
             text_content=f"{title} {description}"
@@ -120,7 +120,7 @@ class CampusAIEngine:
         priority = risk_res["priority"]
         risk_score = risk_res["risk_score"]
 
-        # 4. Caretaker Matching (§2.2, §6)
+        # 4. Caretaker Matching (2.2, 6)
         caretakers = caretakers or []
         match_res = self.caretaker_matcher.match_caretaker(
             complaint={
@@ -132,7 +132,7 @@ class CampusAIEngine:
             active_workloads=active_workloads or {}
         )
 
-        # 5. Ranking Score (§8.4)
+        # 5. Ranking Score (8.4)
         rank_res = self.ranking_scorer.calculate_ranking_score(
             risk_score=risk_score,
             priority=priority,
@@ -155,7 +155,7 @@ class CampusAIEngine:
             "ranking_score": rank_res["ranking_score"],
             "urgency": rank_res["urgency"],
             "matched_caretaker": match_res,
-            "skip_verification": priority == "P1"  # P1 skips verify per §3 rule 1
+            "skip_verification": priority == "P1"  # P1 skips verify per 3 rule 1
         }
 
     def rank_queue(self, tickets: List[Dict[str, Any]], now: Optional[datetime] = None) -> List[Dict[str, Any]]:

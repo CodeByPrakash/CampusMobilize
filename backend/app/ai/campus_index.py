@@ -1,5 +1,5 @@
 """
-Campus Risk Index (CRI) Calculator (§8.6)
+Campus Risk Index (CRI) Calculator (8.6)
 Computes campus-wide composite operational risk index (0–100) for the Director & Chief Warden dashboards:
 CRI = 0.35×open_P1_P2_ratio + 0.25×sla_breach_rate_30d + 0.20×utility_anomaly_zscore + 0.20×hygiene_complaint_trend
 """
@@ -9,7 +9,7 @@ from typing import Dict, Any
 
 class CampusRiskIndexCalculator:
     """
-    Computes composite Campus Risk Index (CRI) per §8.6.
+    Computes composite Campus Risk Index (CRI) per 8.6.
     """
 
     @classmethod

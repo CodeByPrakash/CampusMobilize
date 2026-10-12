@@ -178,7 +178,7 @@ All status updates must pass through `POST /api/v1/complaints/{id}/events`. The 
 | :--- | :--- | :--- | :--- |
 | `OPEN` | `VERIFIED` | `HOSTEL_REP`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Rep adds verification note |
 | `OPEN` | `REJECTED` | `HOSTEL_REP`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Requires rejection `reason` (min 3 chars) |
-| `OPEN` | `ASSIGNED` | `SYSTEM`, `AUTO_ENGINE`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Emergency P1 auto-bypass (§3 Rule 1) |
+| `OPEN` | `ASSIGNED` | `SYSTEM`, `AUTO_ENGINE`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Emergency P1 auto-bypass (3 Rule 1) |
 | `VERIFIED` | `ASSIGNED` | `SYSTEM`, `AUTO_ENGINE`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Requires `assignee_id` |
 | `VERIFIED` | `REJECTED` | `HOSTEL_REP`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Requires rejection `reason` |
 | `ASSIGNED` | `IN_PROGRESS` | `CARETAKER`, `WARDEN`, `CHIEF_WARDEN`, `ADMIN` | Caretaker starts work |

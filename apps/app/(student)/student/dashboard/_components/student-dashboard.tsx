@@ -141,15 +141,15 @@ export function StudentDashboard() {
 
   const handleUpvote = async (item: ComplaintItem) => {
     try {
-      await apiUpvoteComplaint(item.id).catch(() => {});
+      await apiUpvoteComplaint(item.id).catch(() => { });
       setHostelFeed((prev) =>
         prev.map((c) =>
           c.id === item.id
             ? {
-                ...c,
-                upvotes: c.hasUpvoted ? c.upvotes - 1 : c.upvotes + 1,
-                hasUpvoted: !c.hasUpvoted,
-              }
+              ...c,
+              upvotes: c.hasUpvoted ? c.upvotes - 1 : c.upvotes + 1,
+              hasUpvoted: !c.hasUpvoted,
+            }
             : c
         )
       );
@@ -175,7 +175,7 @@ export function StudentDashboard() {
         block_name: block,
         room_no: room,
         severity: parseInt(severity, 10),
-      }).catch(() => {});
+      }).catch(() => { });
 
       const newTicket: ComplaintItem = {
         id: `c-${Date.now()}`,
@@ -284,7 +284,7 @@ export function StudentDashboard() {
               <div>
                 <CardTitle className="text-base font-semibold">Lodge New Hostel Complaint</CardTitle>
                 <CardDescription className="text-xs">
-                  Direct submission to HB-3 Representative triage inbox (§2.1)
+                  Direct submission to HB-3 Representative triage inbox (2.1)
                 </CardDescription>
               </div>
               <Button
@@ -489,7 +489,7 @@ export function StudentDashboard() {
                 <div>
                   <CardTitle className="text-sm font-semibold">Hostel Community Feed (HB-3)</CardTitle>
                   <CardDescription className="text-xs">
-                    Upvote issues affecting your wing or common facilities to escalate priority (§2.1).
+                    Upvote issues affecting your wing or common facilities to escalate priority (2.1).
                   </CardDescription>
                 </div>
                 <Badge variant="outline" className="text-xs">

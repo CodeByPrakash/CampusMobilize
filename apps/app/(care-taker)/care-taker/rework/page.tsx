@@ -43,7 +43,7 @@ export default function CaretakerReworkPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -63,7 +63,7 @@ export default function CaretakerReworkPage() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950 flex items-start gap-3">
           <AlertCircleIcon className="size-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="font-semibold text-amber-900">Performance Index (PI) Governance (§11.1)</span>
+            <span className="font-semibold text-amber-900">Performance Index (PI) Governance (11.1)</span>
             <p className="text-amber-800">
               Formula: <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">PI = 100 * (0.45*SLA + 0.30*FTR + 0.15*Rating + 0.10*Throughput) - 5*ReworkRate</code>. Resolving rework tickets with verified photographic proof restores your First-Time-Resolution metrics.
             </p>

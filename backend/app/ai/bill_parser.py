@@ -1,5 +1,5 @@
 """
-Utility Bill Parser (§8.5)
+Utility Bill Parser (8.5)
 Extracts structured consumption, billing amount, and tariffs from CSV and text/PDF bill formats.
 Assigns confidence score; flags parses below 0.8 for manual UI confirmation.
 """

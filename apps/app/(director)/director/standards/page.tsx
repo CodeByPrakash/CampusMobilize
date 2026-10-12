@@ -77,14 +77,14 @@ export default function DirectorStandardsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Campus Living Standards & Quality Index
             </h1>
             <p className="text-sm text-slate-500">
-              Cross-hostel benchmark metrics comparing hygiene, energy efficiency, and student satisfaction (§11.3).
+              Cross-hostel benchmark metrics comparing hygiene, energy efficiency, and student satisfaction (11.3).
             </p>
           </div>
           <Badge className="bg-indigo-600 text-white px-3 py-1 text-sm font-semibold gap-1.5">
@@ -140,7 +140,7 @@ export default function DirectorStandardsPage() {
         <Card className="bg-white border-slate-200">
           <CardHeader>
             <CardTitle className="text-base font-semibold text-slate-900">
-              Hostel Efficiency & Standards Matrix (§11.3)
+              Hostel Efficiency & Standards Matrix (11.3)
             </CardTitle>
             <CardDescription className="text-xs">
               Direct telemetry-based ranking published for the Institute Board of Governors

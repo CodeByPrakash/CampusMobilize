@@ -1,5 +1,5 @@
 """
-Performance, Reward, and Hostel Rating Models (§6, §11)
+Performance, Reward, and Hostel Rating Models (6, 11)
 """
 
 import uuid
@@ -23,7 +23,7 @@ class PerformanceScore(Base):
     first_time_resolution_pct = Column(Float, default=100.0)
     avg_resolution_hours = Column(Float, default=0.0)
     rating_avg = Column(Float, default=5.0)
-    performance_index = Column(Float, default=85.0)  # 0–100 (§11.1)
+    performance_index = Column(Float, default=85.0)  # 0–100 (11.1)
     hostel_rank = Column(Integer, default=1)
     created_at = Column(DateTime, default=get_utc_now)
 
@@ -47,7 +47,7 @@ class HostelRating(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     hostel_id = Column(String(36), ForeignKey("hostels.id"), nullable=False)
     month = Column(Date, nullable=False)
-    efficiency_rating = Column(Float, default=85.0)  # 0–100 (§11.3)
+    efficiency_rating = Column(Float, default=85.0)  # 0–100 (11.3)
     resolution_time_score = Column(Float, default=80.0)
     per_resident_energy = Column(Float, default=95.0)
     per_resident_water = Column(Float, default=4.2)

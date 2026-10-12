@@ -169,7 +169,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge className="bg-emerald-600 text-white text-xs font-semibold py-0.5 px-2.5">
-                Automated Pre-Brief Pack (§8.5)
+                Automated Pre-Brief Pack (8.5)
               </Badge>
               <Badge variant="outline" className="text-xs text-slate-600 font-mono bg-white">
                 Countdown: In {daysUntil} Days
@@ -259,7 +259,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
 
       <CardContent className="p-4 sm:p-6 space-y-6">
         {/* ========================================================================= */}
-        {/* Executive AI Briefing & Operational Synthesis Hub (§8.5) */}
+        {/* Executive AI Briefing & Operational Synthesis Hub (8.5) */}
         {/* ========================================================================= */}
         <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-white to-slate-50 p-4 sm:p-5 space-y-4 shadow-2xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 pb-3">
@@ -269,7 +269,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900">
-                  CampusIQ AI Operational Synthesis (§8.5)
+                  CampusIQ AI Operational Synthesis (8.5)
                 </h3>
                 <p className="text-[11px] text-slate-500">
                   Autonomous forecaster predictions & facility readiness guidance
@@ -395,10 +395,10 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
                 code === "HB-3"
                   ? "Primary Guest Hub"
                   : code === "CVR"
-                  ? "Dining & Mess Hub"
-                  : code === "KMS"
-                  ? "Girls Delegations"
-                  : "Mega Event Staging";
+                    ? "Dining & Mess Hub"
+                    : code === "KMS"
+                      ? "Girls Delegations"
+                      : "Mega Event Staging";
               const footfallBadge =
                 code === "HB-3" ? "+1,450" : code === "CVR" ? "+980" : code === "KMS" ? "+820" : "+1,250";
 
@@ -418,10 +418,10 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
                     {code === "HB-3"
                       ? "Pre-fill 50kL sumps 12h prior. Plumber rapid squad stationed."
                       : code === "CVR"
-                      ? "Mess RO operating on 24h continuous filtration."
-                      : code === "KMS"
-                      ? "Booster pump bypass active during morning hours."
-                      : "Dual-feed automatic transfer switch verified."}
+                        ? "Mess RO operating on 24h continuous filtration."
+                        : code === "KMS"
+                          ? "Booster pump bypass active during morning hours."
+                          : "Dual-feed automatic transfer switch verified."}
                   </p>
                 </div>
               );
@@ -520,18 +520,16 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
                 <div
                   key={idx}
                   onClick={() => toggleCheck(idx)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${
-                    isChecked
+                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${isChecked
                       ? "border-emerald-200 bg-emerald-50/40 text-emerald-950"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`size-4 rounded mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
-                      isChecked
+                    className={`size-4 rounded mt-0.5 flex items-center justify-center shrink-0 transition-colors ${isChecked
                         ? "bg-emerald-600 text-white"
                         : "border border-slate-300 bg-slate-50"
-                    }`}
+                      }`}
                   >
                     {isChecked && <CheckIcon className="size-3" />}
                   </div>

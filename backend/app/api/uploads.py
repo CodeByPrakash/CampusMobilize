@@ -1,5 +1,5 @@
 """
-Uploads & S3 Object Storage Endpoints (§3.4, Evidence & Resolution Proofs)
+Uploads & S3 Object Storage Endpoints (3.4, Evidence & Resolution Proofs)
 Integrates directly with Neon S3-compatible bucket ('evidences').
 """
 

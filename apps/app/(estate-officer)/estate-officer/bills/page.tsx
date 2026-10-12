@@ -290,7 +290,7 @@ export default function EstateOfficerBillsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
           <div>
@@ -299,7 +299,7 @@ export default function EstateOfficerBillsPage() {
               <span>Utility Bill Ingestion & S3 Object Storage</span>
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Automated invoice ingestion for TPWODL electric & PHED water bills with permanent S3 object storage (§7.6).
+              Automated invoice ingestion for TPWODL electric & PHED water bills with permanent S3 object storage (7.6).
             </p>
           </div>
 
@@ -554,8 +554,8 @@ export default function EstateOfficerBillsPage() {
                         key={b.id}
                         onClick={() => setSelectedBill(b)}
                         className={`cursor-pointer transition-colors ${isSelected
-                            ? "bg-primary/10 border-l-2 border-primary"
-                            : "hover:bg-muted/30 even:bg-muted/5"
+                          ? "bg-primary/10 border-l-2 border-primary"
+                          : "hover:bg-muted/30 even:bg-muted/5"
                           }`}
                       >
                         {/* Invoice ID */}
@@ -813,7 +813,7 @@ export default function EstateOfficerBillsPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <ShieldCheckIcon className="size-4 text-primary" />
-                  <span>Feeder Sub-Meter Audit Verification (§7.6)</span>
+                  <span>Feeder Sub-Meter Audit Verification (7.6)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 pt-1 text-xs">
@@ -878,7 +878,7 @@ export default function EstateOfficerBillsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span>Ingested By:</span>
-                <span className="text-foreground">Estate Office Operations (§14)</span>
+                <span className="text-foreground">Estate Office Operations (14)</span>
               </div>
             </div>
           </div>

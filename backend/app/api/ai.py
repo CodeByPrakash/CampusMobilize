@@ -1,5 +1,5 @@
 """
-AI & Facility Intelligence REST Endpoints (§7.5, §7.6, §8)
+AI & Facility Intelligence REST Endpoints (7.5, 7.6, 8)
 Exposes complaint triage, dynamic queue ranking, utility forecasts, and continuous learning.
 """
 
@@ -193,7 +193,7 @@ def simulate_facility_stress(
     payload: Dict[str, Any] = Body(...)
 ):
     """
-    AI Facility Stress & Surge Simulator (§7.6, §8.5, §8.6).
+    AI Facility Stress & Surge Simulator (7.6, 8.5, 8.6).
     Autonomous physics & predictive intelligence engine evaluating campus-wide
     water, electrical grid, transformer, and hygiene capacity during festival surges.
     """

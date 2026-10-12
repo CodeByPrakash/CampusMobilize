@@ -129,7 +129,7 @@ export default function ChiefWardenFestivalsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl pb-10">
+      <div className="space-y-6 max-w-8xl pb-10">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -137,7 +137,7 @@ export default function ChiefWardenFestivalsPage() {
               Festival Pre-Briefs & Surge Preparedness
             </h1>
             <p className="text-sm text-slate-500">
-              Autonomous facility readiness packages for large campus fests, footfall surges, and resource rationing (§7.6, §8.5).
+              Autonomous facility readiness packages for large campus fests, footfall surges, and resource rationing (7.6, 8.5).
             </p>
           </div>
 
@@ -146,11 +146,10 @@ export default function ChiefWardenFestivalsPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("prebriefs")}
-                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeTab === "prebriefs"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${activeTab === "prebriefs"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 <LayersIcon className="size-3.5 text-indigo-600" />
                 <span>Pre-Briefs & Mandates</span>
@@ -159,17 +158,15 @@ export default function ChiefWardenFestivalsPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("simulator")}
-                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeTab === "simulator"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-indigo-700 hover:text-indigo-950"
-                }`}
+                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${activeTab === "simulator"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "text-indigo-700 hover:text-indigo-950"
+                  }`}
               >
                 <SparklesIcon className="size-3.5 animate-pulse" />
                 <span>AI Stress Simulator</span>
-                <span className={`ml-1 text-[9px] font-mono py-0.5 px-1.5 rounded ${
-                  activeTab === "simulator" ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
-                }`}>
+                <span className={`ml-1 text-[9px] font-mono py-0.5 px-1.5 rounded ${activeTab === "simulator" ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
+                  }`}>
                   Digital Twin
                 </span>
               </button>
@@ -187,11 +184,10 @@ export default function ChiefWardenFestivalsPage() {
                 return (
                   <Card
                     key={ev.id}
-                    className={`cursor-pointer transition-all ${
-                      isSelected
-                        ? "border-indigo-600 ring-2 ring-indigo-600/15 bg-indigo-50/20 shadow-xs"
-                        : "border-slate-200 bg-white hover:border-slate-300"
-                    }`}
+                    className={`cursor-pointer transition-all ${isSelected
+                      ? "border-indigo-600 ring-2 ring-indigo-600/15 bg-indigo-50/20 shadow-xs"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
                     onClick={() => {
                       setSelectedEvent(ev);
                       loadPrebrief(ev.id);
@@ -201,9 +197,8 @@ export default function ChiefWardenFestivalsPage() {
                       <div className="flex items-center justify-between">
                         <Badge
                           variant="outline"
-                          className={`text-xs uppercase font-mono ${
-                            isSelected ? "border-indigo-300 text-indigo-700 bg-white" : ""
-                          }`}
+                          className={`text-xs uppercase font-mono ${isSelected ? "border-indigo-300 text-indigo-700 bg-white" : ""
+                            }`}
                         >
                           {ev.kind}
                         </Badge>

@@ -257,40 +257,37 @@ export function CommunityIssueDetailDrawer({
 
               <Badge
                 variant="outline"
-                className={`text-[10px] font-bold ${
-                  isP1
+                className={`text-[10px] font-bold ${isP1
                     ? "bg-rose-50 text-rose-700 border-rose-300"
                     : ticket.priority === "P2"
-                    ? "bg-amber-50 text-amber-700 border-amber-300"
-                    : "bg-slate-50 text-slate-700 border-slate-200"
-                }`}
+                      ? "bg-amber-50 text-amber-700 border-amber-300"
+                      : "bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
               >
                 {ticket.priority || "P3"} PRIORITY
               </Badge>
 
               <Badge
                 variant="outline"
-                className={`text-[10px] uppercase font-mono ${
-                  isElectrical
+                className={`text-[10px] uppercase font-mono ${isElectrical
                     ? "bg-amber-50 text-amber-800 border-amber-200"
                     : isWater
-                    ? "bg-blue-50 text-blue-800 border-blue-200"
-                    : "bg-purple-50 text-purple-800 border-purple-200"
-                }`}
+                      ? "bg-blue-50 text-blue-800 border-blue-200"
+                      : "bg-purple-50 text-purple-800 border-purple-200"
+                  }`}
               >
                 {ticket.category_code || "GENERAL"}
               </Badge>
 
               <Badge
-                className={`text-[10px] font-semibold py-0.5 px-2 ${
-                  ticket.status === "RESOLVED" || ticket.status === "CLOSED"
+                className={`text-[10px] font-semibold py-0.5 px-2 ${ticket.status === "RESOLVED" || ticket.status === "CLOSED"
                     ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                     : ticket.status === "IN_PROGRESS"
-                    ? "bg-blue-100 text-blue-800 border-blue-300"
-                    : ticket.status === "ASSIGNED"
-                    ? "bg-indigo-100 text-indigo-800 border-indigo-300"
-                    : "bg-slate-100 text-slate-800 border-slate-300"
-                }`}
+                      ? "bg-blue-100 text-blue-800 border-blue-300"
+                      : ticket.status === "ASSIGNED"
+                        ? "bg-indigo-100 text-indigo-800 border-indigo-300"
+                        : "bg-slate-100 text-slate-800 border-slate-300"
+                  }`}
               >
                 {ticket.status}
               </Badge>
@@ -393,13 +390,12 @@ export function CommunityIssueDetailDrawer({
                 <div className="bg-white p-2.5 rounded-lg border border-indigo-100">
                   <span className="text-[10px] text-slate-400 block">Risk Score</span>
                   <span
-                    className={`text-sm font-bold font-mono ${
-                      (ticket.risk_score || 75) > 80
+                    className={`text-sm font-bold font-mono ${(ticket.risk_score || 75) > 80
                         ? "text-rose-600"
                         : (ticket.risk_score || 75) > 50
-                        ? "text-amber-600"
-                        : "text-emerald-600"
-                    }`}
+                          ? "text-amber-600"
+                          : "text-emerald-600"
+                      }`}
                   >
                     {Math.round(ticket.risk_score || 78)}/100
                   </span>
@@ -421,7 +417,7 @@ export function CommunityIssueDetailDrawer({
               </div>
 
               <p className="text-[11px] text-indigo-900 leading-relaxed bg-white/80 p-2.5 rounded-lg border border-indigo-100">
-                <strong>Autonomous Prioritization:</strong> Each community upvote adds weight to the dynamic SLA queue rank (§2.2). Issues reaching &gt;10 upvotes trigger priority escalation alerts to the Warden.
+                <strong>Autonomous Prioritization:</strong> Each community upvote adds weight to the dynamic SLA queue rank (2.2). Issues reaching &gt;10 upvotes trigger priority escalation alerts to the Warden.
               </p>
             </Card>
 
@@ -567,11 +563,10 @@ export function CommunityIssueDetailDrawer({
               <Button
                 size="sm"
                 onClick={() => onToggleUpvote(ticket.id)}
-                className={`flex-1 sm:flex-none text-xs gap-1.5 font-bold px-4 py-2 rounded-xl transition-all shadow-2xs ${
-                  hasUpvoted
+                className={`flex-1 sm:flex-none text-xs gap-1.5 font-bold px-4 py-2 rounded-xl transition-all shadow-2xs ${hasUpvoted
                     ? "bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-600/20"
                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                }`}
+                  }`}
               >
                 <ThumbsUpIcon className={`size-3.5 ${hasUpvoted ? "fill-white" : ""}`} />
                 <span>
@@ -584,11 +579,10 @@ export function CommunityIssueDetailDrawer({
                 size="sm"
                 variant="outline"
                 onClick={handleMarkAffected}
-                className={`text-xs gap-1.5 rounded-xl border-slate-200 ${
-                  hasMarkedAffected
+                className={`text-xs gap-1.5 rounded-xl border-slate-200 ${hasMarkedAffected
                     ? "border-emerald-500 bg-emerald-50 text-emerald-800 font-bold"
                     : "text-slate-700 hover:bg-slate-100"
-                }`}
+                  }`}
               >
                 <UsersIcon className="size-3.5" />
                 <span>{hasMarkedAffected ? "Endorsed (+1)" : "I'm Also Affected"}</span>

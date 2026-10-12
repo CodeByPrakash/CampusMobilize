@@ -1,5 +1,5 @@
 """
-Campus Utility Demand Forecaster (§8.5)
+Campus Utility Demand Forecaster (8.5)
 Gradient-boosted quantile regression models with 90% confidence intervals (5th, 50th, 95th percentiles)
 predicting monthly electricity (kWh) and water (kL) consumption per hostel.
 Includes deterministic heuristic fallback if model artifact is missing.
@@ -82,7 +82,7 @@ class UtilityForecaster:
         event_multiplier: float = 1.0
     ) -> Dict[str, float]:
         """
-        Deterministic consumption estimation heuristic (§8.5 fallback).
+        Deterministic consumption estimation heuristic (8.5 fallback).
         """
         base = BASE_CONSUMPTION.get(self.utility, 95.0)
         

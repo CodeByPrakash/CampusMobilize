@@ -1,5 +1,5 @@
 """
-SQLAlchemy Database Connection & Session Management (§6)
+SQLAlchemy Database Connection & Session Management (6)
 Primary: PostgreSQL (localhost:5432 or DATABASE_URL).
 Automatic Database Creation: creates 'campusiq' database if not existing.
 Fallback: SQLite for self-contained testing if PostgreSQL is unavailable.

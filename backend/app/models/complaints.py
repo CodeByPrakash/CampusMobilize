@@ -1,5 +1,5 @@
 """
-Complaints, Categories, SLA Policies, and Events Models (§3, §6)
+Complaints, Categories, SLA Policies, and Events Models (3, 6)
 """
 
 import uuid
@@ -50,7 +50,7 @@ class Complaint(Base):
     reported_for = Column(String(36), ForeignKey("users.id"), nullable=True)  # CR filing on behalf
     parent_complaint_id = Column(String(36), ForeignKey("complaints.id"), nullable=True)
 
-    # State machine status (§3)
+    # State machine status (3)
     status = Column(String(30), default="OPEN", nullable=False)
     # OPEN, VERIFIED, ASSIGNED, IN_PROGRESS, RESOLVED, CLOSED, REJECTED, REJECTED_BACK, REASSIGNED, ESCALATED
 

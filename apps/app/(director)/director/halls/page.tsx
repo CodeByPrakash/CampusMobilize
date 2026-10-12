@@ -80,14 +80,14 @@ export default function DirectorHallsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Halls of Residence Master Infrastructure
             </h1>
             <p className="text-sm text-slate-500">
-              Campus-wide institutional residential directory, wing topologies, and accommodation capacities (§2.2).
+              Campus-wide institutional residential directory, wing topologies, and accommodation capacities (2.2).
             </p>
           </div>
           <Badge className="bg-slate-900 text-white px-3 py-1 text-sm font-medium">

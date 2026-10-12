@@ -1,5 +1,5 @@
 """
-CampusIQ Continuous Learning & Active Retraining Engine (§8, §11)
+CampusIQ Continuous Learning & Active Retraining Engine (8, 11)
 Integrates real data imported from the frontend:
 1. Real Utility Bills ingestion -> Drift detection -> Incremental forecaster retraining.
 2. Verified Operator/Warden Feedback -> Active learning buffer -> Classifier fine-tuning.

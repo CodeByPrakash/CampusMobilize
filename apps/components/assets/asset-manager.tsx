@@ -152,7 +152,7 @@ export function AssetManager() {
         lastInspected: "Today (Newly Registered)",
         assignedTechnician: newTech.trim() || "Unassigned",
         installedYear: new Date().getFullYear(),
-        notes: newNotes.trim() || "Initial registration into CampusMobilize asset directory.",
+        notes: newNotes.trim() || "Initial registration into  asset directory.",
       },
     ];
 

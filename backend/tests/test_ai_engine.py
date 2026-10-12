@@ -1,13 +1,13 @@
 """
-CampusIQ AI Engine — Master Acceptance Test Suite (§14.4)
+CampusIQ AI Engine — Master Acceptance Test Suite (14.4)
 Verifies:
-1. §8.3 worked example inputs produce risk 57.4 (night) / 47.4 (day) / 82.0 (P1)
-2. §8.2 duplicate detection with similarity >= 0.85 on same block
-3. §8.4 dynamic ranking score rises as SLA deadline approaches; queue ordering stability
-4. §8.1 complaint classifier macro-F1 >= 0.90
-5. §8.1 graceful fallback to deterministic keyword heuristic when model artifact is missing
-6. §8.5 utility forecaster trains on >= 12 months and predicts within 2x MAE bound
-7. §8.5 festival pre-brief generator output for Innovision
+1. 8.3 worked example inputs produce risk 57.4 (night) / 47.4 (day) / 82.0 (P1)
+2. 8.2 duplicate detection with similarity >= 0.85 on same block
+3. 8.4 dynamic ranking score rises as SLA deadline approaches; queue ordering stability
+4. 8.1 complaint classifier macro-F1 >= 0.90
+5. 8.1 graceful fallback to deterministic keyword heuristic when model artifact is missing
+6. 8.5 utility forecaster trains on >= 12 months and predicts within 2x MAE bound
+7. 8.5 festival pre-brief generator output for Innovision
 8. Caretaker assignment matcher based on trade skill, proficiency, and workload
 9. End-to-end triage pipeline with P1 skipping verification
 """
@@ -35,11 +35,11 @@ from app.ai.campus_index import CampusRiskIndexCalculator
 
 
 # =========================================================================
-# TEST 1: §8.3 Worked Example Inputs (Night 57.4, Day 47.4, High Severity P1 82.0)
+# TEST 1: 8.3 Worked Example Inputs (Night 57.4, Day 47.4, High Severity P1 82.0)
 # =========================================================================
 def test_risk_scorer_worked_examples():
     """
-    Validates §8.3 worked example calculations from BUILD_SPEC:
+    Validates 8.3 worked example calculations from BUILD_SPEC:
     - Leak at HB-3 pump room, severity 4, 15 people, 3 related in 72h, asset 0.8, night (21:14) -> 57.4 (P2)
     - Same complaint at 10 AM (day, vulnerability 0.0) -> 47.4 (P3)
     - Critical complaint with severity 5, 160 people, velocity 6 in 72h, asset 0.8, night -> 82.0 (P1)
@@ -85,7 +85,7 @@ def test_risk_scorer_worked_examples():
 
 
 # =========================================================================
-# TEST 2: §8.2 Duplicate Detection (sim >= 0.85 on same block -> merged)
+# TEST 2: 8.2 Duplicate Detection (sim >= 0.85 on same block -> merged)
 # =========================================================================
 def test_duplicate_detection_logic():
     detector = DuplicateDetector(similarity_threshold=0.85)
@@ -135,7 +135,7 @@ def test_duplicate_detection_logic():
 
 
 # =========================================================================
-# TEST 3: §8.4 Ranking Score Dynamics & Queue Ordering
+# TEST 3: 8.4 Ranking Score Dynamics & Queue Ordering
 # =========================================================================
 def test_ranking_score_rises_with_urgency():
     now = datetime(2026, 10, 11, 12, 0, 0, tzinfo=timezone.utc)
@@ -201,7 +201,7 @@ def test_ranking_score_rises_with_urgency():
 
 
 # =========================================================================
-# TEST 4: §8.1 Classifier Performance & Heuristic Fallback
+# TEST 4: 8.1 Classifier Performance & Heuristic Fallback
 # =========================================================================
 def test_classifier_accuracy_and_fallback():
     models_dir = os.path.join(BACKEND_DIR, "app", "ai", "models")
@@ -238,7 +238,7 @@ def test_classifier_accuracy_and_fallback():
 
 
 # =========================================================================
-# TEST 5: Caretaker Matching (§2.2, §6, §8)
+# TEST 5: Caretaker Matching (2.2, 6, 8)
 # =========================================================================
 def test_caretaker_matcher():
     caretakers = [
@@ -283,7 +283,7 @@ def test_caretaker_matcher():
 
 
 # =========================================================================
-# TEST 6: §8.5 Utility Forecaster & Innovision Festival Pre-Brief
+# TEST 6: 8.5 Utility Forecaster & Innovision Festival Pre-Brief
 # =========================================================================
 def test_utility_forecaster_and_prebrief():
     seed_file = os.path.join(BACKEND_DIR, "seed_data", "utility_bills_36m.json")
@@ -324,7 +324,7 @@ def test_utility_forecaster_and_prebrief():
 
 
 # =========================================================================
-# TEST 7: §8.6 Campus Risk Index (CRI)
+# TEST 7: 8.6 Campus Risk Index (CRI)
 # =========================================================================
 def test_campus_risk_index():
     # CRI = 0.35*p1_p2 + 0.25*breach + 0.20*util + 0.20*hygiene
@@ -340,7 +340,7 @@ def test_campus_risk_index():
 
 
 # =========================================================================
-# TEST 8: Full End-to-End Triage & P1 Bypass Verification (§3 Rule 1)
+# TEST 8: Full End-to-End Triage & P1 Bypass Verification (3 Rule 1)
 # =========================================================================
 def test_full_triage_pipeline():
     engine = CampusAIEngine()

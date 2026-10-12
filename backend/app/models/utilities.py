@@ -1,5 +1,5 @@
 """
-Utility Bills, Events, and Forecasts Data Models (§6)
+Utility Bills, Events, and Forecasts Data Models (6)
 """
 
 import uuid

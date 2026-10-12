@@ -50,14 +50,14 @@ export default function DirectorAuditsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Institutional Governance & Statutory Audits
             </h1>
             <p className="text-sm text-slate-500">
-              Executive compliance archives, IQAC quality certifications, and board reporting exports (§7.9).
+              Executive compliance archives, IQAC quality certifications, and board reporting exports (7.9).
             </p>
           </div>
           <Button
@@ -104,7 +104,7 @@ export default function DirectorAuditsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-slate-500">SLA state machine conforms to rulebook §3.1</p>
+              <p className="text-xs text-slate-500">SLA state machine conforms to rulebook 3.1</p>
             </CardContent>
           </Card>
         </div>
@@ -116,7 +116,7 @@ export default function DirectorAuditsPage() {
               Official Institutional Compliance Reports
             </CardTitle>
             <CardDescription className="text-xs">
-              Cryptographically signed and archived under NIT Rourkela statute §15
+              Cryptographically signed and archived under NIT Rourkela statute 15
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">

@@ -37,7 +37,7 @@ export default function ChiefWardenEscalationsPage() {
     try {
       await apiTransitionComplaint(ticketId, {
         to_status: "IN_PROGRESS",
-        note: "Chief Warden Prof. M. Mishra invoked Emergency Central Estate Requisition (§4.3).",
+        note: "Chief Warden Prof. M. Mishra invoked Emergency Central Estate Requisition (4.3).",
       });
       toast.success(`Executive intervention ordered on ${ticketId}! Central engineering team dispatched.`);
     } catch {
@@ -47,14 +47,14 @@ export default function ChiefWardenEscalationsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Cross-Hostel Force Escalations
             </h1>
             <p className="text-sm text-slate-500">
-              Executive intervention desk for high-severity bottlenecks and SLA breach mitigation across all 4 halls (§4.3).
+              Executive intervention desk for high-severity bottlenecks and SLA breach mitigation across all 4 halls (4.3).
             </p>
           </div>
           <Badge className="bg-rose-600 text-white px-3 py-1 text-sm font-semibold gap-1.5">
@@ -67,7 +67,7 @@ export default function ChiefWardenEscalationsPage() {
         <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-4 text-xs text-rose-950 flex items-start gap-3">
           <SirenIcon className="size-5 text-rose-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="font-semibold text-rose-900">Chief Warden Sovereign Authority (§2.2)</span>
+            <span className="font-semibold text-rose-900">Chief Warden Sovereign Authority (2.2)</span>
             <p className="text-rose-800">
               When an issue exceeds individual hostel caretaker capacity or breaches the 4-hour P1 window, the Chief Warden can bypass local queues, commandeer central estate workshops, and requisition emergency institute procurement.
             </p>

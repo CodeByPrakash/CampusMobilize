@@ -1,5 +1,5 @@
 """
-Campus Event Pre-Brief Synthesis Engine (§8.5)
+Campus Event Pre-Brief Synthesis Engine (8.5)
 Synthesizes actionable, official operational pre-briefs for upcoming campus events
 (Innovision, Nitrutsav, Technozion, End-sem exams) using forecaster outputs and operational guidelines.
 """
@@ -10,7 +10,7 @@ from datetime import datetime, date
 
 class PreBriefGenerator:
     """
-    Synthesizes festival & occasion operational pre-briefs per §8.5.
+    Synthesizes festival & occasion operational pre-briefs per 8.5.
     """
 
     @staticmethod
@@ -54,7 +54,7 @@ class PreBriefGenerator:
                 f"Reserve provisional emergency contingency budget of ₹{budget_inr:,}"
             ]
 
-        # Plain language summary (§8.5 text template)
+        # Plain language summary (8.5 text template)
         short_summary = (
             f"{name} in {days_left} days — predicted water demand +{water_pct}%, "
             f"electricity +{elec_pct}%, hygiene complaints ×{hygiene_x}. "

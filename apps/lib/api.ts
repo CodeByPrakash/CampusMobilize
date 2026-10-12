@@ -1,5 +1,5 @@
 /**
- * CampusIQ Backend API Client with RBAC Headers (§1, §2)
+ * CampusIQ Backend API Client with RBAC Headers (1, 2)
  * Sends X-Actor-Role, X-Actor-Id, and X-Hostel-Code headers on every request.
  */
 

@@ -12,7 +12,7 @@ export default function HomePage() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-xs">
               NIT
             </div>
-            <span>CampusMobilize</span>
+            <span>CampusIQ</span>
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">

@@ -116,7 +116,7 @@ export function HostelRepDashboard() {
       await apiTransitionComplaint(ticket.ticket_no, {
         to_status: "VERIFIED",
         note: "Physical inspection complete. Genuine complaint verified by Hostel Rep.",
-      }).catch(() => {});
+      }).catch(() => { });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -132,7 +132,7 @@ export function HostelRepDashboard() {
   // Rejection with mandatory reason
   const handleConfirmReject = async () => {
     if (!selectedTicket || !rejectReason.trim()) {
-      toast.error("Mandatory rejection reason required (§2.3)");
+      toast.error("Mandatory rejection reason required (2.3)");
       return;
     }
 
@@ -141,7 +141,7 @@ export function HostelRepDashboard() {
         to_status: "REJECTED",
         reason: rejectReason,
         note: rejectReason,
-      }).catch(() => {});
+      }).catch(() => { });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -165,7 +165,7 @@ export function HostelRepDashboard() {
     }
 
     try {
-      await apiMergeComplaints(mergeMasterId, [mergeDuplicates], "Merged duplicate issue by Hostel Rep").catch(() => {});
+      await apiMergeComplaints(mergeMasterId, [mergeDuplicates], "Merged duplicate issue by Hostel Rep").catch(() => { });
       setTickets((prev) =>
         prev.filter((t) => t.ticket_no !== mergeDuplicates)
       );
@@ -179,7 +179,7 @@ export function HostelRepDashboard() {
   // 1-Level Priority Escalation
   const handleConfirmEscalate = async () => {
     if (!selectedTicket || !escalateJustification.trim()) {
-      toast.error("Please provide justification for priority escalation (§2.3)");
+      toast.error("Please provide justification for priority escalation (2.3)");
       return;
     }
 
@@ -192,7 +192,7 @@ export function HostelRepDashboard() {
     const nextPriority = priorityMap[selectedTicket.priority];
 
     try {
-      await apiOverridePriority(selectedTicket.ticket_no, nextPriority, escalateJustification).catch(() => {});
+      await apiOverridePriority(selectedTicket.ticket_no, nextPriority, escalateJustification).catch(() => { });
       setTickets((prev) =>
         prev.map((t) =>
           t.id === selectedTicket.id ? { ...t, priority: nextPriority } : t
@@ -270,7 +270,7 @@ export function HostelRepDashboard() {
       {/* Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Hostel Representative Triage Terminal (§2.3)</h3>
+          <h3 className="text-sm font-semibold text-foreground">Hostel Representative Triage Terminal (2.3)</h3>
           <p className="text-xs text-muted-foreground">
             1-Click physical verification, spam rejection with reason, deduplication & +1 priority escalation.
           </p>
@@ -314,7 +314,7 @@ export function HostelRepDashboard() {
                     <TableHead>Priority</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Upvotes</TableHead>
-                    <TableHead className="text-right">Actions (§2.3)</TableHead>
+                    <TableHead className="text-right">Actions (2.3)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -340,8 +340,8 @@ export function HostelRepDashboard() {
                             t.priority === "P1"
                               ? "destructive"
                               : t.priority === "P2"
-                              ? "default"
-                              : "secondary"
+                                ? "default"
+                                : "secondary"
                           }
                           className="text-[10px]"
                         >
@@ -354,8 +354,8 @@ export function HostelRepDashboard() {
                             t.status === "OPEN"
                               ? "secondary"
                               : t.status === "VERIFIED"
-                              ? "default"
-                              : "outline"
+                                ? "default"
+                                : "outline"
                           }
                           className="text-[10px]"
                         >
@@ -480,7 +480,7 @@ export function HostelRepDashboard() {
                 <span>Reject Complaint ({selectedTicket.ticket_no})</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Per FSM rules (§2.3), rejection of an OPEN complaint requires a logged reason visible in the audit trail.
+                Per FSM rules (2.3), rejection of an OPEN complaint requires a logged reason visible in the audit trail.
               </p>
             </div>
 
@@ -526,7 +526,7 @@ export function HostelRepDashboard() {
             <div>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <GitMergeIcon className="size-4" />
-                <span>Auto-Merge Duplicate Complaints (§2.3)</span>
+                <span>Auto-Merge Duplicate Complaints (2.3)</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
                 Consolidate multiple resident reports regarding the same underlying breakdown into a single master ticket.
@@ -582,7 +582,7 @@ export function HostelRepDashboard() {
                 <span>Override Priority by 1 Class ({selectedTicket.ticket_no})</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Current priority: <strong>{selectedTicket.priority}</strong>. Hostel Reps may escalate by strictly 1 level (§2.3).
+                Current priority: <strong>{selectedTicket.priority}</strong>. Hostel Reps may escalate by strictly 1 level (2.3).
               </p>
             </div>
 

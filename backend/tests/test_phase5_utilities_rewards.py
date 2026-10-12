@@ -1,5 +1,5 @@
 """
-Phase 5 Test Suite: Utilities, Forecasting API, Events & Rewards (§7.6, §7.7, §7.9, §8.5, §11)
+Phase 5 Test Suite: Utilities, Forecasting API, Events & Rewards (7.6, 7.7, 7.9, 8.5, 11)
 Tests bill parsing, quantile consumption forecasts, festival pre-brief generator,
 Caretaker Performance Index (PI), Hostel Efficiency Rating (ER), Rewards ledger, and CSV exports.
 """
@@ -54,7 +54,7 @@ def test_utility_bill_creation_and_listing(client):
 
 
 def test_bill_upload_parser(client):
-    """Test text extractor and bill parser (§8.5)."""
+    """Test text extractor and bill parser (8.5)."""
     bill_text = """
     TPWODL ELECTRICITY BILL - NIT ROURKELA HB-3
     Billing Month: 2026-09-01
@@ -71,7 +71,7 @@ def test_bill_upload_parser(client):
 
 
 def test_quantile_utility_forecasts(client):
-    """Test quantile forecast generation with 90% confidence intervals (§8.5)."""
+    """Test quantile forecast generation with 90% confidence intervals (8.5)."""
     res = client.get("/api/v1/utilities/forecasts?utility=electricity&months_ahead=3&hostel_code=HB-3")
     assert res.status_code == 200
     data = res.json()
@@ -88,7 +88,7 @@ def test_quantile_utility_forecasts(client):
 
 
 def test_campus_events_and_prebrief_generation(client):
-    """Test event management and festival pre-brief operational package (§8.5)."""
+    """Test event management and festival pre-brief operational package (8.5)."""
     # 1. List events (seeded)
     ev_res = client.get("/api/v1/events")
     assert ev_res.status_code == 200
@@ -110,7 +110,7 @@ def test_campus_events_and_prebrief_generation(client):
 
 
 def test_caretaker_performance_index_pi(client):
-    """Test Caretaker Performance Index (PI) calculation (§11.1)."""
+    """Test Caretaker Performance Index (PI) calculation (11.1)."""
     # 1. Staff self-scorecard
     me_res = client.get("/api/v1/performance/me", headers={"X-Actor-Id": "usr-caretaker-das"})
     assert me_res.status_code == 200
@@ -129,7 +129,7 @@ def test_caretaker_performance_index_pi(client):
 
 
 def test_hostel_efficiency_rating_er(client):
-    """Test dignified cross-hostel ranking table (ER) (§11.3)."""
+    """Test dignified cross-hostel ranking table (ER) (11.3)."""
     res = client.get("/api/v1/performance/campus")
     assert res.status_code == 200
     table = res.json()
@@ -142,7 +142,7 @@ def test_hostel_efficiency_rating_er(client):
 
 
 def test_rewards_propose_and_approve(client):
-    """Test proposing and approving caretaker rewards (§11.2)."""
+    """Test proposing and approving caretaker rewards (11.2)."""
     # 1. Propose certificate
     prop_res = client.post("/api/v1/rewards/propose", json={
         "user_id": "usr-caretaker-das",
@@ -166,7 +166,7 @@ def test_rewards_propose_and_approve(client):
 
 
 def test_reports_monthly_pack_and_csv_export(client):
-    """Test monthly report pack generation and executive CSV exports (§7.9)."""
+    """Test monthly report pack generation and executive CSV exports (7.9)."""
     # 1. Monthly report
     rep_res = client.get("/api/v1/reports/monthly")
     assert rep_res.status_code == 200
@@ -188,7 +188,7 @@ def test_reports_monthly_pack_and_csv_export(client):
 
 
 def test_campus_risk_index_endpoint(client):
-    """Test real-time Campus Risk Index API (§8.6)."""
+    """Test real-time Campus Risk Index API (8.6)."""
     res = client.get("/api/v1/analytics/risk-index")
     assert res.status_code == 200
     cri = res.json()

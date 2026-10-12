@@ -7,7 +7,7 @@ import { getCrNav } from "@/components/dashboards/nav-config";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BuildingIcon, DropletsIcon, WifiIcon, FlameIcon, ShieldCheckIcon, AlertTriangleIcon, WrenchIcon, CheckCircle2Icon } from "lucide-react";
+import { BuildingIcon, DropletsIcon, WifiIcon, FlameIcon, ShieldCheckIcon, AlertTriangleIcon, WrenchIcon, CheckCircle2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CrAmenitiesPage() {
@@ -67,13 +67,26 @@ export default function CrAmenitiesPage() {
     },
   ]);
 
-  const handleEndorseMaintenance = (name: string) => {
-    toast.success(`Priority maintenance endorsement dispatched to Caretaker for ${name}!`);
+  const [confirmingAmenity, setConfirmingAmenity] = React.useState<{ id: string; name: string; location: string; category: string } | null>(null);
+
+  const handleRequestServicing = (item: { id: string; name: string; location: string; category: string }) => {
+    setConfirmingAmenity(item);
+  };
+
+  const handleConfirmServicing = () => {
+    if (confirmingAmenity) {
+      toast.success(`Priority maintenance endorsement dispatched to Caretaker for ${confirmingAmenity.name}!`);
+      setConfirmingAmenity(null);
+    }
+  };
+
+  const handleCancelServicing = () => {
+    setConfirmingAmenity(null);
   };
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -150,8 +163,8 @@ export default function CrAmenitiesPage() {
                         item.status === "Operational" || item.status === "Inspected"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-xs"
                           : item.status === "Degraded"
-                          ? "bg-amber-50 text-amber-700 border-amber-200 text-xs"
-                          : "bg-rose-50 text-rose-700 border-rose-200 text-xs"
+                            ? "bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                            : "bg-rose-50 text-rose-700 border-rose-200 text-xs"
                       }
                     >
                       {item.status}
@@ -184,7 +197,7 @@ export default function CrAmenitiesPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
-                    onClick={() => handleEndorseMaintenance(item.name)}
+                    onClick={() => handleRequestServicing(item)}
                   >
                     <WrenchIcon className="size-3 text-slate-500" />
                     Request Servicing
@@ -194,6 +207,72 @@ export default function CrAmenitiesPage() {
             </Card>
           ))}
         </div>
+
+        {/* Confirmation Modal */}
+        {confirmingAmenity && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+              onClick={handleCancelServicing}
+            />
+            {/* Dialog */}
+            <div className="relative bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between p-5 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center justify-center size-9 rounded-lg bg-amber-50 border border-amber-200">
+                    <WrenchIcon className="size-4 text-amber-600" />
+                  </div>
+                  <h3 className="text-base font-semibold text-slate-900">Confirm Service Request</h3>
+                </div>
+                <button
+                  onClick={handleCancelServicing}
+                  className="size-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  <XIcon className="size-4" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-sm text-slate-600">
+                  You are about to dispatch a priority maintenance endorsement to the Caretaker for the following amenity:
+                </p>
+                <div className="rounded-lg bg-slate-50 border border-slate-100 p-3.5 space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Amenity</span>
+                    <span className="font-semibold text-slate-800 text-right max-w-[60%]">{confirmingAmenity.name}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Location</span>
+                    <span className="font-medium text-slate-700">{confirmingAmenity.location}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Category</span>
+                    <span className="font-medium text-slate-700">{confirmingAmenity.category}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">
+                  This action will notify the assigned Caretaker and log the request in the maintenance queue.
+                </p>
+              </div>
+              <div className="flex items-center justify-end gap-2.5 p-5 pt-3 border-t border-slate-100">
+                <Button
+                  variant="outline"
+                  className="h-9 px-4 text-sm border-slate-200 text-slate-600 hover:bg-slate-50"
+                  onClick={handleCancelServicing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="h-9 px-4 text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-1.5"
+                  onClick={handleConfirmServicing}
+                >
+                  <CheckCircle2Icon className="size-3.5" />
+                  Confirm Request
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </RoleDashboardShell>
   );

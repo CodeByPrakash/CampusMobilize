@@ -171,8 +171,8 @@ export function SafetyHazardDashboard({
               s.status === "COMPLETED"
                 ? "PENDING"
                 : s.status === "PENDING"
-                ? "IN_PROGRESS"
-                : "COMPLETED";
+                  ? "IN_PROGRESS"
+                  : "COMPLETED";
             return { ...s, status: nextStatus };
           }
           return s;
@@ -348,7 +348,7 @@ Please provide:
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-8xl mx-auto pb-12">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
         <div>
@@ -360,7 +360,7 @@ Please provide:
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
                 Safety & Hazard Hotspot Analysis
                 <Badge variant="outline" className="text-xs font-mono font-medium border-rose-300 text-rose-700 bg-rose-50">
-                  AI Offline Engine (§8.3)
+                  AI Offline Engine (8.3)
                 </Badge>
               </h1>
               <p className="text-sm text-slate-500">
@@ -422,7 +422,7 @@ Please provide:
             </div>
             <div className="flex justify-between text-[11px] pt-1">
               <span>Band: {data?.cri_band || "Low-Moderate"}</span>
-              <span className="text-slate-400">§8.6 formula</span>
+              <span className="text-slate-400">8.6 formula</span>
             </div>
           </CardContent>
         </Card>
@@ -466,7 +466,7 @@ Please provide:
           </CardHeader>
           <CardContent className="text-xs text-slate-500 pt-0">
             <p className="line-clamp-1">
-              Elevates base risk scores by +10.0 pts per §8.3 formula
+              Elevates base risk scores by +10.0 pts per 8.3 formula
             </p>
           </CardContent>
         </Card>
@@ -550,11 +550,10 @@ Please provide:
                   <div
                     key={hotspot.id}
                     onClick={() => setSelectedHotspot(hotspot)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer bg-white relative ${
-                      isSelected
-                        ? "border-rose-500 shadow-md ring-1 ring-rose-500/20"
-                        : "border-slate-200 hover:border-slate-300 shadow-sm"
-                    }`}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer bg-white relative ${isSelected
+                      ? "border-rose-500 shadow-md ring-1 ring-rose-500/20"
+                      : "border-slate-200 hover:border-slate-300 shadow-sm"
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2">
@@ -566,11 +565,10 @@ Please provide:
                       <div className="flex items-center gap-2">
                         {getPriorityBadge(hotspot.priority)}
                         <span
-                          className={`text-sm font-mono font-bold px-2 py-0.5 rounded ${
-                            hotspot.risk_score >= 80
-                              ? "bg-rose-50 text-rose-700 border border-rose-200"
-                              : "bg-amber-50 text-amber-700 border border-amber-200"
-                          }`}
+                          className={`text-sm font-mono font-bold px-2 py-0.5 rounded ${hotspot.risk_score >= 80
+                            ? "bg-rose-50 text-rose-700 border border-rose-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            }`}
                         >
                           Risk: {hotspot.risk_score}
                         </span>
@@ -609,13 +607,12 @@ Please provide:
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            percentDone === 100
-                              ? "bg-emerald-500"
-                              : percentDone > 0
+                          className={`h-full rounded-full transition-all duration-300 ${percentDone === 100
+                            ? "bg-emerald-500"
+                            : percentDone > 0
                               ? "bg-amber-500"
                               : "bg-slate-300"
-                          }`}
+                            }`}
                           style={{ width: `${percentDone}%` }}
                         />
                       </div>
@@ -722,13 +719,12 @@ Please provide:
                         <div
                           key={step.step_num}
                           onClick={() => handleToggleStep(selectedHotspot.id, step.step_num)}
-                          className={`p-3 rounded-lg border text-xs transition-all cursor-pointer flex items-start gap-2.5 ${
-                            isDone
-                              ? "bg-emerald-50/60 border-emerald-200 text-slate-800"
-                              : isInProgress
+                          className={`p-3 rounded-lg border text-xs transition-all cursor-pointer flex items-start gap-2.5 ${isDone
+                            ? "bg-emerald-50/60 border-emerald-200 text-slate-800"
+                            : isInProgress
                               ? "bg-amber-50/60 border-amber-200 text-slate-800"
                               : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                          }`}
+                            }`}
                         >
                           <div className="mt-0.5">
                             {isDone ? (
@@ -746,13 +742,12 @@ Please provide:
                               </span>
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] uppercase font-mono ${
-                                  isDone
-                                    ? "border-emerald-300 text-emerald-700 bg-emerald-50"
-                                    : isInProgress
+                                className={`text-[10px] uppercase font-mono ${isDone
+                                  ? "border-emerald-300 text-emerald-700 bg-emerald-50"
+                                  : isInProgress
                                     ? "border-amber-300 text-amber-700 bg-amber-50"
                                     : "border-slate-200 text-slate-500 bg-slate-50"
-                                }`}
+                                  }`}
                               >
                                 {step.status}
                               </Badge>
@@ -803,7 +798,7 @@ Please provide:
         <TabsList className="bg-slate-100 border border-slate-200 p-1">
           <TabsTrigger value="simulator" className="text-xs gap-1.5">
             <SlidersIcon className="size-3.5" />
-            AI Hazard Triage Simulator (§8.3)
+            AI Hazard Triage Simulator (8.3)
           </TabsTrigger>
           <TabsTrigger value="tickets" className="text-xs gap-1.5">
             <AlertTriangleIcon className="size-3.5" />
@@ -824,7 +819,7 @@ Please provide:
                 Backend AI Hazard Triage &amp; Risk Prediction Engine
               </CardTitle>
               <CardDescription className="text-xs text-slate-500">
-                Test real-time offline classification, multi-factor risk scoring (§8.3), and caretaker matching for hypothetical incidents.
+                Test real-time offline classification, multi-factor risk scoring (8.3), and caretaker matching for hypothetical incidents.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1015,13 +1010,12 @@ Please provide:
                         <TruckIcon className="size-5" />
                       </div>
                       <Badge
-                        className={`text-[10px] font-semibold ${
-                          squad.status === "ACTIVE_SITE"
-                            ? "bg-rose-100 text-rose-800 border-rose-200"
-                            : squad.status === "ON_PATROL"
+                        className={`text-[10px] font-semibold ${squad.status === "ACTIVE_SITE"
+                          ? "bg-rose-100 text-rose-800 border-rose-200"
+                          : squad.status === "ON_PATROL"
                             ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                             : "bg-slate-100 text-slate-700 border-slate-200"
-                        }`}
+                          }`}
                       >
                         {squad.status}
                       </Badge>

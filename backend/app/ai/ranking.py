@@ -1,5 +1,5 @@
 """
-Dynamic Work Queue Ranking Engine (§8.4)
+Dynamic Work Queue Ranking Engine (8.4)
 Recomputes dynamic urgency and ranking score based on SLA deadline approach.
 Ensures P1 always outranks lower classes, while approaching breaches rise to the top.
 """
@@ -25,7 +25,7 @@ PRIORITY_RANK_ORDER = {
 
 class RankingScorer:
     """
-    Computes ranking score and sorts work queues according to §8.4.
+    Computes ranking score and sorts work queues according to 8.4.
     """
 
     @classmethod
@@ -39,7 +39,7 @@ class RankingScorer:
         sla_hours: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        Computes dynamic urgency and ranking_score (§8.4):
+        Computes dynamic urgency and ranking_score (8.4):
         sla_total = sla_hours(priority) * 3600
         elapsed   = now - assigned_at (or now - created_at)
         urgency   = max(0, 1 - remaining/sla_total)

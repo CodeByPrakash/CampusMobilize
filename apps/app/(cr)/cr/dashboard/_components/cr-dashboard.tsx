@@ -105,7 +105,7 @@ export function CrDashboard() {
         room_no: location,
         severity: 3,
         reported_for: affectedStudents,
-      }).catch(() => {});
+      }).catch(() => { });
 
       const newIssue: WingComplaint = {
         id: `cr-${Date.now()}`,
@@ -133,15 +133,15 @@ export function CrDashboard() {
 
   const handleUpvote = async (issue: WingComplaint) => {
     try {
-      await apiUpvoteComplaint(issue.id).catch(() => {});
+      await apiUpvoteComplaint(issue.id).catch(() => { });
       setWingIssues((prev) =>
         prev.map((i) =>
           i.id === issue.id
             ? {
-                ...i,
-                upvotes: i.hasUpvoted ? i.upvotes - 1 : i.upvotes + 1,
-                hasUpvoted: !i.hasUpvoted,
-              }
+              ...i,
+              upvotes: i.hasUpvoted ? i.upvotes - 1 : i.upvotes + 1,
+              hasUpvoted: !i.hasUpvoted,
+            }
             : i
         )
       );
@@ -214,7 +214,7 @@ export function CrDashboard() {
           <CardHeader className="border-b pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-semibold">Lodge Common Facility / Wing Issue (§2.2)</CardTitle>
+                <CardTitle className="text-base font-semibold">Lodge Common Facility / Wing Issue (2.2)</CardTitle>
                 <CardDescription className="text-xs">
                   File on behalf of wing students or collective infrastructure
                 </CardDescription>
@@ -379,8 +379,8 @@ export function CrDashboard() {
                             issue.status === "OPEN"
                               ? "secondary"
                               : issue.status === "IN_PROGRESS"
-                              ? "default"
-                              : "outline"
+                                ? "default"
+                                : "outline"
                           }
                           className="text-[10px]"
                         >

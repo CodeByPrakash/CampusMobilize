@@ -1,5 +1,5 @@
 """
-S3 Object Storage Service for CampusIQ (§3.4, Evidence & Resolution Proofs)
+S3 Object Storage Service for CampusIQ (3.4, Evidence & Resolution Proofs)
 Uploads complaint photos, resolution evidence, and receipts to Neon S3-compatible storage.
 """
 

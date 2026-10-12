@@ -1,5 +1,5 @@
 """
-Reports, Analytics & Data Export Router (§7.5, §7.9, §8.6)
+Reports, Analytics & Data Export Router (7.5, 7.9, 8.6)
 Generates monthly executive packs, Campus Risk Index (CRI), and CSV exports.
 """
 
@@ -25,7 +25,7 @@ def get_campus_risk_index(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Computes real-time Campus Risk Index (0–100) per §8.6
+    Computes real-time Campus Risk Index (0–100) per 8.6
     for Director and Chief Warden command dashboards.
     """
     now = datetime.now(timezone.utc)
@@ -75,7 +75,7 @@ def get_monthly_executive_report(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Returns the comprehensive monthly facility intelligence pack (§7.9).
+    Returns the comprehensive monthly facility intelligence pack (7.9).
     """
     target_month = month or datetime.now(timezone.utc).strftime("%Y-%m")
 
@@ -113,7 +113,7 @@ def export_csv_dataset(
     dataset: str = Query("complaints", description="complaints|bills|performance"),
     db: Session = Depends(get_db)
 ) -> Response:
-    """Exports raw datasets in CSV format for executive spreadsheet reporting (§7.9)."""
+    """Exports raw datasets in CSV format for executive spreadsheet reporting (7.9)."""
     output = io.StringIO()
     writer = csv.writer(output)
 

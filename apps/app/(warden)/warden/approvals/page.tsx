@@ -58,14 +58,14 @@ export default function WardenApprovalsPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl">
+      <div className="space-y-6 max-w-8xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Resolution Audits & Closure Sign-Off
             </h1>
             <p className="text-sm text-slate-500">
-              Statutory Warden review of completed tradesman jobs before official ticket closure (§3.1).
+              Statutory Warden review of completed tradesman jobs before official ticket closure (3.1).
             </p>
           </div>
           <Badge className="bg-indigo-600 text-white px-3 py-1 text-sm font-semibold gap-1.5">

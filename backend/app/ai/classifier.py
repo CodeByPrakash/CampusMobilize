@@ -1,5 +1,5 @@
 """
-Complaint Category Classifier (§8.1)
+Complaint Category Classifier (8.1)
 Offline TF-IDF + Logistic Regression model with deterministic keyword heuristic fallback.
 Guarantees >= 0.90 macro-F1 and fails over gracefully if model artifact is missing.
 """
@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 DEFAULT_MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 MODEL_FILENAME = "complaint_classifier.joblib"
 
-# Deterministic keyword scoring map (§8.1 Fallback)
+# Deterministic keyword scoring map (8.1 Fallback)
 KEYWORD_MAP = {
     "ELECTRICAL": [
         "spark", "wire", "wiring", "switch", "socket", "mcb", "breaker", "fuse",
@@ -80,7 +80,7 @@ class ComplaintClassifier:
 
     def heuristic_predict(self, title: str, description: str) -> Tuple[str, float]:
         """
-        Deterministic keyword scoring map (§8.1 fallback).
+        Deterministic keyword scoring map (8.1 fallback).
         Calculates match density per category and returns best class with confidence.
         """
         text = self._combine_text(title, description)

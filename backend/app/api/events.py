@@ -1,5 +1,5 @@
 """
-Campus Events & Festival Pre-Brief Router (§7.6, §8.5)
+Campus Events & Festival Pre-Brief Router (7.6, 8.5)
 Manages event calendar and generates autonomous pre-brief operational packages.
 """
 
@@ -120,7 +120,7 @@ def generate_event_prebrief(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Generates an autonomous Festival Pre-Brief Operational Package (§8.5).
+    Generates an autonomous Festival Pre-Brief Operational Package (8.5).
     Includes surge multipliers, budget impact, staff redeployment, and checklists.
     """
     event = db.query(CampusEvent).filter(CampusEvent.id == event_id).first()
@@ -172,7 +172,7 @@ def issue_chief_warden_mandate(
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Issues and logs an official Chief Warden Mandate (§8.5).
+    Issues and logs an official Chief Warden Mandate (8.5).
     Dispatches notifications to Hall Wardens and Estate Office.
     """
     event = db.query(CampusEvent).filter(CampusEvent.id == event_id).first()

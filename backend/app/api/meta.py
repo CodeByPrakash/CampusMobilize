@@ -1,5 +1,5 @@
 """
-Reference & Metadata Endpoints (§7.2, §2.2, §15)
+Reference & Metadata Endpoints (7.2, 2.2, 15)
 Provides hostels, rooms, categories, SLA policies, and 1-click demo personas.
 """
 

@@ -1,5 +1,5 @@
 """
-Phase 4 Test Suite: SLA Engine, Workers & Offline Email System (§7.4, §9, §10)
+Phase 4 Test Suite: SLA Engine, Workers & Offline Email System (7.4, 9, 10)
 Tests 75% warning trigger, 100% breach auto-escalation (+10 risk penalty),
 P1 45-minute inactivity escalation, and offline email audit logging.
 """

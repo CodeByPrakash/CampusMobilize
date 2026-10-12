@@ -1,5 +1,5 @@
 """
-Resend Mail Service & Template Dispatcher (§10)
+Resend Mail Service & Template Dispatcher (10)
 Dispatches live transactional notification emails via Resend API (resend.com)
 with responsive HTML templates, official NIT Rourkela branding, and DB audit logging.
 """
@@ -181,7 +181,7 @@ class MailService:
         chief_warden_email: str = "chief.warden@campusiq.in",
         estate_email: str = "estate@campusiq.in"
     ) -> EmailLog:
-        """Triggers urgent alert for P1 complaint intake (§10.3)."""
+        """Triggers urgent alert for P1 complaint intake (10.3)."""
         ticket_link = f"{settings.FRONTEND_URL}/#ticket-{complaint.ticket_no}"
         body_text = f"""To: {warden_email} | Cc: {chief_warden_email}, {estate_email}
 Ref: {complaint.ticket_no} | Raised: {complaint.created_at}
@@ -236,7 +236,7 @@ Dashboard: {ticket_link}
         assignee_email: str,
         warden_email: str
     ) -> EmailLog:
-        """Warning sent at 75% SLA threshold (§10.2)."""
+        """Warning sent at 75% SLA threshold (10.2)."""
         ticket_link = f"{settings.FRONTEND_URL}/#ticket-{complaint.ticket_no}"
         body_text = f"""Ref: {complaint.ticket_no} | Priority: {complaint.priority}
 The SLA deadline for this ticket is approaching (75% elapsed).
@@ -287,7 +287,7 @@ Please ensure repair works are updated to IN_PROGRESS or RESOLVED to prevent bre
         warden_email: str = "warden.hb3@campusiq.in",
         assignee_email: Optional[str] = None
     ) -> EmailLog:
-        """Escalation alert sent when 100% SLA window is breached (§10.2)."""
+        """Escalation alert sent when 100% SLA window is breached (10.2)."""
         ticket_link = f"{settings.FRONTEND_URL}/#ticket-{complaint.ticket_no}"
         cc_list = [warden_email]
         if assignee_email:

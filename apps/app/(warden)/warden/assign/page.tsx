@@ -174,7 +174,7 @@ export default function WardenAssignPage() {
 
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
-      <div className="space-y-6 max-w-6xl pb-10">
+      <div className="space-y-6 max-w-8xl pb-10">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -182,7 +182,7 @@ export default function WardenAssignPage() {
               Assign Tradesmen & Resource Dispatch
             </h1>
             <p className="text-sm text-slate-500">
-              Match resident complaints with certified institute technicians and monitor active workloads (§6, §7.4).
+              Match resident complaints with certified institute technicians and monitor active workloads (6, 7.4).
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -229,13 +229,12 @@ export default function WardenAssignPage() {
                   <div className="flex items-center justify-between">
                     <Badge
                       variant="outline"
-                      className={`text-[10px] font-medium ${
-                        tm.trade === "Electrician"
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : tm.trade === "Plumber"
+                      className={`text-[10px] font-medium ${tm.trade === "Electrician"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : tm.trade === "Plumber"
                           ? "bg-blue-50 text-blue-700 border-blue-200"
                           : "bg-slate-50 text-slate-700 border-slate-200"
-                      }`}
+                        }`}
                     >
                       {tm.trade === "Electrician" && <ZapIcon className="size-2.5 mr-1 text-amber-500 inline" />}
                       {tm.trade === "Plumber" && <DropletsIcon className="size-2.5 mr-1 text-blue-500 inline" />}
@@ -250,13 +249,12 @@ export default function WardenAssignPage() {
                 </CardHeader>
                 <CardContent className="p-3.5 pt-0 flex items-center justify-between text-xs text-slate-500">
                   <Badge
-                    className={`text-[10px] py-0 px-1.5 ${
-                      tm.activeJobs === 0
-                        ? "bg-emerald-100 text-emerald-800"
-                        : tm.activeJobs === 1
+                    className={`text-[10px] py-0 px-1.5 ${tm.activeJobs === 0
+                      ? "bg-emerald-100 text-emerald-800"
+                      : tm.activeJobs === 1
                         ? "bg-blue-100 text-blue-800"
                         : "bg-amber-100 text-amber-800"
-                    }`}
+                      }`}
                   >
                     {tm.activeJobs === 0 ? "Available (0 Jobs)" : `${tm.activeJobs} Active Jobs`}
                   </Badge>
@@ -297,18 +295,16 @@ export default function WardenAssignPage() {
                 <button
                   type="button"
                   onClick={() => setFilterCategory("ALL")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-                    filterCategory === "ALL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${filterCategory === "ALL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
+                    }`}
                 >
                   All
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterCategory("ELECTRICAL")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1 ${
-                    filterCategory === "ELECTRICAL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1 ${filterCategory === "ELECTRICAL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
+                    }`}
                 >
                   <ZapIcon className="size-3 text-amber-500" />
                   Electrical
@@ -316,9 +312,8 @@ export default function WardenAssignPage() {
                 <button
                   type="button"
                   onClick={() => setFilterCategory("WATER")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1 ${
-                    filterCategory === "WATER" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1 ${filterCategory === "WATER" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"
+                    }`}
                 >
                   <DropletsIcon className="size-3 text-blue-500" />
                   Plumbing
@@ -326,9 +321,8 @@ export default function WardenAssignPage() {
                 <button
                   type="button"
                   onClick={() => setFilterCategory("P1")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-                    filterCategory === "P1" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600"
-                  }`}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${filterCategory === "P1" ? "bg-white text-rose-700 shadow-2xs font-bold" : "text-slate-600"
+                    }`}
                 >
                   P1 Emergency
                 </button>
@@ -357,9 +351,8 @@ export default function WardenAssignPage() {
                 return (
                   <Card
                     key={t.id}
-                    className={`bg-white border-slate-200 hover:border-slate-300 transition-all shadow-2xs ${
-                      isP1 ? "border-l-4 border-l-rose-500" : ""
-                    }`}
+                    className={`bg-white border-slate-200 hover:border-slate-300 transition-all shadow-2xs ${isP1 ? "border-l-4 border-l-rose-500" : ""
+                      }`}
                   >
                     <CardHeader className="p-4 pb-2.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="space-y-1">
@@ -370,26 +363,24 @@ export default function WardenAssignPage() {
 
                           <Badge
                             variant="outline"
-                            className={`text-[10px] font-semibold ${
-                              isP1
-                                ? "bg-rose-50 text-rose-700 border-rose-300"
-                                : t.priority === "P2"
+                            className={`text-[10px] font-semibold ${isP1
+                              ? "bg-rose-50 text-rose-700 border-rose-300"
+                              : t.priority === "P2"
                                 ? "bg-amber-50 text-amber-700 border-amber-300"
                                 : "bg-slate-50 text-slate-700 border-slate-200"
-                            }`}
+                              }`}
                           >
                             {t.priority || "P3"}
                           </Badge>
 
                           <Badge
                             variant="outline"
-                            className={`text-[10px] font-mono uppercase ${
-                              isElectrical
-                                ? "border-amber-200 text-amber-800 bg-amber-50/50"
-                                : isWater
+                            className={`text-[10px] font-mono uppercase ${isElectrical
+                              ? "border-amber-200 text-amber-800 bg-amber-50/50"
+                              : isWater
                                 ? "border-blue-200 text-blue-800 bg-blue-50/50"
                                 : "border-slate-200 text-slate-700"
-                            }`}
+                              }`}
                           >
                             {t.category_code || "GENERAL"}
                           </Badge>
@@ -409,15 +400,14 @@ export default function WardenAssignPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge
                           variant="outline"
-                          className={`text-[11px] font-mono ${
-                            t.status === "ASSIGNED"
-                              ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                              : t.status === "IN_PROGRESS"
+                          className={`text-[11px] font-mono ${t.status === "ASSIGNED"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            : t.status === "IN_PROGRESS"
                               ? "bg-amber-50 text-amber-700 border-amber-200"
                               : t.status === "OPEN"
-                              ? "bg-slate-100 text-slate-700 border-slate-300"
-                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          }`}
+                                ? "bg-slate-100 text-slate-700 border-slate-300"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            }`}
                         >
                           Status: {t.status}
                         </Badge>

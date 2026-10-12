@@ -1,5 +1,5 @@
 """
-Pydantic Schemas for Complaints and State Machine Events (§7.3, §7.4)
+Pydantic Schemas for Complaints and State Machine Events (7.3, 7.4)
 """
 
 from typing import Optional, List, Dict, Any

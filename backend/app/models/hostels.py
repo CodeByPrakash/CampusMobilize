@@ -1,5 +1,5 @@
 """
-Hostel & Physical Facilities Data Models (§6)
+Hostel & Physical Facilities Data Models (6)
 """
 
 import uuid
