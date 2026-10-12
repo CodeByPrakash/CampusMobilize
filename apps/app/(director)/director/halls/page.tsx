@@ -7,9 +7,10 @@ import { getDirectorNav } from "@/components/dashboards/nav-config";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2Icon, UsersIcon, DoorOpenIcon, ShieldCheckIcon, MapPinIcon } from "lucide-react";
+import { Building2Icon, UsersIcon, DoorOpenIcon, ShieldCheckIcon, MapPinIcon, SatelliteIcon } from "lucide-react";
 import { toast } from "sonner";
 import { apiGetHostels } from "@/lib/api";
+import { HallSatelliteModal } from "@/components/maps/hall-satellite-modal";
 
 export default function DirectorHallsPage() {
   const role = ROLES.find((r) => r.id === "director") || ROLES[7];
@@ -17,6 +18,8 @@ export default function DirectorHallsPage() {
 
   const [hostels, setHostels] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
+  const [selectedMapHall, setSelectedMapHall] = React.useState<any | null>(null);
 
   React.useEffect(() => {
     async function load() {
@@ -90,9 +93,22 @@ export default function DirectorHallsPage() {
               Campus-wide institutional residential directory, wing topologies, and accommodation capacities (2.2).
             </p>
           </div>
-          <Badge className="bg-slate-900 text-white px-3 py-1 text-sm font-medium">
-            4 Main Residential Complexes
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedMapHall(null);
+                setIsMapModalOpen(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 h-8"
+            >
+              <SatelliteIcon className="size-3.5" />
+              View on Satellite Map
+            </Button>
+            <Badge className="bg-slate-900 text-white px-3 py-1 text-sm font-medium">
+              4 Main Residential Complexes
+            </Badge>
+          </div>
         </div>
 
         {/* Global Statistics */}
@@ -194,16 +210,29 @@ export default function DirectorHallsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                    onClick={() => toast.success(`Viewing structural architectural blue-prints for ${h.name}`)}
+                    className="h-7 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-semibold flex items-center gap-1.5"
+                    onClick={() => {
+                      setSelectedMapHall(h);
+                      setIsMapModalOpen(true);
+                    }}
                   >
-                    View Layout Map
+                    <SatelliteIcon className="size-3 text-indigo-500" />
+                    View on Map
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* OpenStreetMap Satellite View Modal */}
+        <HallSatelliteModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          selectedHall={selectedMapHall}
+          allHalls={hostels}
+          onSelectHall={(hall) => setSelectedMapHall(hall)}
+        />
       </div>
     </RoleDashboardShell>
   );

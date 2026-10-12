@@ -150,27 +150,32 @@ class MailService:
                 status = "sent"
             except ResendError as error:
                 print(f"[Resend Notice] Resend API response: {error}")
-                status = f"failed: {str(error)[:24]}"
+                status = "failed"
             except Exception as e:
                 print(f"[Resend Notice] Dispatch exception: {e}")
-                status = f"failed: {str(e)[:24]}"
+                status = "failed"
         else:
             print(f"[Resend Notice] RESEND_API_KEY is not set. Logged as sent_simulated to database.")
 
-        log_entry = EmailLog(
-            template=template,
-            to_emails=to_str,
-            cc_emails=cc_str,
-            subject=subject,
-            body=body_text,
-            status=status,
-            sent_at=now,
-            created_at=now
-        )
-        db.add(log_entry)
-        db.commit()
-        db.refresh(log_entry)
-        return log_entry
+        try:
+            log_entry = EmailLog(
+                template=template,
+                to_emails=to_str,
+                cc_emails=cc_str,
+                subject=subject,
+                body=body_text,
+                status=status[:30],
+                sent_at=now,
+                created_at=now
+            )
+            db.add(log_entry)
+            db.commit()
+            db.refresh(log_entry)
+            return log_entry
+        except Exception as log_err:
+            db.rollback()
+            print(f"[Resend Notice] Failed to save EmailLog: {log_err}")
+            return None
 
     @classmethod
     def send_p1_urgent_alert(
