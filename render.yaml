@@ -1,16 +1,40 @@
 services:
+  # 1. Main CampusIQ FastAPI Backend Web Service
   - type: web
-    name: campusiq-ml-backend
+    name: campusiq-backend
     env: python
     region: singapore
     plan: free
-    rootDir: ML
-    buildCommand: pip install -r requirements.txt && python run_pipeline.py
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python -m app.ai.training.train_all
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
     autoDeploy: true
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: ENVIRONMENT
+      - key: APP_ENV
         value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_SECRET
+        generateValue: true
+      - key: MAIL_ENABLED
+        value: "false"
+
+  # 2. Automated Continuous Learning & Retraining Cron (Daily at 02:00 UTC)
+  - type: cron
+    name: campusiq-continuous-learning-cron
+    env: python
+    region: singapore
+    plan: free
+    rootDir: backend
+    schedule: "0 2 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.ai.continuous_learning --target all
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: APP_ENV
+        value: production
+

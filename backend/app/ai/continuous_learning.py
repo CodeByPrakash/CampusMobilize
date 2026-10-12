@@ -280,7 +280,36 @@ class ContinuousLearningEngine:
 
         # Retrain classifier
         res = self.classifier.train(temp_merged_file, save_artifact=True)
+        meta = self._load_meta()
+        meta["last_retrained_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_meta(meta)
         return res
+
+    def trigger_retraining(self, target: str = "all") -> Dict[str, Any]:
+        """
+        Manually triggers retraining across forecasters and/or classifier.
+        Target can be 'all', 'utilities', or 'classifier'.
+        """
+        target = target.lower()
+        results: Dict[str, Any] = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "target": target,
+            "status": "COMPLETED"
+        }
+
+        if target in ["all", "utilities"]:
+            print("[ContinuousLearning] Retraining utility forecasting models with buffer data...")
+            results["utilities"] = self.retrain_utility_models()
+
+        if target in ["all", "classifier"]:
+            print("[ContinuousLearning] Retraining complaint classifier with operator feedback buffer...")
+            results["classifier"] = self.retrain_classifier_with_feedback()
+
+        meta = self._load_meta()
+        meta["last_retrained_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_meta(meta)
+        results["meta"] = meta
+        return results
 
     # =========================================================================
     # 3. CONTINUOUS PREDICTION FOR NEXT MONTH'S CONSUMPTION & BILLS
@@ -379,3 +408,35 @@ class ContinuousLearningEngine:
                 }
             }
         }
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="CampusIQ Continuous Learning Trigger & Status CLI")
+    parser.add_argument(
+        "--target",
+        choices=["all", "utilities", "classifier"],
+        default="all",
+        help="Models to retrain: 'all', 'utilities', or 'classifier' (default: all)"
+    )
+    parser.add_argument(
+        "--status-only",
+        action="store_true",
+        help="Print current continuous learning status and buffer counts without retraining"
+    )
+    args = parser.parse_args()
+
+    engine = ContinuousLearningEngine()
+    if args.status_only:
+        status = engine.get_status()
+        print("\n=== CampusIQ Continuous Learning Status ===")
+        print(json.dumps(status, indent=2))
+    else:
+        print(f"\n[Trigger] Initiating Continuous Learning retraining (target: {args.target})...")
+        res = engine.trigger_retraining(target=args.target)
+        print("\n=== Retraining Results ===")
+        print(json.dumps(res, indent=2))
+        print("\n[SUCCESS] Models retrained and saved to disk.")
+

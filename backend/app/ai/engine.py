@@ -250,3 +250,8 @@ class CampusAIEngine:
     def get_learning_status(self) -> Dict[str, Any]:
         """Returns online continuous learning metrics and drift alerts."""
         return self.continuous_learning.get_status()
+
+    def trigger_continuous_retraining(self, target: str = "all") -> Dict[str, Any]:
+        """Manually triggers continuous learning retraining across forecasters and/or classifier."""
+        return self.continuous_learning.trigger_retraining(target=target)
+

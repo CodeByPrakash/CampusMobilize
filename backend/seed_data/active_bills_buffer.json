@@ -497,5 +497,45 @@
     "amount_inr": 674725.0,
     "resident_count": 850,
     "ingested_at": "2026-10-11T18:55:15.198994+00:00"
+  },
+  {
+    "hostel_code": "HB-3",
+    "utility": "electricity",
+    "bill_month": "2026-11-01",
+    "units_consumed": 78500.0,
+    "amount_inr": 537725.0,
+    "tariff_rate": 6.85,
+    "resident_count": 850,
+    "ingested_at": "2026-10-12T03:55:28.916319+00:00"
+  },
+  {
+    "hostel_code": "KMS",
+    "utility": "water",
+    "bill_month": "2026-11-01",
+    "units_consumed": 12500.0,
+    "amount_inr": 231250.0,
+    "tariff_rate": 18.5,
+    "resident_count": 620,
+    "ingested_at": "2026-10-12T03:55:28.917769+00:00"
+  },
+  {
+    "hostel_code": "HB-3",
+    "utility": "electricity",
+    "bill_month": "2026-11-01",
+    "units_consumed": 78500.0,
+    "amount_inr": 537725.0,
+    "tariff_rate": 6.85,
+    "resident_count": 850,
+    "ingested_at": "2026-10-12T03:58:41.924712+00:00"
+  },
+  {
+    "hostel_code": "KMS",
+    "utility": "water",
+    "bill_month": "2026-11-01",
+    "units_consumed": 12500.0,
+    "amount_inr": 231250.0,
+    "tariff_rate": 18.5,
+    "resident_count": 620,
+    "ingested_at": "2026-10-12T03:58:41.929712+00:00"
   }
 ]

@@ -128,6 +128,18 @@ def log_operator_feedback(
     return res
 
 
+@router.post("/continuous-learning/retrain")
+def trigger_continuous_learning_retrain(
+    target: str = Query("all", description="Models to retrain: 'all', 'utilities', or 'classifier'")
+):
+    """
+    On-demand trigger for continuous learning model retraining.
+    Merges historical data with active buffers and fine-tunes AI models offline.
+    """
+    return ai_engine.trigger_continuous_retraining(target=target)
+
+
+
 @router.post("/utilities/forecast")
 def predict_utility_demand(
     payload: Dict[str, Any] = Body(...)

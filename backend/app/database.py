@@ -15,13 +15,17 @@ Base = declarative_base()
 
 def get_engine_and_session():
     db_url = settings.DATABASE_URL
+    # Render and older cloud database providers supply 'postgres://' which SQLAlchemy requires as 'postgresql://'
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
 
     # Extract target database name
     db_name_match = re.search(r"/([^/?]+)(?:\?|$)", db_url)
     target_db = db_name_match.group(1) if db_name_match else "campusiq"
 
-    # Only verify/create database on local PostgreSQL instances, not on cloud databases (e.g. Neon)
+    # Only verify/create database on local PostgreSQL instances, not on cloud databases (e.g. Neon, Render)
     is_cloud_db = any(k in db_url.lower() for k in ["neon.tech", "supabase", "render", "cockroach", "aws", "azure", "gcp"])
+
     if not is_cloud_db and ("localhost" in db_url or "127.0.0.1" in db_url):
         server_url = re.sub(r"/[^/?]+(\?.*)?$", "/postgres\\1", db_url)
         try:
