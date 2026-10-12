@@ -47,6 +47,19 @@ app.add_middleware(
 )
 
 
+@app.get("/", tags=["System"])
+@app.head("/", tags=["System"])
+def root_check():
+    """Root health check for Render port detection and ping."""
+    return {
+        "status": "HEALTHY",
+        "service": "campusiq-backend",
+        "campus": "NIT Rourkela",
+        "health": "/api/v1/health",
+        "docs": "/docs"
+    }
+
+
 @app.get("/api/v1/health", tags=["System"])
 def health_check():
     """System health check endpoint."""
@@ -58,6 +71,7 @@ def health_check():
         "offline_mode": True,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+
 
 
 # Include Routers
