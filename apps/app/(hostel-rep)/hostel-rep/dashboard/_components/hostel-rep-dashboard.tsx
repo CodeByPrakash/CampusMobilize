@@ -109,6 +109,7 @@ export function HostelRepDashboard() {
 
   const [showEscalateModal, setShowEscalateModal] = React.useState(false);
   const [escalateJustification, setEscalateJustification] = React.useState("");
+  const [targetPriority, setTargetPriority] = React.useState<"P1" | "P2" | "P3" | "P4">("P1");
 
   // 1-Click Verify Action
   const handleVerify = async (ticket: TriageTicket) => {
@@ -176,29 +177,21 @@ export function HostelRepDashboard() {
     }
   };
 
-  // 1-Level Priority Escalation
+  // Priority Edit & Override
   const handleConfirmEscalate = async () => {
     if (!selectedTicket || !escalateJustification.trim()) {
-      toast.error("Please provide justification for priority escalation (2.3)");
+      toast.error("Please provide justification for priority adjustment");
       return;
     }
 
-    const priorityMap: Record<string, "P1" | "P2" | "P3" | "P4"> = {
-      P4: "P3",
-      P3: "P2",
-      P2: "P1",
-      P1: "P1",
-    };
-    const nextPriority = priorityMap[selectedTicket.priority];
-
     try {
-      await apiOverridePriority(selectedTicket.ticket_no, nextPriority, escalateJustification).catch(() => { });
+      await apiOverridePriority(selectedTicket.ticket_no, targetPriority, escalateJustification).catch(() => { });
       setTickets((prev) =>
         prev.map((t) =>
-          t.id === selectedTicket.id ? { ...t, priority: nextPriority } : t
+          t.id === selectedTicket.id ? { ...t, priority: targetPriority } : t
         )
       );
-      toast.success(`Priority escalated from ${selectedTicket.priority} to ${nextPriority}!`);
+      toast.success(`Priority updated from ${selectedTicket.priority} to ${targetPriority}!`);
       setShowEscalateModal(false);
       setEscalateJustification("");
       setSelectedTicket(null);
@@ -395,15 +388,16 @@ export function HostelRepDashboard() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 text-xs px-2 gap-1"
-                            title="Escalate Priority by 1 class"
+                            className="h-7 text-xs px-2 gap-1 text-primary hover:text-primary"
+                            title="Edit Priority with justification"
                             onClick={() => {
                               setSelectedTicket(t);
+                              setTargetPriority(t.priority === "P4" ? "P3" : t.priority === "P3" ? "P2" : "P1");
                               setShowEscalateModal(true);
                             }}
                           >
                             <ArrowUpRightIcon className="size-3" />
-                            <span>Escalate</span>
+                            <span>Edit Priority</span>
                           </Button>
                         </div>
                       </TableCell>
@@ -572,26 +566,50 @@ export function HostelRepDashboard() {
         </div>
       )}
 
-      {/* Modal 3: Escalate Priority +1 */}
+      {/* Modal 3: Edit / Override Priority */}
       {showEscalateModal && selectedTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-lg space-y-4">
             <div>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <ArrowUpRightIcon className="size-4" />
-                <span>Override Priority by 1 Class ({selectedTicket.ticket_no})</span>
+                <ArrowUpRightIcon className="size-4 text-primary" />
+                <span>Edit Priority &amp; Triage Level ({selectedTicket.ticket_no})</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Current priority: <strong>{selectedTicket.priority}</strong>. Hostel Reps may escalate by strictly 1 level (2.3).
+                AI initial priority: <strong>{selectedTicket.priority}</strong>. Hostel Representatives and higher authorities may edit priority with logged justification.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Justification Note</Label>
+              <Label className="text-xs">Select Target Priority</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {(["P1", "P2", "P3", "P4"] as const).map((p) => (
+                  <Button
+                    key={p}
+                    type="button"
+                    size="sm"
+                    variant={targetPriority === p ? (p === "P1" ? "destructive" : "default") : "outline"}
+                    className="h-8 text-xs font-mono font-bold"
+                    onClick={() => setTargetPriority(p)}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </div>
+              <div className="text-[11px] text-muted-foreground flex justify-between px-1">
+                <span>P1: Emergency</span>
+                <span>P2: Urgent</span>
+                <span>P3: Standard</span>
+                <span>P4: Routine</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Justification Note (Logged in Audit Trail)</Label>
               <textarea
                 rows={3}
                 className="w-full rounded-md border border-input bg-background p-2 text-xs"
-                placeholder="e.g. Multiple students affected; hazard risk escalated due to heavy evening load..."
+                placeholder="e.g. Verified on-site: heavy water accumulation risking electrical panel short-circuit..."
                 value={escalateJustification}
                 onChange={(e) => setEscalateJustification(e.target.value)}
                 required
@@ -613,7 +631,7 @@ export function HostelRepDashboard() {
                 size="sm"
                 onClick={handleConfirmEscalate}
               >
-                Escalate Priority
+                Save Priority Change
               </Button>
             </div>
           </div>

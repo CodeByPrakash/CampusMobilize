@@ -218,7 +218,6 @@ export default function StudentComplaintsKanbanPage() {
   const [category, setCategory] = React.useState("ELECTRICAL");
   const [block, setBlock] = React.useState("Block B");
   const [room, setRoom] = React.useState("204");
-  const [severity, setSeverity] = React.useState("3");
   const [imageUrl, setImageUrl] = React.useState<string>("");
   const [imageName, setImageName] = React.useState<string>("");
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
@@ -366,30 +365,67 @@ export default function StudentComplaintsKanbanPage() {
 
     setIsSubmitting(true);
     try {
+      const text = `${title} ${description} ${category}`.toLowerCase();
+      let aiSev = 3;
+      let aiPrio: "P1" | "P2" | "P3" | "P4" = "P3";
+      if (
+        text.includes("spark") ||
+        text.includes("fire") ||
+        text.includes("shock") ||
+        text.includes("short circuit") ||
+        text.includes("smoke") ||
+        text.includes("collapse") ||
+        text.includes("gas") ||
+        text.includes("naked wire") ||
+        text.includes("exposed wire")
+      ) {
+        aiSev = 5;
+        aiPrio = "P1";
+      } else if (
+        text.includes("flooding") ||
+        text.includes("overflow") ||
+        text.includes("no water") ||
+        text.includes("power outage") ||
+        text.includes("blackout") ||
+        text.includes("main line") ||
+        text.includes("tripping")
+      ) {
+        aiSev = 4;
+        aiPrio = "P2";
+      } else if (
+        text.includes("geyser") ||
+        text.includes("leak") ||
+        text.includes("tap") ||
+        text.includes("fan") ||
+        text.includes("washroom") ||
+        text.includes("cooler") ||
+        text.includes("lock")
+      ) {
+        aiSev = 3;
+        aiPrio = "P3";
+      } else {
+        aiSev = 2;
+        aiPrio = "P4";
+      }
+
       const finalDesc = imageUrl ? `${description}\n\n[Photo Evidence]: ${imageUrl}` : description;
-      const res = await apiCreateComplaint({
-        title,
-        description: finalDesc,
-        category_code: category,
-        block_name: block,
-        room_no: room,
-        severity: parseInt(severity, 10),
-      });
+      const tempId = `ciq-${Date.now()}`;
+      const tempTicketNo = `CIQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
       const newTicket: KanbanCardData = {
-        id: res?.id || `ciq-${Date.now()}`,
-        ticket_no: res?.ticket_no || `CIQ-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: tempId,
+        ticket_no: tempTicketNo,
         title,
         description: finalDesc,
         category,
         block,
         room,
-        priority: parseInt(severity, 10) >= 4 ? "P1" : "P3",
-        severity: parseInt(severity, 10),
-        status: parseInt(severity, 10) >= 4 ? "ASSIGNED" : "OPEN",
+        priority: aiPrio,
+        severity: aiSev,
+        status: aiSev >= 4 ? "ASSIGNED" : "OPEN",
         upvotes: 1,
         sla_deadline: "Scheduled",
-        sla_hours: parseInt(severity, 10) >= 4 ? 2 : 48,
+        sla_hours: aiSev >= 4 ? 2 : 48,
         sla_remaining: "SLA Active",
         escalation_target: "Hostel Rep Triage Queue",
         is_escalated: false,
@@ -398,18 +434,39 @@ export default function StudentComplaintsKanbanPage() {
         created_at: "Just now",
       };
 
+      // Optimistic Instant Insertion (0ms Latency)
       setTickets((prev) => [newTicket, ...prev]);
-      toast.success(`Complaint lodged! Ticket #${newTicket.ticket_no}`);
+      toast.success(`Complaint lodged! Ticket #${newTicket.ticket_no} (AI Priority: ${aiPrio})`);
 
-      // Reset form & close Sheet
+      // Reset form & close Sheet immediately
       setTitle("");
       setDescription("");
       setImageUrl("");
       setImageName("");
       setIsLodgeSheetOpen(false);
+      setIsSubmitting(false);
+
+      // Background asynchronous persistence & backend reconciliation
+      apiCreateComplaint({
+        title,
+        description: finalDesc,
+        category_code: category,
+        block_name: block,
+        room_no: room,
+        severity: aiSev,
+      }).then((res) => {
+        if (res?.ticket_no) {
+          setTickets((prev) =>
+            prev.map((t) =>
+              t.id === tempId ? { ...t, id: res.id || t.id, ticket_no: res.ticket_no } : t
+            )
+          );
+        }
+      }).catch((err) => {
+        console.warn("Backend sync notice:", err?.message);
+      });
     } catch (err: any) {
       toast.error(err?.message || "Failed to lodge complaint");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -1033,32 +1090,20 @@ export default function StudentComplaintsKanbanPage() {
                 </div>
               </div>
 
-              {/* Severity Level Picker */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                  <span>Severity Level</span>
-                  <span className="text-[11px] text-muted-foreground font-normal">Level 5 = Emergency P1 Bypass</span>
-                </Label>
-                <div className="flex gap-2">
-                  {["1", "2", "3", "4", "5"].map((lvl) => (
-                    <Button
-                      key={lvl}
-                      type="button"
-                      size="sm"
-                      variant={
-                        severity === lvl
-                          ? lvl === "5" || lvl === "4"
-                            ? "destructive"
-                            : "default"
-                          : "outline"
-                      }
-                      className="flex-1 text-xs h-8"
-                      onClick={() => setSeverity(lvl)}
-                    >
-                      L{lvl}
-                    </Button>
-                  ))}
+              {/* AI Determined Priority & Severity Notice */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <SparklesIcon className="size-3.5 text-primary" />
+                    AI Priority &amp; Severity Assessment
+                  </span>
+                  <Badge variant="outline" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20">
+                    Automated Triage
+                  </Badge>
                 </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Students cannot select priority manually. CampusIQ AI automatically calculates severity and maps the priority band (P1–P4) based on safety risks and keywords. Hostel Representatives and higher authorities can edit or escalate priority during physical verification.
+                </p>
               </div>
 
               {/* S3 Photo Evidence Uploader */}

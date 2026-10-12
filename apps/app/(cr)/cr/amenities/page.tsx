@@ -11,7 +11,7 @@ import { BuildingIcon, DropletsIcon, WifiIcon, FlameIcon, ShieldCheckIcon, Alert
 import { toast } from "sonner";
 
 export default function CrAmenitiesPage() {
-  const role = ROLES.find((r) => r.id === "cr") || ROLES[1];
+  const role = ROLES.find((r) => r.id === "student") || ROLES[0];
   const navItems = getCrNav();
 
   const [amenities, setAmenities] = React.useState([

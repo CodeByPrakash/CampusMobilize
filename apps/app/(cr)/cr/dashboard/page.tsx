@@ -14,7 +14,7 @@ import {
 import { getCrNav } from "@/components/dashboards/nav-config";
 
 export default function CrPage() {
-  const role = ROLES.find((r) => r.id === "cr") || ROLES[1];
+  const role = ROLES.find((r) => r.id === "student") || ROLES[0];
   const navItems = getCrNav();
 
   return (

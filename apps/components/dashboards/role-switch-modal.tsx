@@ -17,7 +17,7 @@ interface RoleSwitchModalProps {
 export function RoleSwitchModal({
   isOpen,
   onClose,
-  currentRoleId = "cr",
+  currentRoleId = "student",
 }: RoleSwitchModalProps) {
   const router = useRouter()
   const [activeId, setActiveId] = React.useState(currentRoleId)
@@ -57,10 +57,10 @@ export function RoleSwitchModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
-                Switch Demonstration Role (15)
+                Switch Demonstration Role
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Instantaneous switch between Student, Rep, Caretaker, Warden, and Admin dashboards.
+                Instantaneous switch between Student Representative, Hostel Rep, Caretaker, Warden, and Admin dashboards.
               </p>
             </div>
           </div>

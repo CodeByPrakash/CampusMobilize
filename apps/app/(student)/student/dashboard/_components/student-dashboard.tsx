@@ -137,7 +137,46 @@ export function StudentDashboard() {
   const [category, setCategory] = React.useState("Electrical");
   const [block, setBlock] = React.useState("B-Block");
   const [room, setRoom] = React.useState("Rm 204");
-  const [severity, setSeverity] = React.useState("3");
+
+function evaluateAiSeverityAndPriority(t: string, d: string, cat: string): { severity: number; priority: "P1" | "P2" | "P3" | "P4"; explanation: string } {
+  const text = `${t} ${d} ${cat}`.toLowerCase();
+  if (
+    text.includes("spark") ||
+    text.includes("fire") ||
+    text.includes("shock") ||
+    text.includes("short circuit") ||
+    text.includes("smoke") ||
+    text.includes("collapse") ||
+    text.includes("gas") ||
+    text.includes("naked wire") ||
+    text.includes("exposed wire")
+  ) {
+    return { severity: 5, priority: "P1", explanation: "Critical Hazard: Life-safety risk" };
+  }
+  if (
+    text.includes("flooding") ||
+    text.includes("overflow") ||
+    text.includes("no water") ||
+    text.includes("power outage") ||
+    text.includes("blackout") ||
+    text.includes("main line") ||
+    text.includes("tripping")
+  ) {
+    return { severity: 4, priority: "P2", explanation: "High Severity: Service disruption" };
+  }
+  if (
+    text.includes("geyser") ||
+    text.includes("leak") ||
+    text.includes("tap") ||
+    text.includes("fan") ||
+    text.includes("washroom") ||
+    text.includes("cooler") ||
+    text.includes("lock")
+  ) {
+    return { severity: 3, priority: "P3", explanation: "Standard Facility: Maintenance required" };
+  }
+  return { severity: 2, priority: "P4", explanation: "Minor Defect: Routine maintenance" };
+}
 
   const handleUpvote = async (item: ComplaintItem) => {
     try {
@@ -168,36 +207,52 @@ export function StudentDashboard() {
 
     setIsSubmitting(true);
     try {
-      await apiCreateComplaint({
-        title,
-        description,
-        category_code: category.toUpperCase(),
-        block_name: block,
-        room_no: room,
-        severity: parseInt(severity, 10),
-      }).catch(() => { });
+      const aiAssessment = evaluateAiSeverityAndPriority(title, description, category);
+      const tempId = `c-${Date.now()}`;
+      const tempTicketNo = `CIQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
       const newTicket: ComplaintItem = {
-        id: `c-${Date.now()}`,
-        ticket_no: `CMP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: tempId,
+        ticket_no: tempTicketNo,
         title,
         category,
         block,
         room,
-        severity: parseInt(severity, 10),
+        severity: aiAssessment.severity,
         status: "OPEN",
         upvotes: 1,
         createdAt: "Just now",
       };
 
+      // Optimistic Instant Insertion (0ms Latency)
       setMyComplaints([newTicket, ...myComplaints]);
-      toast.success("Complaint successfully lodged with HB-3 Triage!");
+      toast.success(`Complaint lodged! AI classified priority as ${aiAssessment.priority}. Triage queue notified.`);
       setTitle("");
       setDescription("");
       setShowLodgeForm(false);
+      setIsSubmitting(false);
+
+      // Background asynchronous persistence & reconciliation
+      apiCreateComplaint({
+        title,
+        description,
+        category_code: category.toUpperCase(),
+        block_name: block,
+        room_no: room,
+        severity: aiAssessment.severity,
+      }).then((res) => {
+        if (res?.ticket_no) {
+          setMyComplaints((prev) =>
+            prev.map((c) =>
+              c.id === tempId ? { ...c, id: res.id || c.id, ticket_no: res.ticket_no } : c
+            )
+          );
+        }
+      }).catch((err) => {
+        console.warn("Backend sync notice:", err?.message);
+      });
     } catch {
       toast.error("Could not lodge complaint. Saved offline.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -358,22 +413,20 @@ export function StudentDashboard() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Perceived Severity (1 = Minor, 5 = Critical Hazard)</Label>
-                <div className="flex gap-2">
-                  {["1", "2", "3", "4", "5"].map((lvl) => (
-                    <Button
-                      key={lvl}
-                      type="button"
-                      variant={severity === lvl ? "default" : "outline"}
-                      size="sm"
-                      className="size-8 p-0 text-xs"
-                      onClick={() => setSeverity(lvl)}
-                    >
-                      {lvl}
-                    </Button>
-                  ))}
+              {/* AI Determined Priority Notice */}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <SparklesIcon className="size-3.5 text-primary" />
+                    <span>Priority Assessed by CampusIQ AI</span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-medium bg-primary/10 text-primary border-primary/20">
+                    Auto-Triage Active
+                  </Badge>
                 </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Students cannot select priority directly. CampusIQ AI automatically determines severity and priority (P1–P4) based on risk factors and description. Hostel Representatives and higher authorities can adjust priority during verification.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t">

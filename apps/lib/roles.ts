@@ -16,24 +16,13 @@ export const ROLES: RoleDefinition[] = [
   {
     id: "student",
     name: "Aryan Sharma",
-    title: "B.Tech Student (Hostel 14, Rm 204)",
-    roleKey: "STUDENT",
-    description: "Personal dashboard, lodge issues, live status tracking & reward points",
+    title: "Student Representative & Wing Coordinator (Hostel 14, Rm 204)",
+    roleKey: "STUDENT_REP",
+    description: "Personal dashboard, lodge issues, wing coordination, common facility tracking & reward points",
     color: "#2563eb",
     initial: "A",
     email: "aryan@student.nitrkl.ac.in",
     route: "/student/dashboard",
-  },
-  {
-    id: "cr",
-    name: "Diya Patel",
-    title: "Class Rep & Wing Coordinator",
-    roleKey: "CR",
-    description: "Filing on behalf of wing students, common facility tracking",
-    color: "#0d9488",
-    initial: "D",
-    email: "diya@cr.nitrkl.ac.in",
-    route: "/cr/dashboard",
     badge: "ACTIVE",
   },
   {
@@ -104,4 +93,4 @@ export const ROLES: RoleDefinition[] = [
   },
 ]
 
-export const DEFAULT_ROLE = ROLES[1] // Diya Patel (CR) as shown ACTIVE in prompt
+export const DEFAULT_ROLE = ROLES[0] // Aryan Sharma (Student Rep) as the merged Student + CR role

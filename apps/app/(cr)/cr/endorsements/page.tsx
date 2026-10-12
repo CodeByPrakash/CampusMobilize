@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { apiListComplaints } from "@/lib/api";
 
 export default function CrEndorsementsPage() {
-  const role = ROLES.find((r) => r.id === "cr") || ROLES[1];
+  const role = ROLES.find((r) => r.id === "student") || ROLES[0];
   const navItems = getCrNav();
 
   const [complaints, setComplaints] = React.useState<any[]>([]);

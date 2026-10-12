@@ -142,16 +142,28 @@ export async function apiCreateComplaint(data: {
     actor_role: persona.role,
     hostel_code: data.hostel_code || persona.hostel_code,
   }
-  const res = await fetch(`${API_BASE_URL}/complaints`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || `Failed to lodge complaint: ${res.statusText}`)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 6000)
+  try {
+    const res = await fetch(`${API_BASE_URL}/complaints`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Failed to lodge complaint: ${res.statusText}`)
+    }
+    return await res.json()
+  } catch (err: any) {
+    clearTimeout(timer)
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out. Complaint queued locally.")
+    }
+    throw err
   }
-  return res.json()
 }
 
 export async function apiTransitionComplaint(

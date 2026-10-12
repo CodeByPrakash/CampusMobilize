@@ -6,12 +6,14 @@ import { SustainabilityScoreCharts } from "./sustainability-score-charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IoTSensorDashboard } from "@/components/telemetry/iot-sensor-dashboard";
 import {
   MapPinIcon,
   LineChartIcon,
   SparklesIcon,
   ShieldCheckIcon,
   ActivityIcon,
+  RadioIcon,
 } from "lucide-react";
 
 export function SustainabilityDashboard() {
@@ -29,7 +31,7 @@ export function SustainabilityDashboard() {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Geospatial risk heatmap, sector-by-sector telemetry, and predictive Sustainability AI scoring.
+            Geospatial risk heatmap, sector telemetry, IoT sensor stream ingestion, anomaly alerts, and prescriptive administrative recommendations.
           </p>
         </div>
 
@@ -41,9 +43,13 @@ export function SustainabilityDashboard() {
         </div>
       </div>
 
-      {/* Main Tabs: Map View & Graphical Graphs View */}
-      <Tabs defaultValue="map" className="space-y-4">
+      {/* Main Tabs: Map View, IoT Telemetry Hub & Score Graphs View */}
+      <Tabs defaultValue="telemetry" className="space-y-4">
         <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="telemetry" className="gap-1.5 text-xs font-semibold text-primary">
+            <RadioIcon className="size-3.5" />
+            <span>Live IoT Telemetry & Anomaly Hub</span>
+          </TabsTrigger>
           <TabsTrigger value="map" className="gap-1.5 text-xs">
             <MapPinIcon className="size-3.5" />
             <span>Interactive Campus Heatmap & Sectors</span>
@@ -53,6 +59,10 @@ export function SustainabilityDashboard() {
             <span>Sustainability AI Score Graphs & Analytics</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="telemetry" className="space-y-4">
+          <IoTSensorDashboard />
+        </TabsContent>
 
         <TabsContent value="map" className="space-y-4">
           <NitRourkelaMap />

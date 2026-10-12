@@ -15,7 +15,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"form">) {
   const router = useRouter();
-  const [email, setEmail] = React.useState("diya@cr.nitrkl.ac.in");
+  const [email, setEmail] = React.useState("aryan@student.nitrkl.ac.in");
   const [password, setPassword] = React.useState("••••••••");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
@@ -104,11 +104,10 @@ export function LoginForm({
       {/* Demonstration Role Switcher Banner */}
       <div className="mt-6 rounded-lg border border-border bg-card p-4 text-center">
         <div className="text-xs font-semibold text-foreground">
-          Switch Demonstration Role (15)
+          Switch Demonstration Role
         </div>
         <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
-          1-click instant login as Student, CR, Rep, Caretaker, Warden, or
-          Director
+          1-click instant login as Student Rep, Hostel Rep, Caretaker, Warden, or Director
         </p>
 
         <Button
@@ -118,7 +117,7 @@ export function LoginForm({
           className="w-full text-xs h-9 gap-2"
         >
           <UserCheckIcon className="size-4" />
-          <span>Open Role Selector (15)</span>
+          <span>Open Role Selector</span>
         </Button>
 
         {/* Quick chip shortcuts */}

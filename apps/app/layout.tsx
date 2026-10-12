@@ -23,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <div id="google_translate_element" style={{ display: "none" }} aria-hidden="true" />
         {children}
         <Toaster richColors position="top-right" />
       </body>

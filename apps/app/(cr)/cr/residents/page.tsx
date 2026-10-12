@@ -12,7 +12,7 @@ import { SearchIcon, UsersIcon, DoorOpenIcon, ShieldCheckIcon, PhoneIcon, AlertC
 import { toast } from "sonner";
 
 export default function CrResidentsPage() {
-  const role = ROLES.find((r) => r.id === "cr") || ROLES[1];
+  const role = ROLES.find((r) => r.id === "student") || ROLES[0];
   const navItems = getCrNav();
 
   const [search, setSearch] = React.useState("");

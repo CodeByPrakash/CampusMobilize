@@ -176,3 +176,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Google Translate Widget Cleanups */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#google_translate_element {
+  display: none !important;
+}
+.skiptranslate iframe {
+  display: none !important;
+}
+iframe.skiptranslate {
+  display: none !important;
+}
+div.skiptranslate {
+  display: inline-block;
+}

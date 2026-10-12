@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ROLES, RoleDefinition } from "@/lib/roles";
 import { RoleSwitchModal } from "@/components/dashboards/role-switch-modal";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { cn } from "cn";
 import {
   Sidebar,
@@ -152,7 +153,7 @@ export function RoleDashboardShell({
             >
               <div className="flex items-center gap-2">
                 <UserCheckIcon className="size-3.5 text-muted-foreground" />
-                <span>Switch Role (15)</span>
+                <span>Switch Role</span>
               </div>
               <ChevronRightIcon className="size-3.5 text-muted-foreground" />
             </Button>
@@ -211,6 +212,7 @@ export function RoleDashboardShell({
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <Button
               variant="outline"
               size="sm"

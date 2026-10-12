@@ -27,6 +27,7 @@ import {
   TrophyIcon,
   MapPinIcon,
   FlameIcon,
+  RadioIcon,
 } from "lucide-react";
 
 export interface NavItemConfig {
@@ -50,6 +51,27 @@ export const getStudentNav = (): NavItemConfig[] => [
     badge: "Kanban",
   },
   {
+    title: "Wing Coordination",
+    url: "/cr/dashboard",
+    icon: <BuildingIcon className="size-4" />,
+  },
+  {
+    title: "Wing Residents",
+    url: "/cr/residents",
+    icon: <UsersIcon className="size-4" />,
+    badge: "48",
+  },
+  {
+    title: "Common Amenities",
+    url: "/cr/amenities",
+    icon: <Building2Icon className="size-4" />,
+  },
+  {
+    title: "Endorsement Log",
+    url: "/cr/endorsements",
+    icon: <FileCheckIcon className="size-4" />,
+  },
+  {
     title: "Map",
     url: "/student/map",
     icon: <MapPinIcon className="size-4" />,
@@ -69,29 +91,7 @@ export const getStudentNav = (): NavItemConfig[] => [
   },
 ];
 
-export const getCrNav = (): NavItemConfig[] => [
-  {
-    title: "Wing Overview",
-    url: "/cr/dashboard",
-    icon: <LayoutDashboardIcon className="size-4" />,
-  },
-  {
-    title: "Wing B Residents",
-    url: "/cr/residents",
-    icon: <UsersIcon className="size-4" />,
-    badge: "48",
-  },
-  {
-    title: "Common Amenities",
-    url: "/cr/amenities",
-    icon: <BuildingIcon className="size-4" />,
-  },
-  {
-    title: "Endorsement Log",
-    url: "/cr/endorsements",
-    icon: <FileCheckIcon className="size-4" />,
-  },
-];
+export const getCrNav = (): NavItemConfig[] => getStudentNav();
 
 export const getHostelRepNav = (): NavItemConfig[] => [
   {
@@ -243,6 +243,12 @@ export const getEstateOfficerNav = (): NavItemConfig[] => [
     icon: <UploadCloudIcon className="size-4" />,
   },
   {
+    title: "IoT Sensor Telemetry",
+    url: "/telemetry",
+    icon: <RadioIcon className="size-4" />,
+    badge: "148 Nodes",
+  },
+  {
     title: "Grid & Substation",
     url: "/estate-officer/grid",
     icon: <AlertTriangleIcon className="size-4" />,
@@ -255,6 +261,12 @@ export const getDirectorNav = (): NavItemConfig[] => [
     url: "/director/dashboard",
     icon: <ActivityIcon className="size-4" />,
     badge: "31 / 100",
+  },
+  {
+    title: "IoT & Sensor Telemetry",
+    url: "/telemetry",
+    icon: <RadioIcon className="size-4" />,
+    badge: "Live (148)",
   },
   {
     title: "Safety Hotspots",
@@ -310,8 +322,9 @@ export const getNavForRoleId = (roleId?: string): NavItemConfig[] => {
     case "hostel_rep":
     case "hostel-rep":
       return getHostelRepNav();
+    case "student_rep":
+    case "student-rep":
     case "cr":
-      return getCrNav();
     case "student":
       return getStudentNav();
     default:

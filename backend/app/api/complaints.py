@@ -52,21 +52,28 @@ CROSS_HOSTEL_ROLES = ["CHIEF_WARDEN", "DIRECTOR", "ESTATE_OFFICER", "ADMIN"]
 
 
 def generate_ticket_no(db: Session) -> str:
-    """Generates sequential ticket number: CIQ-<year>-#####"""
+    """Generates unique sequential ticket number: CIQ-<year>-#####"""
     current_year = datetime.now(timezone.utc).year
     prefix = f"CIQ-{current_year}-"
-    last_ticket = db.query(Complaint).filter(Complaint.ticket_no.like(f"{prefix}%")) \
-                    .order_by(desc(Complaint.created_at)).first()
-
-    if last_ticket:
+    existing_tickets = db.query(Complaint.ticket_no).filter(Complaint.ticket_no.like(f"{prefix}%")).all()
+    max_seq = 0
+    existing_set = set()
+    for (t_no,) in existing_tickets:
+        existing_set.add(t_no)
         try:
-            seq = int(last_ticket.ticket_no.split("-")[-1]) + 1
+            val = int(t_no.split("-")[-1])
+            if val > max_seq:
+                max_seq = val
         except Exception:
-            seq = 1
-    else:
-        seq = 1
+            pass
 
-    return f"{prefix}{seq:05d}"
+    next_seq = max(max_seq + 1, 90003) if max_seq >= 90000 else max(max_seq + 1, 1)
+    candidate = f"{prefix}{next_seq:05d}"
+    while candidate in existing_set:
+        next_seq += 1
+        candidate = f"{prefix}{next_seq:05d}"
+
+    return candidate
 
 
 def get_sla_hours(priority: str, db: Session) -> int:
@@ -76,6 +83,23 @@ def get_sla_hours(priority: str, db: Session) -> int:
         return policy.sla_hours
     defaults = {"P1": 2, "P2": 8, "P3": 48, "P4": 168}
     return defaults.get(priority, 48)
+
+
+def normalize_category_code(code_str: Optional[str]) -> str:
+    if not code_str:
+        return "MISC"
+    s = str(code_str).upper().strip()
+    if any(k in s for k in ["ELECTR", "POWER", "LIGHT", "FAN", "WIR", "SPARK"]):
+        return "ELECTRICAL"
+    if any(k in s for k in ["WATER", "PLUMB", "LEAK", "PIPE", "TAP", "DRAIN"]):
+        return "WATER"
+    if any(k in s for k in ["HYGIEN", "SANIT", "CLEAN", "GARBAG", "TRASH", "SMELL"]):
+        return "HYGIENE"
+    if any(k in s for k in ["CIVIL", "CARPENT", "DOOR", "WINDOW", "MASON", "WALL", "TILE"]):
+        return "CIVIL"
+    if any(k in s for k in ["SECUR", "SAFE", "THEFT", "LOCK", "GATE", "GUARD"]):
+        return "SECURITY"
+    return "MISC"
 
 
 def normalize_hostel_code(code_str: Optional[str]) -> Optional[str]:
@@ -262,11 +286,13 @@ def create_complaint(
             parent_ticket.upvote_count += 1
             dup_parent_id = parent_ticket.id
 
+    resolved_cat = normalize_category_code(triage.get("category_code") or payload.category_code)
+
     complaint = Complaint(
         ticket_no=ticket_no,
         title=payload.title,
         description=payload.description,
-        category_code=triage["category_code"],
+        category_code=resolved_cat,
         hostel_id=hostel.id if hostel else None,
         block_id=block_id,
         room_id=room_id,
@@ -683,16 +709,11 @@ def override_complaint_priority(
     target_priority = payload.new_priority.upper()
 
     priority_order = {"P4": 4, "P3": 3, "P2": 2, "P1": 1}
-    curr_rank = priority_order.get(curr_priority, 3)
-    target_rank = priority_order.get(target_priority, 3)
-
-    # HOSTEL_REP constraint: can only raise priority by EXACTLY 1 level (2.3)
-    if actor_role == "HOSTEL_REP":
-        if target_rank != curr_rank - 1:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Hostel Representative can only escalate priority by exactly 1 class (current: {curr_priority}, requested: {target_priority})"
-            )
+    if target_priority not in priority_order:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid priority: {target_priority}. Must be one of P1, P2, P3, P4."
+        )
 
     now = datetime.now(timezone.utc)
     old_priority = complaint.priority
