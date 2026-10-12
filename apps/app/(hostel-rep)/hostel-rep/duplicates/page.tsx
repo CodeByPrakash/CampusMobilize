@@ -22,19 +22,19 @@ export default function HostelRepDuplicatesPage() {
       category: "Plumbing / Water Supply",
       location: "Hostel 14, Wing B, 2nd Floor",
       master: {
-        id: "TI-HB3-0104",
+        id: "CIQ-2026-90001",
         title: "Main RO Water Cooler Dispensing Lukewarm / Cloudy Water",
         author: "Aarav Sharma (Room B-204)",
         upvotes: 8,
       },
       duplicates: [
         {
-          id: "TI-HB3-0109",
+          id: "CIQ-2026-90002",
           title: "Water filter near 206 smells metallic and not cooling",
           author: "Sneha Mukherjee (Room B-206)",
         },
         {
-          id: "TI-HB3-0112",
+          id: "CIQ-2026-90003",
           title: "2nd floor water cooler tap low pressure and warm",
           author: "Debashis Swain (Room B-208)",
         },
@@ -46,14 +46,14 @@ export default function HostelRepDuplicatesPage() {
       category: "Electrical",
       location: "Wing A Corridor",
       master: {
-        id: "TI-HB3-0098",
+        id: "CIQ-2026-90004",
         title: "Fluorescent tube flickering continuously outside Room A-102",
         author: "Vikram Rathore (Room A-102)",
         upvotes: 4,
       },
       duplicates: [
         {
-          id: "TI-HB3-0101",
+          id: "CIQ-2026-90005",
           title: "Ground floor corridor light sparking and blinking",
           author: "Kunal Pradhan (Room A-104)",
         },

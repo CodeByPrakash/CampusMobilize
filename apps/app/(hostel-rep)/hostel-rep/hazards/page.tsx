@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangleIcon, FlameIcon, ShieldAlertIcon, SirenIcon, PhoneCallIcon, ZapIcon } from "lucide-react";
 import { toast } from "sonner";
-import { apiOverridePriority } from "@/lib/api";
+import { apiOverridePriority, apiListComplaints } from "@/lib/api";
 
 export default function HostelRepHazardsPage() {
   const role = ROLES.find((r) => r.id === "hostel_rep") || ROLES[2];
@@ -18,7 +18,7 @@ export default function HostelRepHazardsPage() {
   const [activeAlerts, setActiveAlerts] = React.useState([
     {
       id: "HAZ-01",
-      ticket: "TI-HB3-0089",
+      ticket: "CIQ-2026-90001",
       title: "Exposed 415V Neutral Wire in Main Electrical Duct (Wing C Landing)",
       reportedAt: "Today, 14:15",
       severity: "CRITICAL",
@@ -28,7 +28,7 @@ export default function HostelRepHazardsPage() {
     },
     {
       id: "HAZ-02",
-      ticket: "TI-HB3-0094",
+      ticket: "CIQ-2026-90002",
       title: "Overhead Tank Valve Gasket Rupture with Continuous Cascade",
       reportedAt: "Today, 17:30",
       severity: "HIGH",
@@ -38,11 +38,43 @@ export default function HostelRepHazardsPage() {
     },
   ]);
 
+  React.useEffect(() => {
+    async function loadRealHazards() {
+      try {
+        const res = await apiListComplaints({ hostel_code: "HB-3" });
+        const items = Array.isArray(res) ? res : res?.items || [];
+        const criticalItems = items.filter((item: any) => (item.severity || 0) >= 4 || item.priority === "P1");
+        if (criticalItems.length > 0) {
+          const mapped = criticalItems.map((item: any, idx: number) => ({
+            id: `HAZ-LIVE-${idx}`,
+            ticket: item.ticket_no || item.id,
+            title: item.title,
+            reportedAt: "Recent Live Ticket",
+            severity: item.priority === "P1" ? "CRITICAL" : "HIGH",
+            status: item.status || "OPEN",
+            location: item.location_text || `${item.block_name || "Block A"}`,
+            assignedTradesman: item.assigned_to_name || "Hostel Rep Triage Queue",
+          }));
+          setActiveAlerts(mapped);
+        }
+      } catch {
+        // keep demonstration alerts
+      }
+    }
+    loadRealHazards();
+  }, []);
+
   const handleEscalateToP1 = async (ticketId: string) => {
     try {
       await apiOverridePriority(ticketId, "P1", "Overridden to Emergency P1 by Hostel Representative Rohan Mehta.");
+      setActiveAlerts((prev) =>
+        prev.map((a) => (a.ticket === ticketId ? { ...a, severity: "CRITICAL", status: "ESCALATED (P1)" } : a))
+      );
       toast.success(`Ticket ${ticketId} escalated to Emergency P1! SMS sent to Warden & Estate Officer.`);
     } catch {
+      setActiveAlerts((prev) =>
+        prev.map((a) => (a.ticket === ticketId ? { ...a, severity: "CRITICAL", status: "ESCALATED (P1)" } : a))
+      );
       toast.success(`Emergency P1 flag broadcast for ${ticketId} (offline simulation).`);
     }
   };

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 
-const BACKEND_UPLOAD_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/uploads`
-  : "http://localhost:8000/api/v1/uploads";
+const getBackendUploadUrl = () => {
+  let base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  base = base.trim().replace(/\/+$/, "");
+  if (!base.endsWith("/api/v1")) {
+    base = `${base}/api/v1`;
+  }
+  return `${base}/uploads`;
+};
+const BACKEND_UPLOAD_URL = getBackendUploadUrl();
 
 export async function POST(req: Request) {
   try {

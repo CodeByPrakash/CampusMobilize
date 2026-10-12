@@ -74,7 +74,7 @@ def health_check():
 
 
 
-# Include Routers
+# Include Routers with /api/v1
 app.include_router(meta.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(complaints.router, prefix="/api/v1")
@@ -84,6 +84,17 @@ app.include_router(events.router, prefix="/api/v1")
 app.include_router(performance.router, prefix="/api/v1")
 app.include_router(reports.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
+
+# Dual compatibility: Also mount without prefix so direct /complaints calls succeed
+app.include_router(meta.router)
+app.include_router(ai.router)
+app.include_router(complaints.router)
+app.include_router(sla.router)
+app.include_router(utilities.router)
+app.include_router(events.router)
+app.include_router(performance.router)
+app.include_router(reports.router)
+app.include_router(uploads.router)
 
 
 if __name__ == "__main__":

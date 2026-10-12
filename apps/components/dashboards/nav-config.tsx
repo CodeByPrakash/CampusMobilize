@@ -28,6 +28,7 @@ import {
   MapPinIcon,
   FlameIcon,
   RadioIcon,
+  BoxIcon,
 } from "lucide-react";
 
 export interface NavItemConfig {
@@ -88,6 +89,12 @@ export const getStudentNav = (): NavItemConfig[] => [
     url: "/student/rewards",
     icon: <AwardIcon className="size-4" />,
     badge: "340 pts",
+  },
+  {
+    title: "3D Digital Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "X-Ray & Heat",
   },
 ];
 
@@ -158,6 +165,11 @@ export const getWardenNav = (): NavItemConfig[] => [
     badge: "AI Risk",
   },
   {
+    title: "Festival Pre-Briefs",
+    url: "/warden/festivals",
+    icon: <SparklesIcon className="size-4" />,
+  },
+  {
     title: "Assign Tradesmen",
     url: "/warden/assign",
     icon: <UserPlusIcon className="size-4" />,
@@ -215,6 +227,12 @@ export const getEstateOfficerNav = (): NavItemConfig[] => [
     badge: "P10/50/90",
   },
   {
+    title: "Festival Pre-Briefs",
+    url: "/estate-officer/festivals",
+    icon: <SparklesIcon className="size-4" />,
+    badge: "Surge Ready",
+  },
+  {
     title: "Hazard Hotspots",
     url: "/estate-officer/hazards",
     icon: <FlameIcon className="size-4" />,
@@ -253,6 +271,12 @@ export const getEstateOfficerNav = (): NavItemConfig[] => [
     url: "/estate-officer/grid",
     icon: <AlertTriangleIcon className="size-4" />,
   },
+  {
+    title: "3D Spatial Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "3D Assets",
+  },
 ];
 
 export const getDirectorNav = (): NavItemConfig[] => [
@@ -261,6 +285,18 @@ export const getDirectorNav = (): NavItemConfig[] => [
     url: "/director/dashboard",
     icon: <ActivityIcon className="size-4" />,
     badge: "31 / 100",
+  },
+  {
+    title: "Festival Pre-Briefs",
+    url: "/director/festivals",
+    icon: <SparklesIcon className="size-4" />,
+    badge: "Mega-Events",
+  },
+  {
+    title: "3D Spatial Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "Live 3D",
   },
   {
     title: "IoT & Sensor Telemetry",

@@ -30,12 +30,18 @@ interface FestivalPreBriefPackProps {
   selectedEvent: any;
   prebrief: any;
   onOpenSimulator: () => void;
+  issuerName?: string;
+  issuerRole?: string;
+  issuerTitle?: string;
 }
 
 export function FestivalPreBriefPack({
   selectedEvent,
   prebrief,
   onOpenSimulator,
+  issuerName = "Prof. M. Mishra",
+  issuerRole = "CHIEF_WARDEN",
+  issuerTitle = "Chief Warden",
 }: FestivalPreBriefPackProps) {
   const [isIssuing, setIsIssuing] = React.useState(false);
   const [mandate, setMandate] = React.useState<any>(null);
@@ -76,8 +82,8 @@ export function FestivalPreBriefPack({
     setIsIssuing(true);
     try {
       const payload = {
-        issuer_name: "Prof. M. Mishra",
-        issuer_role: "CHIEF_WARDEN",
+        issuer_name: issuerName,
+        issuer_role: issuerRole,
         target_hostels: prebrief?.critical_hostels || ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"],
         budget_approved_inr: prebrief?.estimated_budget_inr || prebrief?.budget_inr || 52000,
         directives: prebrief?.key_actions || prebrief?.recommendations || [
@@ -91,20 +97,20 @@ export function FestivalPreBriefPack({
       const res = await apiIssueChiefWardenMandate(selectedEvent.id, payload);
       setMandate(res);
       toast.success(
-        `Official Chief Warden Mandate issued & dispatched to Hall Wardens and Estate Office!`
+        `Official ${issuerTitle} Mandate issued & dispatched to Wardens and Estate Office!`
       );
     } catch {
       // Fallback
       const fakeMandate = {
-        mandate_id: `CWM-NITR-2026-${selectedEvent.id.slice(0, 6).toUpperCase()}-MANDATE`,
+        mandate_id: `MANDATE-NITR-2026-${selectedEvent.id.slice(0, 6).toUpperCase()}`,
         status: "ISSUED",
         issued_at: new Date().toISOString(),
-        issued_by: "Prof. M. Mishra (Chief Warden)",
+        issued_by: `${issuerName} (${issuerTitle})`,
         target_hostels: ["Hall 14", "Hall 3", "CVR", "HB-3", "KMS"],
         budget_approved_inr: 52000,
       };
       setMandate(fakeMandate);
-      toast.success(`Official Chief Warden Mandate dispatched!`);
+      toast.success(`Official ${issuerTitle} Mandate dispatched!`);
     } finally {
       setIsIssuing(false);
     }
@@ -215,7 +221,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
                 className="bg-slate-900 text-white hover:bg-slate-800 text-xs gap-1.5 shadow-2xs font-semibold"
               >
                 <ShieldCheckIcon className="size-4 text-emerald-400" />
-                {isIssuing ? "Dispatching Mandate..." : "Issue Chief Warden Mandate"}
+                {isIssuing ? "Dispatching Mandate..." : `Issue ${issuerTitle} Mandate`}
               </Button>
             )}
           </div>
@@ -227,7 +233,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
             <div className="flex items-center gap-2.5">
               <CheckCircle2Icon className="size-4 text-emerald-600 shrink-0" />
               <span>
-                <strong>Mandate #{mandate.mandate_id} Dispatched & Enacted:</strong> Officially registered by Prof. M. Mishra. Acknowledged by Estate Officer & Wardens of {criticalHostels.join(", ")}.
+                <strong>Mandate #{mandate.mandate_id} Dispatched & Enacted:</strong> Officially registered by {mandate.issued_by || `${issuerName} (${issuerTitle})`}. Acknowledged by Estate Officer & Wardens of {criticalHostels.join(", ")}.
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
@@ -506,7 +512,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <CheckSquareIcon className="size-4 text-emerald-600" />
-              Chief Warden Pre-Inauguration Verification Checklist
+              {issuerTitle} Pre-Inauguration Verification Checklist
             </span>
             <span className="text-[11px] text-slate-500">
               {Object.values(checkedItems).filter(Boolean).length} of {keyActions.length} Verified
@@ -551,7 +557,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
               <div className="flex items-center gap-2">
                 <ShieldCheckIcon className="size-5 text-emerald-600" />
                 <h3 className="font-bold text-slate-900 text-base">
-                  Official Chief Warden Mandate Order Slip
+                  Official {issuerTitle} Mandate Order Slip
                 </h3>
               </div>
               <Badge variant="outline" className="text-xs font-mono bg-slate-50">
@@ -566,7 +572,7 @@ ${keyActions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
               </div>
               <div className="flex justify-between border-b pb-2">
                 <span className="text-slate-500">Issuing Authority:</span>
-                <span className="font-semibold text-slate-900">Prof. M. Mishra, Chief Warden</span>
+                <span className="font-semibold text-slate-900">{mandate.issued_by || `${issuerName}, ${issuerTitle}`}</span>
               </div>
               <div className="flex justify-between border-b pb-2">
                 <span className="text-slate-500">Effective Window:</span>

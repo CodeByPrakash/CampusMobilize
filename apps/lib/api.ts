@@ -3,7 +3,16 @@
  * Sends X-Actor-Role, X-Actor-Id, and X-Hostel-Code headers on every request.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+export function getApiBaseUrl(): string {
+  let raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  raw = raw.trim().replace(/\/+$/, "");
+  if (!raw.endsWith("/api/v1")) {
+    raw = `${raw}/api/v1`;
+  }
+  return raw;
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export interface PersonaContext {
   role: string

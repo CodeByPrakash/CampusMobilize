@@ -24,8 +24,8 @@ import {
   SparklesIcon,
   CameraIcon,
   UploadCloudIcon,
-  Trash2Icon,
   CheckCircle2Icon,
+  XIcon,
   ClockIcon,
   ShieldAlertIcon,
   UserCheckIcon,
@@ -43,7 +43,6 @@ import {
   apiCreateComplaint,
   apiUpvoteComplaint,
   apiUploadToS3,
-  apiDeleteComplaint,
 } from "@/lib/api";
 
 interface KanbanCardData {
@@ -210,7 +209,6 @@ export default function StudentComplaintsKanbanPage() {
   // Sheet States
   const [isLodgeSheetOpen, setIsLodgeSheetOpen] = React.useState(false);
   const [selectedTicket, setSelectedTicket] = React.useState<KanbanCardData | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
 
   // Form State inside Lodge Sheet
   const [title, setTitle] = React.useState("");
@@ -496,33 +494,6 @@ export default function StudentComplaintsKanbanPage() {
     }
   };
 
-  // Handle Deleting Complaint (Student can delete if NOT escalated)
-  const handleDeleteComplaint = async (card: KanbanCardData) => {
-    if (card.is_escalated || card.status === "ESCALATED") {
-      toast.error("Cannot delete complaint: Ticket has already been escalated to higher authorities.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Are you sure you want to withdraw/delete complaint #${card.ticket_no}? This will permanently remove it from the triage queue.`
-    );
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      await apiDeleteComplaint(card.id).catch(() => { });
-      setTickets((prev) => prev.filter((t) => t.id !== card.id));
-      if (selectedTicket?.id === card.id) {
-        setSelectedTicket(null);
-      }
-      toast.success(`Complaint #${card.ticket_no} has been successfully deleted.`);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to delete complaint");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   return (
     <RoleDashboardShell role={role} navItems={navItems}>
       <div className="space-y-6 max-w-8xl mx-auto">
@@ -558,7 +529,7 @@ export default function StudentComplaintsKanbanPage() {
           <div className="flex items-center gap-2.5">
             <InfoIcon className="size-4 text-primary shrink-0" />
             <span>
-              <strong>Student Read-Only Governance:</strong> Ticket statuses progress automatically as Hostel Reps, Caretakers, and Wardens complete physical inspections and upload S3 resolution proofs. As the submitter, you can withdraw your complaint anytime before it is escalated.
+              <strong>Student Read-Only Governance:</strong> Ticket statuses progress automatically as Hostel Reps, Caretakers, and Wardens complete physical inspections and upload S3 resolution proofs. Once lodged, tickets are permanently recorded in the campus facility ledger and cannot be deleted by students.
             </span>
           </div>
           <Badge variant="secondary" className="font-mono text-[11px] shrink-0 hidden sm:inline-flex">
@@ -672,21 +643,6 @@ export default function StudentComplaintsKanbanPage() {
                               >
                                 {card.priority}
                               </Badge>
-
-                              {/* Student Delete Button (if not escalated) */}
-                              {!card.is_escalated && card.status !== "ESCALATED" && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteComplaint(card);
-                                  }}
-                                  title="Withdraw / Delete Complaint"
-                                  className="text-muted-foreground hover:text-destructive p-0.5 rounded transition-colors opacity-60 group-hover:opacity-100"
-                                >
-                                  <Trash2Icon className="size-3" />
-                                </button>
-                              )}
                             </div>
                           </div>
                           <CardTitle className="text-xs font-semibold text-card-foreground line-clamp-2 leading-snug">
@@ -809,37 +765,21 @@ export default function StudentComplaintsKanbanPage() {
                   </div>
                 </div>
 
-                {/* Student Withdrawal Section (Delete if not escalated) */}
-                {selectedTicket.is_escalated || selectedTicket.status === "ESCALATED" ? (
-                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive flex items-start gap-2.5">
-                    <ShieldAlertIcon className="size-4 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold">Locked: Escalated to Higher Authority</p>
-                      <p className="text-[11px] mt-0.5 opacity-90">
-                        This complaint has breached SLA thresholds and has been escalated to executive oversight (Warden/Chief Warden). It can no longer be deleted or withdrawn by students (3.4).
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-border bg-muted/30 p-3.5 flex items-center justify-between text-xs">
+                {/* Immutable Ledger Record (Student cannot delete) */}
+                <div className="rounded-xl border border-border bg-muted/30 p-3.5 flex items-center justify-between text-xs">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlertIcon className="size-4 text-primary shrink-0 mt-0.5" />
                     <div className="space-y-0.5">
-                      <p className="font-semibold text-foreground">Withdraw Complaint</p>
+                      <p className="font-semibold text-foreground">Immutable Ledger Record</p>
                       <p className="text-muted-foreground text-[11px]">
-                        Since this ticket has not been escalated, you can retract it from the queue anytime.
+                        Complaints cannot be deleted from the facility kanban board once lodged. All tickets are permanently tracked under the 3.1 FSM audit trail.
                       </p>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteComplaint(selectedTicket)}
-                      disabled={isDeleting}
-                      className="text-xs gap-1.5 shrink-0"
-                    >
-                      <Trash2Icon className="size-3.5" />
-                      {isDeleting ? "Deleting..." : "Withdraw Ticket"}
-                    </Button>
                   </div>
-                )}
+                  <Badge variant="outline" className="font-mono text-[10px] shrink-0 text-muted-foreground">
+                    Non-Deletable
+                  </Badge>
+                </div>
 
                 {/* Assigned Officer & Technician Information */}
                 <div className="space-y-3">
@@ -1146,7 +1086,7 @@ export default function StudentComplaintsKanbanPage() {
                         setImageName("");
                       }}
                     >
-                      <Trash2Icon className="size-4" />
+                      <XIcon className="size-4" />
                     </Button>
                   </div>
                 ) : (

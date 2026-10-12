@@ -771,15 +771,11 @@ def delete_complaint(
         )
 
     caller_role = (persona.get("role") or "STUDENT").upper()
-    caller_id = persona.get("user_id")
-
-    # In student persona, verify authorization if reported_by is set
-    if caller_role == "STUDENT" and complaint.reported_by and caller_id:
-        if complaint.reported_by != caller_id:
-            raise HTTPException(
-                status_code=403,
-                detail="FORBIDDEN: You can only delete complaints submitted by yourself."
-            )
+    if caller_role in ["STUDENT", "CR", "STUDENT_REP"]:
+        raise HTTPException(
+            status_code=403,
+            detail="FORBIDDEN_ROLE: Students are not authorized to delete complaints from the facility kanban ledger. Complaints are immutable records."
+        )
 
     ticket_no = complaint.ticket_no
 
