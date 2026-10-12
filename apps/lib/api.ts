@@ -28,11 +28,17 @@ export const ROLE_PERSONAS: Record<string, PersonaContext> = {
     hostel_code: "HB-3",
     name: "Aryan Sharma",
   },
+  student_rep: {
+    role: "STUDENT",
+    actor_id: "usr-student-aarav",
+    hostel_code: "HB-3",
+    name: "Aryan Sharma",
+  },
   cr: {
     role: "CR",
     actor_id: "usr-cr-diya",
     hostel_code: "HB-3",
-    name: "Diya Patel",
+    name: "Aryan Sharma",
   },
   hostel_rep: {
     role: "HOSTEL_REP",
@@ -74,10 +80,34 @@ export const ROLE_PERSONAS: Record<string, PersonaContext> = {
 
 export function getActivePersona(): PersonaContext {
   if (typeof window !== "undefined") {
-    const roleId = localStorage.getItem("current_role_id") || "cr"
-    return ROLE_PERSONAS[roleId] || ROLE_PERSONAS.cr
+    // 1. First check if current route specifically defines the active authority role
+    const pathname = window.location.pathname || ""
+    let routeRole = ""
+    if (pathname.includes("/care-taker") || pathname.includes("/caretaker")) routeRole = "caretaker"
+    else if (pathname.includes("/chief-warden")) routeRole = "chief_warden"
+    else if (pathname.includes("/warden")) routeRole = "warden"
+    else if (pathname.includes("/hostel-rep")) routeRole = "hostel_rep"
+    else if (pathname.includes("/estate-officer")) routeRole = "estate_officer"
+    else if (pathname.includes("/director")) routeRole = "director"
+    else if (pathname.includes("/student")) routeRole = "student"
+
+    if (routeRole && ROLE_PERSONAS[routeRole]) {
+      try {
+        localStorage.setItem("current_role_id", routeRole)
+      } catch { }
+      return ROLE_PERSONAS[routeRole]
+    }
+
+    // 2. Otherwise read from localStorage
+    const rawRoleId = localStorage.getItem("current_role_id") || "student"
+    const normalizedKey = rawRoleId.toLowerCase().replace(/-/g, "_")
+    return (
+      ROLE_PERSONAS[rawRoleId] ||
+      ROLE_PERSONAS[normalizedKey] ||
+      ROLE_PERSONAS.student
+    )
   }
-  return ROLE_PERSONAS.cr
+  return ROLE_PERSONAS.student
 }
 
 export function getAuthHeaders(): HeadersInit {

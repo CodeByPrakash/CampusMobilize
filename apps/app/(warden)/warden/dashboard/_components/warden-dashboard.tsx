@@ -27,7 +27,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { apiTransitionComplaint } from "@/lib/api";
+import { apiTransitionComplaint, apiListComplaints } from "@/lib/api";
 
 interface WardenTicket {
   id: string;
@@ -35,8 +35,8 @@ interface WardenTicket {
   title: string;
   category: string;
   location: string;
-  priority: "P1" | "P2" | "P3";
-  status: "OPEN" | "VERIFIED" | "ASSIGNED" | "RESOLVED" | "CLOSED" | "REJECTED_BACK";
+  priority: "P1" | "P2" | "P3" | "P4";
+  status: "OPEN" | "VERIFIED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "CLOSED" | "REJECTED_BACK" | "REJECTED";
   assignee?: string;
   photoUrl?: string;
   note?: string;
@@ -90,6 +90,34 @@ export function WardenDashboard() {
   const [tickets, setTickets] = React.useState<WardenTicket[]>(INITIAL_WARDEN_TICKETS);
   const [selectedTicket, setSelectedTicket] = React.useState<WardenTicket | null>(null);
 
+  // Live complaints loader
+  const loadTickets = React.useCallback(async () => {
+    try {
+      const data = await apiListComplaints({ hostel_code: "HB-3" });
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped: WardenTicket[] = data.map((c: any) => ({
+          id: c.id,
+          ticket_no: c.ticket_no,
+          title: c.title,
+          category: c.category_code || "General",
+          location: [c.block_name, c.room_no ? `Rm ${c.room_no}` : "", c.location_text].filter(Boolean).join(" - ") || "HB-3",
+          priority: (c.priority || "P3") as "P1" | "P2" | "P3" | "P4",
+          status: c.status as any,
+          assignee: c.assigned_to_name || c.assigned_to || (c.status === "ASSIGNED" || c.status === "IN_PROGRESS" ? "R. Das (Caretaker)" : undefined),
+          photoUrl: c.resolution_photo_url,
+          note: c.resolution_note,
+        }));
+        setTickets(mapped);
+      }
+    } catch (err) {
+      console.warn("Could not load complaints from API, keeping existing state", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
+
   // Assign Caretaker Modal
   const [showAssignModal, setShowAssignModal] = React.useState(false);
   const [selectedAssignee, setSelectedAssignee] = React.useState("R. Das (Electrical/Plumbing)");
@@ -107,7 +135,7 @@ export function WardenDashboard() {
         to_status: "ASSIGNED",
         assignee_id: selectedAssignee,
         note: `Assigned to ${selectedAssignee} by Warden Dr. S. Nanda`,
-      }).catch(() => { });
+      });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -119,6 +147,7 @@ export function WardenDashboard() {
       toast.success(`${selectedTicket.ticket_no} assigned to ${selectedAssignee}`);
       setShowAssignModal(false);
       setSelectedTicket(null);
+      loadTickets();
     } catch {
       toast.error("Failed to assign ticket");
     }
@@ -132,7 +161,7 @@ export function WardenDashboard() {
       await apiTransitionComplaint(selectedTicket.ticket_no, {
         to_status: "CLOSED",
         note: "Photo proof inspected and approved. Ticket marked CLOSED by Warden Dr. S. Nanda.",
-      }).catch(() => { });
+      });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -142,6 +171,7 @@ export function WardenDashboard() {
       toast.success(`${selectedTicket.ticket_no} closed successfully!`);
       setShowAuditModal(false);
       setSelectedTicket(null);
+      loadTickets();
     } catch {
       toast.error("Failed to approve closure");
     }
@@ -160,7 +190,7 @@ export function WardenDashboard() {
         to_status: "REJECTED_BACK",
         note: rejectFeedback,
         reason: rejectFeedback,
-      }).catch(() => { });
+      });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -173,12 +203,13 @@ export function WardenDashboard() {
       setShowAuditModal(false);
       setRejectFeedback("");
       setSelectedTicket(null);
+      loadTickets();
     } catch {
       toast.error("Failed to reject back");
     }
   };
 
-  const verifiedQueue = tickets.filter((t) => t.status === "VERIFIED");
+  const verifiedQueue = tickets.filter((t) => t.status === "VERIFIED" || t.status === "OPEN");
   const auditQueue = tickets.filter((t) => t.status === "RESOLVED");
 
   return (

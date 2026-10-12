@@ -29,6 +29,7 @@ import {
   apiTransitionComplaint,
   apiMergeComplaints,
   apiOverridePriority,
+  apiListComplaints,
 } from "@/lib/api";
 
 interface TriageTicket {
@@ -99,6 +100,34 @@ export function HostelRepDashboard() {
   const [tickets, setTickets] = React.useState<TriageTicket[]>(INITIAL_TRIAGE_TICKETS);
   const [selectedTicket, setSelectedTicket] = React.useState<TriageTicket | null>(null);
 
+  // Live complaints loader
+  const loadTickets = React.useCallback(async () => {
+    try {
+      const data = await apiListComplaints({ hostel_code: "HB-3" });
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped: TriageTicket[] = data.map((c: any) => ({
+          id: c.id,
+          ticket_no: c.ticket_no,
+          title: c.title,
+          reporter: c.reported_by || `Student (${c.room_no ? `Rm ${c.room_no}` : c.block_name || "Hostel"})`,
+          category: c.category_code || "General",
+          location: [c.block_name, c.room_no ? `Rm ${c.room_no}` : "", c.location_text].filter(Boolean).join(" - ") || "Hostel",
+          priority: (c.priority || "P3") as "P1" | "P2" | "P3" | "P4",
+          status: (c.status === "VERIFIED" || c.status === "REJECTED" ? c.status : "OPEN") as "OPEN" | "VERIFIED" | "REJECTED",
+          upvotes: c.upvote_count || 1,
+          timeAgo: c.created_at ? new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+        }));
+        setTickets(mapped);
+      }
+    } catch (err) {
+      console.warn("Could not load complaints from API, keeping existing state", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
+
   // Modals / Dialogs
   const [showRejectModal, setShowRejectModal] = React.useState(false);
   const [rejectReason, setRejectReason] = React.useState("");
@@ -117,14 +146,15 @@ export function HostelRepDashboard() {
       await apiTransitionComplaint(ticket.ticket_no, {
         to_status: "VERIFIED",
         note: "Physical inspection complete. Genuine complaint verified by Hostel Rep.",
-      }).catch(() => { });
+      });
 
       setTickets((prev) =>
         prev.map((t) =>
           t.id === ticket.id ? { ...t, status: "VERIFIED" } : t
         )
       );
-      toast.success(`${ticket.ticket_no} verified! Ready for Warden assignment.`);
+      toast.success(`${ticket.ticket_no} verified! Forwarded to Warden assignment queue.`);
+      loadTickets();
     } catch {
       toast.error("Failed to verify ticket");
     }
@@ -142,7 +172,7 @@ export function HostelRepDashboard() {
         to_status: "REJECTED",
         reason: rejectReason,
         note: rejectReason,
-      }).catch(() => { });
+      });
 
       setTickets((prev) =>
         prev.map((t) =>
@@ -153,6 +183,7 @@ export function HostelRepDashboard() {
       setShowRejectModal(false);
       setRejectReason("");
       setSelectedTicket(null);
+      loadTickets();
     } catch {
       toast.error("Failed to reject ticket");
     }
@@ -166,12 +197,13 @@ export function HostelRepDashboard() {
     }
 
     try {
-      await apiMergeComplaints(mergeMasterId, [mergeDuplicates], "Merged duplicate issue by Hostel Rep").catch(() => { });
+      await apiMergeComplaints(mergeMasterId, [mergeDuplicates], "Merged duplicate issue by Hostel Rep");
       setTickets((prev) =>
         prev.filter((t) => t.ticket_no !== mergeDuplicates)
       );
       toast.success(`Merged ${mergeDuplicates} into parent ticket ${mergeMasterId}`);
       setShowMergeModal(false);
+      loadTickets();
     } catch {
       toast.error("Failed to merge tickets");
     }
@@ -185,7 +217,7 @@ export function HostelRepDashboard() {
     }
 
     try {
-      await apiOverridePriority(selectedTicket.ticket_no, targetPriority, escalateJustification).catch(() => { });
+      await apiOverridePriority(selectedTicket.ticket_no, targetPriority, escalateJustification);
       setTickets((prev) =>
         prev.map((t) =>
           t.id === selectedTicket.id ? { ...t, priority: targetPriority } : t
@@ -195,6 +227,7 @@ export function HostelRepDashboard() {
       setShowEscalateModal(false);
       setEscalateJustification("");
       setSelectedTicket(null);
+      loadTickets();
     } catch {
       toast.error("Failed to override priority");
     }

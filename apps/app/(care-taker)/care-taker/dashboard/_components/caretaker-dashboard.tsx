@@ -26,16 +26,16 @@ import {
   FileCheckIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { apiTransitionComplaint } from "@/lib/api";
+import { apiTransitionComplaint, apiListComplaints } from "@/lib/api";
 
 interface WorkOrder {
   id: string;
   ticket_no: string;
   title: string;
-  trade: "Electrical" | "Plumbing" | "Carpentry";
+  trade: "Electrical" | "Plumbing" | "Carpentry" | string;
   location: string;
-  priority: "P1" | "P2" | "P3";
-  status: "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "REJECTED_BACK";
+  priority: "P1" | "P2" | "P3" | "P4";
+  status: "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "REJECTED_BACK" | "CLOSED";
   slaRemaining: string;
   slaBreached?: boolean;
   completionNote?: string;
@@ -88,9 +88,62 @@ const INITIAL_WORK_ORDERS: WorkOrder[] = [
   },
 ];
 
+const mapCategoryToTrade = (cat: string) => {
+  if (!cat) return "Electrical";
+  const upper = cat.toUpperCase();
+  if (upper.includes("PLUMB") || upper.includes("WATER")) return "Plumbing";
+  if (upper.includes("CIVIL") || upper.includes("CARPENT")) return "Carpentry";
+  return "Electrical";
+};
+
+const calculateSlaRemaining = (c: any) => {
+  if (c.status === "RESOLVED" || c.status === "CLOSED") return "Completed";
+  if (!c.sla_deadline) return "Within SLA";
+  const deadline = new Date(c.sla_deadline).getTime();
+  const diff = deadline - Date.now();
+  if (diff <= 0) return "SLA Breached";
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${mins}m`;
+};
+
 export function CaretakerDashboard() {
   const [orders, setOrders] = React.useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
   const [selectedOrder, setSelectedOrder] = React.useState<WorkOrder | null>(null);
+
+  // Live work orders loader
+  const loadOrders = React.useCallback(async () => {
+    try {
+      const data = await apiListComplaints({ hostel_code: "HB-3" });
+      if (Array.isArray(data) && data.length > 0) {
+        const relevant = data.filter((c: any) =>
+          ["ASSIGNED", "IN_PROGRESS", "RESOLVED", "REJECTED_BACK", "CLOSED"].includes(c.status)
+        );
+        if (relevant.length > 0) {
+          const mapped: WorkOrder[] = relevant.map((c: any) => ({
+            id: c.id,
+            ticket_no: c.ticket_no,
+            title: c.title,
+            trade: mapCategoryToTrade(c.category_code),
+            location: [c.block_name, c.room_no ? `Rm ${c.room_no}` : "", c.location_text].filter(Boolean).join(" - ") || "HB-3",
+            priority: (c.priority || "P3") as "P1" | "P2" | "P3" | "P4",
+            status: c.status as any,
+            slaRemaining: calculateSlaRemaining(c),
+            slaBreached: c.sla_deadline ? new Date(c.sla_deadline).getTime() < Date.now() : false,
+            completionNote: c.resolution_note,
+            photoUrl: c.resolution_photo_url,
+          }));
+          setOrders(mapped);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load work orders from API, keeping existing state", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   // Photo Proof & Resolution Modal
   const [showResolveModal, setShowResolveModal] = React.useState(false);
@@ -103,7 +156,7 @@ export function CaretakerDashboard() {
       await apiTransitionComplaint(order.ticket_no, {
         to_status: "IN_PROGRESS",
         note: `Tradesman accepted ticket and arrived on site (${order.location}).`,
-      }).catch(() => { });
+      });
 
       setOrders((prev) =>
         prev.map((o) =>
@@ -111,6 +164,7 @@ export function CaretakerDashboard() {
         )
       );
       toast.success(`Work started on ${order.ticket_no}! Status updated to IN PROGRESS.`);
+      loadOrders();
     } catch {
       toast.error("Failed to start work order");
     }
@@ -133,7 +187,7 @@ export function CaretakerDashboard() {
         to_status: "RESOLVED",
         note: completionNote,
         photo_url: photoUrl,
-      }).catch(() => { });
+      });
 
       setOrders((prev) =>
         prev.map((o) =>
@@ -153,6 +207,7 @@ export function CaretakerDashboard() {
       setCompletionNote("");
       setPhotoUrl("");
       setSelectedOrder(null);
+      loadOrders();
     } catch {
       toast.error("Failed to mark order as resolved");
     }

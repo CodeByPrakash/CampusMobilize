@@ -224,55 +224,56 @@ export default function StudentComplaintsKanbanPage() {
   const [aiConfidence, setAiConfidence] = React.useState<number | null>(null);
 
   // Load backend tickets
-  React.useEffect(() => {
-    async function loadTickets() {
-      try {
-        const res = await apiListComplaints({ hostel_code: "HB-3" });
-        const items = Array.isArray(res) ? res : res?.items || [];
-        if (items.length > 0) {
-          const mapped: KanbanCardData[] = items.map((item: any) => ({
-            id: item.id,
-            ticket_no: item.ticket_no || item.id,
-            title: item.title,
-            description: item.description,
-            category: item.category_code || "MISC",
-            block: item.block_name || "Block B",
-            room: item.room_no || "204",
-            priority: (item.priority || "P3") as any,
-            severity: item.severity || 3,
-            status: item.status as any,
-            upvotes: item.upvote_count || 0,
-            assigned_to_name: item.assigned_to_name || "Assigned Tradesman",
-            assigned_trade:
-              item.category_code === "ELECTRICAL"
-                ? "Electrician"
-                : item.category_code === "WATER"
-                  ? "Plumber"
-                  : "Tradesman",
-            sla_deadline: item.sla_deadline
-              ? new Date(item.sla_deadline).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-              : "Standard Window",
-            sla_hours: item.priority === "P1" ? 2 : item.priority === "P2" ? 8 : 48,
-            sla_remaining: item.priority === "P1" ? "1h 30m remaining" : "SLA Active",
-            escalation_target:
-              item.priority === "P1" ? "Emergency P1: Warden Alert" : "Monitored under Caretaker queue",
-            is_escalated: item.status === "ESCALATED" || item.priority === "P1",
-            reported_by: item.reported_by || "usr-student-aarav",
-            photo_url:
-              item.resolution_photo_url ||
-              (item.description.includes("http") ? item.description.match(/https?:\/\/[^\s]+/)?.[0] : undefined),
-            resolution_photo_url: item.resolution_photo_url,
-            resolution_note: item.resolution_note,
-            created_at: "Active",
-          }));
-          setTickets(mapped);
-        }
-      } catch {
-        // Keeps default realistic board
+  const loadTickets = React.useCallback(async () => {
+    try {
+      const res = await apiListComplaints({ hostel_code: "HB-3" });
+      const items = Array.isArray(res) ? res : res?.items || [];
+      if (items.length > 0) {
+        const mapped: KanbanCardData[] = items.map((item: any) => ({
+          id: item.id,
+          ticket_no: item.ticket_no || item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category_code || "MISC",
+          block: item.block_name || "Block B",
+          room: item.room_no || "204",
+          priority: (item.priority || "P3") as any,
+          severity: item.severity || 3,
+          status: item.status as any,
+          upvotes: item.upvote_count || 0,
+          assigned_to_name: item.assigned_to_name || "Assigned Tradesman",
+          assigned_trade:
+            item.category_code === "ELECTRICAL"
+              ? "Electrician"
+              : item.category_code === "WATER"
+                ? "Plumber"
+                : "Tradesman",
+          sla_deadline: item.sla_deadline
+            ? new Date(item.sla_deadline).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "Standard Window",
+          sla_hours: item.priority === "P1" ? 2 : item.priority === "P2" ? 8 : 48,
+          sla_remaining: item.priority === "P1" ? "1h 30m remaining" : "SLA Active",
+          escalation_target:
+            item.priority === "P1" ? "Emergency P1: Warden Alert" : "Monitored under Caretaker queue",
+          is_escalated: item.status === "ESCALATED" || item.priority === "P1",
+          reported_by: item.reported_by || "usr-student-aarav",
+          photo_url:
+            item.resolution_photo_url ||
+            (item.description?.includes("http") ? item.description.match(/https?:\/\/[^\s]+/)?.[0] : undefined),
+          resolution_photo_url: item.resolution_photo_url,
+          resolution_note: item.resolution_note,
+          created_at: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Active",
+        }));
+        setTickets(mapped);
       }
+    } catch {
+      // Keeps default realistic board
     }
-    loadTickets();
   }, []);
+
+  React.useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   // Filtered Cards
   const filteredTickets = tickets.filter((t) => {
@@ -407,12 +408,32 @@ export default function StudentComplaintsKanbanPage() {
       }
 
       const finalDesc = imageUrl ? `${description}\n\n[Photo Evidence]: ${imageUrl}` : description;
-      const tempId = `ciq-${Date.now()}`;
-      const tempTicketNo = `CIQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+      // Persist to backend database first
+      let realId = `ciq-${Date.now()}`;
+      let realTicketNo = `CIQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+      let serverStatus: any = aiSev >= 4 || aiPrio === "P1" ? "ASSIGNED" : "OPEN";
+
+      try {
+        const res = await apiCreateComplaint({
+          title,
+          description: finalDesc,
+          category_code: category,
+          block_name: block,
+          room_no: room,
+          severity: aiSev,
+          hostel_code: "HB-3",
+        });
+
+        if (res?.id) realId = res.id;
+        if (res?.ticket_no) realTicketNo = res.ticket_no;
+        if (res?.status) serverStatus = res.status;
+      } catch (err: any) {
+        console.warn("Backend sync notice:", err?.message);
+      }
 
       const newTicket: KanbanCardData = {
-        id: tempId,
-        ticket_no: tempTicketNo,
+        id: realId,
+        ticket_no: realTicketNo,
         title,
         description: finalDesc,
         category,
@@ -420,49 +441,30 @@ export default function StudentComplaintsKanbanPage() {
         room,
         priority: aiPrio,
         severity: aiSev,
-        status: aiSev >= 4 ? "ASSIGNED" : "OPEN",
+        status: serverStatus,
         upvotes: 1,
-        sla_deadline: "Scheduled",
+        sla_deadline: serverStatus === "ASSIGNED" ? "Within 2 Hours" : "Within 24 Hours",
         sla_hours: aiSev >= 4 ? 2 : 48,
         sla_remaining: "SLA Active",
-        escalation_target: "Hostel Rep Triage Queue",
-        is_escalated: false,
+        escalation_target: serverStatus === "ASSIGNED" ? "Emergency P1: Direct Alert to Caretaker & Warden" : "Hostel Rep Triage Queue",
+        is_escalated: serverStatus === "ASSIGNED",
         reported_by: "usr-student-aarav",
         photo_url: imageUrl || undefined,
         created_at: "Just now",
       };
 
-      // Optimistic Instant Insertion (0ms Latency)
+      // Add to Board & notify user
       setTickets((prev) => [newTicket, ...prev]);
-      toast.success(`Complaint lodged! Ticket #${newTicket.ticket_no} (AI Priority: ${aiPrio})`);
+      toast.success(`Complaint #${newTicket.ticket_no} lodged and forwarded to Hostel Rep triage!`);
+      loadTickets();
 
-      // Reset form & close Sheet immediately
+      // Reset form & close Sheet
       setTitle("");
       setDescription("");
       setImageUrl("");
       setImageName("");
       setIsLodgeSheetOpen(false);
       setIsSubmitting(false);
-
-      // Background asynchronous persistence & backend reconciliation
-      apiCreateComplaint({
-        title,
-        description: finalDesc,
-        category_code: category,
-        block_name: block,
-        room_no: room,
-        severity: aiSev,
-      }).then((res) => {
-        if (res?.ticket_no) {
-          setTickets((prev) =>
-            prev.map((t) =>
-              t.id === tempId ? { ...t, id: res.id || t.id, ticket_no: res.ticket_no } : t
-            )
-          );
-        }
-      }).catch((err) => {
-        console.warn("Backend sync notice:", err?.message);
-      });
     } catch (err: any) {
       toast.error(err?.message || "Failed to lodge complaint");
       setIsSubmitting(false);
