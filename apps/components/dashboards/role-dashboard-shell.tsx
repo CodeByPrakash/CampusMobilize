@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ROLES, RoleDefinition } from "@/lib/roles";
 import { RoleSwitchModal } from "@/components/dashboards/role-switch-modal";
+import { NotificationsPopup } from "@/components/notifications/notifications-popup";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { cn } from "cn";
 import {
@@ -29,6 +30,7 @@ import {
   UserCheckIcon,
   BellIcon,
   ChevronRightIcon,
+  BoxIcon,
 } from "lucide-react";
 
 interface RoleDashboardShellProps {
@@ -212,6 +214,14 @@ export function RoleDashboardShell({
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              href="/spatial-3d"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-xs font-semibold text-foreground transition-all shadow-xs h-8"
+              title="3D Digital Twin - X-Ray & Heat View"
+            >
+              <BoxIcon className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">3D Twin</span>
+            </Link>
             <LanguageSwitcher />
             <Button
               variant="outline"
@@ -222,14 +232,7 @@ export function RoleDashboardShell({
               <UserCheckIcon className="size-3.5" />
               <span>Switch Role</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-foreground"
-              title="Notifications"
-            >
-              <BellIcon className="size-4" />
-            </Button>
+            <NotificationsPopup />
           </div>
         </header>
 

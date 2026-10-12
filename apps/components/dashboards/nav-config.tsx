@@ -123,6 +123,12 @@ export const getHostelRepNav = (): NavItemConfig[] => [
     url: "/hostel-rep/hazards",
     icon: <AlertTriangleIcon className="size-4" />,
   },
+  {
+    title: "3D Digital Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "Hostel 3D",
+  },
 ];
 
 export const getCaretakerNav = (): NavItemConfig[] => [
@@ -149,6 +155,12 @@ export const getCaretakerNav = (): NavItemConfig[] => [
     url: "/care-taker/proofs",
     icon: <CheckCircle2Icon className="size-4" />,
   },
+  {
+    title: "3D Digital Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "Live Ops",
+  },
 ];
 
 export const getWardenNav = (): NavItemConfig[] => [
@@ -168,6 +180,12 @@ export const getWardenNav = (): NavItemConfig[] => [
     title: "Festival Pre-Briefs",
     url: "/warden/festivals",
     icon: <SparklesIcon className="size-4" />,
+  },
+  {
+    title: "3D Digital Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "Hall 3D",
   },
   {
     title: "Assign Tradesmen",
@@ -216,6 +234,12 @@ export const getChiefWardenNav = (): NavItemConfig[] => [
     title: "Festival Pre-Briefs",
     url: "/chief-warden/festivals",
     icon: <SparklesIcon className="size-4" />,
+  },
+  {
+    title: "3D Digital Twin",
+    url: "/spatial-3d",
+    icon: <BoxIcon className="size-4" />,
+    badge: "Campus 3D",
   },
 ];
 

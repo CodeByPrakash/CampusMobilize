@@ -9,12 +9,15 @@ import {
   SpatialAsset,
   ViewSpectrum,
   WorkStep,
-  AssetCategory,
 } from "@/components/spatial-3d/spatial-data";
 import { DigitalTwinViewer } from "@/components/spatial-3d/digital-twin-viewer";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { NotificationsPopup } from "@/components/notifications/notifications-popup";
+import { RoleSwitchModal } from "@/components/dashboards/role-switch-modal";
+import { ROLES, RoleDefinition } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   BoxIcon,
   LayersIcon,
@@ -27,19 +30,17 @@ import {
   ActivityIcon,
   ZapIcon,
   DropletsIcon,
-  LightbulbIcon,
-  SunIcon,
-  Building2Icon,
-  CheckCircle2Icon,
-  AlertTriangleIcon,
   WrenchIcon,
   EyeIcon,
   ArrowLeftIcon,
   Maximize2Icon,
-  ShieldCheckIcon,
+  Minimize2Icon,
   RotateCcwIcon,
   RadioIcon,
   XIcon,
+  SearchIcon,
+  UserCheckIcon,
+  SlidersHorizontalIcon,
 } from "lucide-react";
 
 export default function Spatial3DDigitalTwinPage() {
@@ -51,9 +52,25 @@ export default function Spatial3DDigitalTwinPage() {
   const [isPlayingSteps, setIsPlayingSteps] = useState<boolean>(false);
   const [selectedAsset, setSelectedAsset] = useState<SpatialAsset | null>(SPATIAL_ASSETS[0]);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
+  const [isAssetDrawerOpen, setIsAssetDrawerOpen] = useState<boolean>(true);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<RoleDefinition>(ROLES[6]); // Default Director
 
   const currentStep: WorkStep = WORK_STEPS[currentStepIndex];
+
+  // Detect active role from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedRoleId = localStorage.getItem("current_role_id");
+      if (savedRoleId) {
+        const found = ROLES.find((r) => r.id === savedRoleId);
+        if (found) setCurrentRole(found);
+      }
+    }
+  }, []);
 
   // Auto-step timeline playback
   useEffect(() => {
@@ -80,105 +97,170 @@ export default function Spatial3DDigitalTwinPage() {
     }
   }, [currentStepIndex, currentStep.focusAssetId]);
 
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
+
   // Filtered Assets
   const filteredAssets = SPATIAL_ASSETS.filter((asset) => {
-    if (categoryFilter === "all") return true;
-    return asset.category === categoryFilter;
+    const matchesCategory = categoryFilter === "all" || asset.category === categoryFilter;
+    const matchesSearch =
+      searchQuery.trim() === "" ||
+      asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      asset.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      asset.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-background text-foreground flex flex-col font-sans select-none">
       {/* =========================================================================
           TOP COMMAND HEADER
           ========================================================================= */}
-      <header className="h-16 px-4 md:px-6 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md z-30 flex items-center justify-between shrink-0 shadow-lg shadow-black/40">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/director/dashboard"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs text-slate-300 transition-colors"
+      <header className="h-16 px-3 sm:px-6 border-b border-border bg-card/90 backdrop-blur-md z-30 flex items-center justify-between shrink-0 shadow-xs">
+        {/* Left: Return & Branding */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(currentRole.route)}
+            className="text-xs h-9 gap-1.5 shadow-2xs font-medium"
+            title={`Return to ${currentRole.name}'s Dashboard`}
           >
             <ArrowLeftIcon className="size-3.5" />
-            <span className="hidden sm:inline">Exit to Dashboard</span>
-          </Link>
+            <span className="hidden sm:inline">Exit to {currentRole.name.split(" ")[0]}</span>
+          </Button>
 
-          <div className="h-5 w-px bg-slate-800 hidden sm:block" />
+          <Separator orientation="vertical" className="h-5 hidden md:block" />
 
           <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-2xs">
               <BoxIcon className="size-4.5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-sm md:text-base font-bold tracking-tight text-slate-100">
-                  CampusIQ 3D Spatial Twin
+                <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground">
+                  3D Spatial Digital Twin
                 </h1>
                 <Badge
                   variant="outline"
-                  className="bg-cyan-950/60 text-cyan-400 border-cyan-800/60 text-[10px] py-0 px-1.5 font-mono"
+                  className="bg-primary/10 text-primary border-primary/30 text-[10px] py-0 px-1.5 font-mono"
                 >
                   LIVE WEBGL
                 </Badge>
               </div>
-              <p className="text-[11px] text-slate-400 hidden md:block">
+              <p className="text-[11px] text-muted-foreground hidden lg:block">
                 Multi-Spectrum Lifecycle & Ongoing Works Engineering Viewer (NIT Rourkela)
               </p>
             </div>
           </div>
         </div>
 
-        {/* Spectrum Switcher (Standard, X-Ray, Heat, Night) */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl shadow-inner">
-          <button
+        {/* Center: Spectrum Switcher (Standard, X-Ray, Heat, Night) */}
+        <div className="flex items-center gap-1 bg-muted/60 border border-border p-1 rounded-xl shadow-2xs">
+          <Button
+            size="sm"
+            variant={spectrum === "standard" ? "default" : "ghost"}
             onClick={() => setSpectrum("standard")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              spectrum === "standard"
-                ? "bg-slate-800 text-cyan-300 shadow-sm border border-slate-700"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
+            className="h-7 text-xs font-semibold gap-1.5 px-2.5"
           >
             <LayersIcon className="size-3.5" />
-            <span className="hidden lg:inline">Standard 3D</span>
-          </button>
+            <span className="hidden md:inline">Standard 3D</span>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={spectrum === "xray" ? "default" : "ghost"}
             onClick={() => setSpectrum("xray")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`h-7 text-xs font-semibold gap-1.5 px-2.5 ${
               spectrum === "xray"
-                ? "bg-cyan-500/20 text-cyan-300 shadow-sm border border-cyan-500/40"
-                : "text-slate-400 hover:text-cyan-300"
+                ? "bg-cyan-600 hover:bg-cyan-500 text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <EyeIcon className="size-3.5 text-cyan-400" />
-            <span>X-Ray Blueprint</span>
-          </button>
+            <EyeIcon className="size-3.5" />
+            <span>X-Ray</span>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={spectrum === "heat" ? "default" : "ghost"}
             onClick={() => setSpectrum("heat")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`h-7 text-xs font-semibold gap-1.5 px-2.5 ${
               spectrum === "heat"
-                ? "bg-amber-500/20 text-amber-300 shadow-sm border border-amber-500/40"
-                : "text-slate-400 hover:text-amber-300"
+                ? "bg-amber-600 hover:bg-amber-500 text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <FlameIcon className="size-3.5 text-amber-400" />
+            <FlameIcon className="size-3.5" />
             <span>Thermal FLIR</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={spectrum === "night" ? "default" : "ghost"}
             onClick={() => setSpectrum("night")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`h-7 text-xs font-semibold gap-1.5 px-2.5 ${
               spectrum === "night"
-                ? "bg-indigo-500/20 text-indigo-300 shadow-sm border border-indigo-500/40"
-                : "text-slate-400 hover:text-indigo-300"
+                ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <MoonIcon className="size-3.5 text-indigo-400" />
+            <MoonIcon className="size-3.5" />
             <span className="hidden sm:inline">Night Lux</span>
-          </button>
+          </Button>
         </div>
 
-        {/* Top-Right Language Switcher */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Controls & Utility Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Toggle Asset Drawer Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsAssetDrawerOpen(!isAssetDrawerOpen)}
+            title={isAssetDrawerOpen ? "Hide Asset Catalog" : "Show Asset Catalog"}
+            className="size-8"
+          >
+            <SlidersHorizontalIcon className="size-3.5 text-muted-foreground" />
+          </Button>
+
+          {/* Role Switcher */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsRoleModalOpen(true)}
+            className="text-xs h-8 gap-1.5 hidden md:flex"
+            title="Switch Persona"
+          >
+            <UserCheckIcon className="size-3.5 text-muted-foreground" />
+            <span>{currentRole.name.split(" ")[0]}</span>
+          </Button>
+
+          {/* Fullscreen Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            className="size-8 hidden sm:flex"
+          >
+            {isFullscreen ? (
+              <Minimize2Icon className="size-3.5 text-muted-foreground" />
+            ) : (
+              <Maximize2Icon className="size-3.5 text-muted-foreground" />
+            )}
+          </Button>
+
+          <NotificationsPopup />
           <LanguageSwitcher />
         </div>
       </header>
@@ -186,7 +268,7 @@ export default function Spatial3DDigitalTwinPage() {
       {/* =========================================================================
           MAIN 3D VIEWPORT CONTAINER
           ========================================================================= */}
-      <div className="relative flex-1 w-full overflow-hidden">
+      <div className="relative flex-1 w-full overflow-hidden bg-slate-950">
         {/* Three.js Engine Canvas */}
         <DigitalTwinViewer
           spectrum={spectrum}
@@ -200,10 +282,12 @@ export default function Spatial3DDigitalTwinPage() {
         />
 
         {/* Spectrum Mode Watermark Banner */}
-        <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-700/60 bg-slate-900/80 backdrop-blur-md text-xs font-mono text-slate-300 shadow-xl">
-          <span className="size-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="text-slate-400 uppercase tracking-widest text-[10px]">Spectrum:</span>
-          <span className="font-semibold text-cyan-300 uppercase">
+        <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-card/85 backdrop-blur-md text-xs font-mono text-card-foreground shadow-lg">
+          <span className="size-2 rounded-full bg-primary animate-ping" />
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">
+            Mode:
+          </span>
+          <span className="font-semibold text-primary uppercase">
             {spectrum === "xray"
               ? "X-Ray Translucent Conduits & Internal Piping"
               : spectrum === "heat"
@@ -216,136 +300,169 @@ export default function Spatial3DDigitalTwinPage() {
 
         {/* FLIR Thermal Legend Bar (Visible in Heat Mode) */}
         {spectrum === "heat" && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 px-4 py-2 rounded-xl border border-amber-500/30 bg-slate-900/90 backdrop-blur-md shadow-2xl text-[11px] font-mono text-slate-200">
-            <div className="flex items-center justify-between w-64 text-[10px] text-slate-400">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-500/30 bg-card/90 backdrop-blur-md shadow-xl text-[11px] font-mono text-card-foreground">
+            <div className="flex items-center justify-between w-64 text-[10px] text-muted-foreground">
               <span>20°C (Safe)</span>
               <span>45°C (Warm)</span>
               <span>75°C (Warning)</span>
-              <span className="text-red-400 font-bold">95°C+ (Hotspot)</span>
+              <span className="text-red-500 font-bold">95°C+ (Hotspot)</span>
             </div>
-            <div className="h-3 w-64 rounded-full bg-gradient-to-r from-blue-700 via-cyan-400 via-yellow-400 via-orange-500 to-red-600 border border-slate-700 shadow-inner" />
+            <div className="h-2.5 w-64 rounded-full bg-gradient-to-r from-blue-700 via-cyan-400 via-yellow-400 via-orange-500 to-red-600 border border-border shadow-inner" />
           </div>
         )}
 
         {/* =========================================================================
             LEFT FLOATING ASSET EXPLORER DRAWER
             ========================================================================= */}
-        <div className="absolute top-4 left-4 bottom-28 w-72 z-20 hidden md:flex flex-col rounded-2xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-hidden">
-          {/* Header */}
-          <div className="p-3 border-b border-slate-800/80 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <RadioIcon className="size-4 text-cyan-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                Campus Assets ({filteredAssets.length})
-              </span>
-            </div>
-          </div>
-
-          {/* Category Filter Pills */}
-          <div className="p-2 border-b border-slate-800/60 flex flex-wrap gap-1 bg-slate-900/50">
-            {[
-              { id: "all", label: "All" },
-              { id: "hostel", label: "Hostels" },
-              { id: "streetlight", label: "Streetlights" },
-              { id: "power", label: "Substation" },
-              { id: "water", label: "Water" },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
-                className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
-                  categoryFilter === cat.id
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+        {isAssetDrawerOpen && (
+          <div className="absolute top-4 left-4 bottom-28 w-72 sm:w-80 z-20 flex flex-col rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-left duration-200">
+            {/* Header */}
+            <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-2">
+                <RadioIcon className="size-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-card-foreground">
+                  Campus Assets ({filteredAssets.length})
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAssetDrawerOpen(false)}
+                className="size-6 text-muted-foreground hover:text-foreground"
               >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+                <XIcon className="size-3.5" />
+              </Button>
+            </div>
 
-          {/* Asset List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
-            {filteredAssets.map((asset) => {
-              const isSelected = selectedAsset?.id === asset.id;
-              return (
-                <div
-                  key={asset.id}
-                  onClick={() => {
-                    setSelectedAsset(asset);
-                    setIsInspectorOpen(true);
-                  }}
-                  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1 ${
-                    isSelected
-                      ? "border-cyan-500/60 bg-cyan-950/30 shadow-md shadow-cyan-950/50"
-                      : "border-slate-800/60 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/50"
-                  }`}
+            {/* Search Box */}
+            <div className="p-2 border-b border-border/60">
+              <div className="relative">
+                <SearchIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Filter hostels, lights, pumps..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="p-2 border-b border-border/60 flex flex-wrap gap-1 bg-muted/20">
+              {[
+                { id: "all", label: "All" },
+                { id: "hostel", label: "Hostels" },
+                { id: "streetlight", label: "Streetlights" },
+                { id: "power", label: "Substation" },
+                { id: "water", label: "Water" },
+              ].map((cat) => (
+                <Button
+                  key={cat.id}
+                  size="sm"
+                  variant={categoryFilter === cat.id ? "default" : "outline"}
+                  onClick={() => setCategoryFilter(cat.id)}
+                  className="h-6 px-2 text-[10px] rounded-md font-medium"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-100 truncate">
-                      {asset.name}
-                    </span>
-                    <span
-                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold ${
-                        asset.status === "ACTIVE_WORK"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse"
-                          : asset.status === "ANOMALY"
-                          ? "bg-red-500/20 text-red-300 border border-red-500/40"
-                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                  {cat.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Asset List */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+              {filteredAssets.length === 0 ? (
+                <div className="p-4 text-center text-xs text-muted-foreground">
+                  No assets match current filter.
+                </div>
+              ) : (
+                filteredAssets.map((asset) => {
+                  const isSelected = selectedAsset?.id === asset.id;
+                  return (
+                    <div
+                      key={asset.id}
+                      onClick={() => {
+                        setSelectedAsset(asset);
+                        setIsInspectorOpen(true);
+                      }}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1 ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-xs"
+                          : "border-border/60 bg-card hover:border-border hover:bg-muted/40"
                       }`}
                     >
-                      {asset.status === "ACTIVE_WORK"
-                        ? "Active Work"
-                        : asset.status === "ANOMALY"
-                        ? "Anomaly"
-                        : "Normal"}
-                    </span>
-                  </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-card-foreground truncate">
+                          {asset.name}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] font-mono px-1.5 py-0 font-bold ${
+                            asset.status === "ACTIVE_WORK"
+                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40"
+                              : asset.status === "ANOMALY"
+                              ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40"
+                              : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40"
+                          }`}
+                        >
+                          {asset.status === "ACTIVE_WORK"
+                            ? "Active Work"
+                            : asset.status === "ANOMALY"
+                            ? "Anomaly"
+                            : "Normal"}
+                        </Badge>
+                      </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                    <span>{asset.categoryLabel}</span>
-                    <span className="text-cyan-400 font-semibold">
-                      {spectrum === "heat"
-                        ? `${asset.thermalProfile.hotspotTempC}°C`
-                        : `${asset.telemetry.temperatureC}°C`}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+                        <span>{asset.categoryLabel}</span>
+                        <span className="text-primary font-semibold">
+                          {spectrum === "heat"
+                            ? `${asset.thermalProfile.hotspotTempC}°C`
+                            : `${asset.telemetry.temperatureC}°C`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* =========================================================================
             RIGHT FLOATING ASSET INSPECTION DRAWER
             ========================================================================= */}
         {selectedAsset && isInspectorOpen && (
-          <div className="absolute top-4 right-4 bottom-28 w-84 md:w-96 z-20 flex flex-col rounded-2xl border border-slate-800/80 bg-slate-950/90 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-hidden">
+          <div className="absolute top-4 right-4 bottom-28 w-80 sm:w-96 z-20 flex flex-col rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-right duration-200">
             {/* Header */}
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+            <div className="p-3.5 border-b border-border flex items-center justify-between bg-muted/30">
               <div className="flex items-center gap-2.5">
                 <div
                   className={`size-3 rounded-full ${
                     selectedAsset.status === "ACTIVE_WORK"
-                      ? "bg-amber-400 animate-pulse"
-                      : "bg-emerald-400"
+                      ? "bg-amber-500 animate-pulse"
+                      : "bg-emerald-500"
                   }`}
                 />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-100">{selectedAsset.name}</h3>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <h3 className="text-sm font-bold text-card-foreground">
+                    {selectedAsset.name}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
                     <span>{selectedAsset.code}</span>
                     <span>•</span>
                     <span>{selectedAsset.location}</span>
                   </div>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsInspectorOpen(false)}
-                className="size-7 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200"
+                className="size-7 text-muted-foreground hover:text-foreground"
               >
                 <XIcon className="size-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Content Details */}
@@ -353,66 +470,80 @@ export default function Spatial3DDigitalTwinPage() {
               {/* Work Order / Ongoing Maintenance Banner */}
               {selectedAsset.workDescription && (
                 <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 space-y-1.5">
-                  <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-semibold text-xs">
                     <WrenchIcon className="size-3.5" />
                     <span>Ongoing Work Order ({selectedAsset.ticketNo})</span>
                   </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
                     {selectedAsset.workDescription}
                   </p>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1 border-t border-amber-500/20">
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono pt-1 border-t border-amber-500/20">
                     <span>Lead: {selectedAsset.assignedContractor}</span>
-                    <span className="text-amber-400 font-bold">{selectedAsset.slaDeadline}</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">
+                      {selectedAsset.slaDeadline}
+                    </span>
                   </div>
                 </div>
               )}
 
               {/* Live Multi-Spectrum Telemetry Gauges */}
               <div className="space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
                   Live Asset Telemetry
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                    <span className="text-[10px] text-slate-400 block">Temperature</span>
-                    <span className="text-base font-bold font-mono text-cyan-300">
+                  <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                    <span className="text-[10px] text-muted-foreground block">
+                      Temperature
+                    </span>
+                    <span className="text-base font-bold font-mono text-primary">
                       {selectedAsset.telemetry.temperatureC}°C
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                    <span className="text-[10px] text-slate-400 block">FLIR Hotspot Peak</span>
-                    <span className="text-base font-bold font-mono text-amber-400">
+                  <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                    <span className="text-[10px] text-muted-foreground block">
+                      FLIR Hotspot Peak
+                    </span>
+                    <span className="text-base font-bold font-mono text-amber-600 dark:text-amber-400">
                       {selectedAsset.thermalProfile.hotspotTempC}°C
                     </span>
                   </div>
                   {selectedAsset.telemetry.voltageV !== undefined && (
-                    <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                      <span className="text-[10px] text-slate-400 block">Voltage Feed</span>
-                      <span className="text-base font-bold font-mono text-slate-200">
+                    <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                      <span className="text-[10px] text-muted-foreground block">
+                        Voltage Feed
+                      </span>
+                      <span className="text-base font-bold font-mono text-card-foreground">
                         {selectedAsset.telemetry.voltageV} V
                       </span>
                     </div>
                   )}
                   {selectedAsset.telemetry.pressureBar !== undefined && (
-                    <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                      <span className="text-[10px] text-slate-400 block">Water Pressure</span>
-                      <span className="text-base font-bold font-mono text-cyan-400">
+                    <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                      <span className="text-[10px] text-muted-foreground block">
+                        Water Pressure
+                      </span>
+                      <span className="text-base font-bold font-mono text-cyan-600 dark:text-cyan-400">
                         {selectedAsset.telemetry.pressureBar} Bar
                       </span>
                     </div>
                   )}
                   {selectedAsset.telemetry.luxLevel !== undefined && (
-                    <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                      <span className="text-[10px] text-slate-400 block">Optical Lux Output</span>
-                      <span className="text-base font-bold font-mono text-amber-300">
+                    <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                      <span className="text-[10px] text-muted-foreground block">
+                        Optical Lux Output
+                      </span>
+                      <span className="text-base font-bold font-mono text-amber-500">
                         {selectedAsset.telemetry.luxLevel} lx
                       </span>
                     </div>
                   )}
                   {selectedAsset.telemetry.vibrationMmS !== undefined && (
-                    <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50">
-                      <span className="text-[10px] text-slate-400 block">Mechanical Vibration</span>
-                      <span className="text-base font-bold font-mono text-slate-300">
+                    <div className="p-2.5 rounded-xl border border-border bg-muted/30">
+                      <span className="text-[10px] text-muted-foreground block">
+                        Mechanical Vibration
+                      </span>
+                      <span className="text-base font-bold font-mono text-card-foreground">
                         {selectedAsset.telemetry.vibrationMmS} mm/s
                       </span>
                     </div>
@@ -422,23 +553,25 @@ export default function Spatial3DDigitalTwinPage() {
 
               {/* X-Ray Internal Building Components */}
               <div className="space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center justify-between">
                   <span>Internal Components (X-Ray View)</span>
                   <button
                     onClick={() => setSpectrum("xray")}
-                    className="text-cyan-400 hover:underline font-mono text-[10px]"
+                    className="text-primary hover:underline font-mono text-[10px]"
                   >
                     View in X-Ray
                   </button>
                 </span>
-                <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/50 space-y-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-2">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Conduits & Wiring:</span>
+                    <span className="text-[10px] text-muted-foreground block">
+                      Conduits & Wiring:
+                    </span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {selectedAsset.internalComponents.conduits.map((c, i) => (
                         <span
                           key={i}
-                          className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-amber-300 border border-slate-700"
+                          className="px-2 py-0.5 rounded bg-muted text-[10px] font-mono text-amber-600 dark:text-amber-300 border border-border"
                         >
                           {c}
                         </span>
@@ -447,12 +580,14 @@ export default function Spatial3DDigitalTwinPage() {
                   </div>
                   {selectedAsset.internalComponents.piping.length > 0 && (
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Plumbing Lines:</span>
+                      <span className="text-[10px] text-muted-foreground block">
+                        Plumbing Lines:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {selectedAsset.internalComponents.piping.map((p, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-cyan-300 border border-slate-700"
+                            className="px-2 py-0.5 rounded bg-muted text-[10px] font-mono text-cyan-600 dark:text-cyan-300 border border-border"
                           >
                             {p}
                           </span>
@@ -461,8 +596,10 @@ export default function Spatial3DDigitalTwinPage() {
                     </div>
                   )}
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Structural Frame:</span>
-                    <span className="text-[11px] text-slate-200">
+                    <span className="text-[10px] text-muted-foreground block">
+                      Structural Frame:
+                    </span>
+                    <span className="text-[11px] text-card-foreground">
                       {selectedAsset.internalComponents.structuralType}
                     </span>
                   </div>
@@ -470,9 +607,11 @@ export default function Spatial3DDigitalTwinPage() {
               </div>
 
               {/* FLIR Hotspot Location */}
-              <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/50 space-y-1">
-                <span className="text-[10px] text-slate-400 block">FLIR Hotspot Location:</span>
-                <span className="text-[11px] text-slate-200 font-mono">
+              <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-1">
+                <span className="text-[10px] text-muted-foreground block">
+                  FLIR Hotspot Location:
+                </span>
+                <span className="text-[11px] text-card-foreground font-mono">
                   {selectedAsset.thermalProfile.hotspotLocation}
                 </span>
               </div>
@@ -483,55 +622,62 @@ export default function Spatial3DDigitalTwinPage() {
         {/* =========================================================================
             BOTTOM STEP-BY-STEP WORK LIFECYCLE SCRUBBER DOCK
             ========================================================================= */}
-        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-800/80 bg-slate-950/90 backdrop-blur-xl shadow-2xl shadow-black/80">
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xl">
           {/* Step Timeline Player Controls */}
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              size="icon"
+              variant={isPlayingSteps ? "secondary" : "default"}
               onClick={() => setIsPlayingSteps(!isPlayingSteps)}
-              className={`size-10 rounded-xl flex items-center justify-center font-bold transition-all shadow-md ${
-                isPlayingSteps
-                  ? "bg-amber-500 text-slate-950 shadow-amber-500/30"
-                  : "bg-cyan-500 text-slate-950 shadow-cyan-500/30 hover:bg-cyan-400"
-              }`}
+              className="size-10 rounded-xl shadow-xs"
+              title={isPlayingSteps ? "Pause Auto-Scrubber" : "Play Lifecycle Simulation"}
             >
               {isPlayingSteps ? (
-                <PauseIcon className="size-5 fill-current" />
+                <PauseIcon className="size-4.5 fill-current" />
               ) : (
-                <PlayIcon className="size-5 fill-current ml-0.5" />
+                <PlayIcon className="size-4.5 fill-current ml-0.5" />
               )}
-            </button>
+            </Button>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                variant="outline"
+                size="icon"
                 disabled={currentStepIndex === 0}
                 onClick={() => setCurrentStepIndex((prev) => Math.max(0, prev - 1))}
-                className="size-8 rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800"
+                className="size-8"
+                title="Previous Lifecycle Step"
               >
                 <ChevronLeftIcon className="size-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 disabled={currentStepIndex === WORK_STEPS.length - 1}
                 onClick={() =>
                   setCurrentStepIndex((prev) => Math.min(WORK_STEPS.length - 1, prev + 1))
                 }
-                className="size-8 rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800"
+                className="size-8"
+                title="Next Lifecycle Step"
               >
                 <ChevronRightIcon className="size-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Current Step Title & Narrative */}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-100">{currentStep.title}</span>
+                <span className="text-xs font-bold text-card-foreground">
+                  {currentStep.title}
+                </span>
                 <Badge
                   variant="outline"
-                  className="bg-cyan-950/60 text-cyan-400 border-cyan-800 text-[10px] py-0 px-2 font-mono"
+                  className="bg-primary/10 text-primary border-primary/30 text-[10px] py-0 px-2 font-mono"
                 >
                   {currentStep.statusBadge}
                 </Badge>
               </div>
-              <p className="text-[11px] text-slate-400 truncate max-w-sm md:max-w-md">
+              <p className="text-[11px] text-muted-foreground truncate max-w-xs sm:max-w-md md:max-w-lg">
                 {currentStep.subtitle}
               </p>
             </div>
@@ -544,35 +690,40 @@ export default function Spatial3DDigitalTwinPage() {
               const isPast = idx < currentStepIndex;
 
               return (
-                <button
+                <Button
                   key={step.stepNumber}
+                  size="sm"
+                  variant={isActive ? "default" : isPast ? "secondary" : "outline"}
                   onClick={() => setCurrentStepIndex(idx)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all shrink-0 ${
-                    isActive
-                      ? "border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold shadow-md shadow-cyan-950/40"
-                      : isPast
-                      ? "border-slate-800 bg-slate-900/60 text-emerald-400"
-                      : "border-slate-800/60 bg-slate-900/30 text-slate-500 hover:text-slate-300"
+                  className={`h-8 px-2.5 text-xs font-mono shrink-0 gap-1.5 ${
+                    isActive ? "shadow-xs font-bold" : ""
                   }`}
                 >
                   <span
                     className={`size-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
                       isActive
-                        ? "bg-cyan-500 text-slate-950"
+                        ? "bg-primary-foreground text-primary"
                         : isPast
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : "bg-slate-800 text-slate-400"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {step.stepNumber}
                   </span>
                   <span className="hidden lg:inline">{step.phaseId}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Role Switcher Modal */}
+      <RoleSwitchModal
+        isOpen={isRoleModalOpen}
+        onClose={() => setIsRoleModalOpen(false)}
+        currentRoleId={currentRole.id}
+      />
     </div>
   );
 }
