@@ -16,6 +16,7 @@ interface DigitalTwinViewerProps {
   selectedAsset: SpatialAsset | null;
   onSelectAsset: (asset: SpatialAsset) => void;
   filteredCategory: string;
+  environmentMode?: "day" | "night";
 }
 
 export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
@@ -24,6 +25,7 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
   selectedAsset,
   onSelectAsset,
   filteredCategory,
+  environmentMode = "day",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<SpatialAsset | null>(null);
@@ -84,32 +86,38 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
     controlsRef.current = controls;
 
     // 5. Lighting Setup
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     ambientLight.name = "ambient-light";
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(40, 60, 40);
+    const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0); // Warm sunny daylight
+    dirLight.position.set(45, 75, 40);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 10;
-    dirLight.shadow.camera.far = 160;
-    dirLight.shadow.camera.left = -50;
-    dirLight.shadow.camera.right = 50;
-    dirLight.shadow.camera.top = 50;
-    dirLight.shadow.camera.bottom = -50;
+    dirLight.shadow.camera.far = 180;
+    dirLight.shadow.camera.left = -60;
+    dirLight.shadow.camera.right = 60;
+    dirLight.shadow.camera.top = 60;
+    dirLight.shadow.camera.bottom = -60;
     dirLight.shadow.bias = -0.0005;
     dirLight.name = "sun-light";
     scene.add(dirLight);
 
+    // Natural hemisphere sky-and-ground bounce light
+    const hemiLight = new THREE.HemisphereLight(0xbde0fe, 0x86efac, 0.75);
+    hemiLight.name = "hemi-light";
+    scene.add(hemiLight);
+
     // Blue fill light for crisp modern architectural contrast
     const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.4);
     fillLight.position.set(-40, 20, -40);
+    fillLight.name = "fill-light";
     scene.add(fillLight);
 
     // 6. Build Campus Environment
-    buildEnvironment(scene);
+    buildEnvironment(scene, environmentMode);
 
     // 7. Build All 3D Assets
     buildAssets(scene, assetMeshesRef.current);
@@ -117,7 +125,20 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
     // 8. Build Utility Networks (Conduits, Water Pipes, Underground Grid)
     buildUtilityNetworks(scene, animatedObjectsRef.current);
 
-    // 9. Resize Handler
+    // 9. Build Radiant Thermal Hotspots (FLIR view emitters)
+    buildThermalHotspots(scene, animatedObjectsRef.current);
+
+    // Cache default materials on all meshes for non-destructive switching
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && !obj.userData.defaultMaterial) {
+        obj.userData.defaultMaterial = obj.material;
+      }
+    });
+
+    // Initial pass of spectrum and environment
+    applySpectrumToScene(scene, spectrum, currentStep, environmentMode);
+
+    // 10. Resize Handler
     const handleResize = () => {
       if (!container || !renderer || !camera) return;
       camera.aspect = container.clientWidth / container.clientHeight;
@@ -126,7 +147,7 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
     };
     window.addEventListener("resize", handleResize);
 
-    // 10. Animation Loop
+    // 11. Animation Loop
     let animationFrameId: number;
     let clock = new THREE.Clock();
 
@@ -148,11 +169,15 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
 
       controls.update();
 
-      // Pulse animated objects (pulses, beacon lights, scan lines)
+      // Pulse animated objects (pulses, beacon lights, scan lines, thermal radiant halos)
       animatedObjectsRef.current.forEach((obj) => {
         if (obj.userData.animatePulse) {
           const scale = 1 + Math.sin(elapsedTime * 4) * 0.15;
           obj.scale.set(scale, scale, scale);
+        }
+        if (obj.userData.animateLightPulse && obj instanceof THREE.PointLight) {
+          const base = obj.userData.baseIntensity || 2.5;
+          obj.intensity = base + Math.sin(elapsedTime * 5) * 0.6;
         }
         if (obj.userData.rotateY) {
           obj.rotation.y += delta * obj.userData.rotateY;
@@ -178,13 +203,13 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
     };
   }, []);
 
-  // Update Materials / Shaders on Spectrum or Filter Change
+  // Update Materials / Shaders on Spectrum or Environment Change
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
 
-    applySpectrumToScene(scene, spectrum, currentStep);
-  }, [spectrum, currentStep]);
+    applySpectrumToScene(scene, spectrum, currentStep, environmentMode);
+  }, [spectrum, currentStep, environmentMode]);
 
   // Focus Camera when Step Changes or Asset is Selected
   useEffect(() => {
@@ -280,7 +305,15 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full select-none overflow-hidden bg-slate-950">
+    <div
+      className={`relative w-full h-full select-none overflow-hidden transition-colors duration-500 ${
+        spectrum === "heat"
+          ? "bg-[#070618]"
+          : spectrum === "xray" || spectrum === "night" || environmentMode === "night"
+          ? "bg-slate-950"
+          : "bg-[#bde0fe]"
+      }`}
+    >
       {/* 3D Canvas Canvas Container */}
       <div
         ref={containerRef}
@@ -328,35 +361,45 @@ export const DigitalTwinViewer: React.FC<DigitalTwinViewerProps> = ({
    3D PROCEDURAL BUILDER HELPERS
    ========================================================================= */
 
-function buildEnvironment(scene: THREE.Scene) {
-  // Ground Surface
+function buildEnvironment(scene: THREE.Scene, environmentMode: "day" | "night" = "day") {
+  const isDay = environmentMode === "day";
+
+  // Ground Surface - modern architectural campus paving
   const groundGeo = new THREE.PlaneGeometry(160, 160);
   const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x0f172a, // Deep slate
-    roughness: 0.85,
-    metalness: 0.1,
+    color: isDay ? 0xe2e8f0 : 0x0f172a, // Slate-200 paving in day, deep slate at night
+    roughness: isDay ? 0.75 : 0.85,
+    metalness: 0.08,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   ground.name = "ground-plane";
+  ground.userData.defaultMaterial = groundMat;
   scene.add(ground);
 
   // Decorative Grid Matrix
-  const gridHelper = new THREE.GridHelper(160, 40, 0x0284c7, 0x1e293b);
+  const gridHelper = new THREE.GridHelper(
+    160,
+    40,
+    isDay ? 0x94a3b8 : 0x0284c7,
+    isDay ? 0xcbd5e1 : 0x1e293b
+  );
   gridHelper.position.y = 0.02;
   gridHelper.name = "ground-grid";
   scene.add(gridHelper);
 
   // Main Asphalt Road Spine
   const roadMat = new THREE.MeshStandardMaterial({
-    color: 0x1e293b,
+    color: isDay ? 0x334155 : 0x1e293b, // Clean dark slate asphalt in day
     roughness: 0.7,
   });
   const roadSpine = new THREE.Mesh(new THREE.PlaneGeometry(12, 140), roadMat);
   roadSpine.rotation.x = -Math.PI / 2;
   roadSpine.position.set(-6, 0.05, 0);
   roadSpine.receiveShadow = true;
+  roadSpine.name = "road-spine";
+  roadSpine.userData.defaultMaterial = roadMat;
   scene.add(roadSpine);
 
   // Cross Road
@@ -364,6 +407,8 @@ function buildEnvironment(scene: THREE.Scene) {
   roadCross.rotation.x = -Math.PI / 2;
   roadCross.position.set(0, 0.04, 6);
   roadCross.receiveShadow = true;
+  roadCross.name = "road-cross";
+  roadCross.userData.defaultMaterial = roadMat;
   scene.add(roadCross);
 
   // Road Lane Dashed Markings
@@ -375,24 +420,31 @@ function buildEnvironment(scene: THREE.Scene) {
     scene.add(dash);
   }
 
-  // Green Campus Lawns
+  // Green Campus Lawns - lush emerald green in daytime
   const lawnMat = new THREE.MeshStandardMaterial({
-    color: 0x064e3b, // Deep emerald lawn
-    roughness: 0.9,
+    color: isDay ? 0x16a34a : 0x064e3b, // Vibrant emerald in day, deep pine at night
+    roughness: 0.85,
   });
   const lawn1 = new THREE.Mesh(new THREE.PlaneGeometry(36, 40), lawnMat);
   lawn1.rotation.x = -Math.PI / 2;
   lawn1.position.set(22, 0.03, -16);
+  lawn1.name = "lawn-1";
+  lawn1.userData.defaultMaterial = lawnMat;
   scene.add(lawn1);
 
   const lawn2 = new THREE.Mesh(new THREE.PlaneGeometry(32, 32), lawnMat);
   lawn2.rotation.x = -Math.PI / 2;
   lawn2.position.set(-30, 0.03, -20);
+  lawn2.name = "lawn-2";
+  lawn2.userData.defaultMaterial = lawnMat;
   scene.add(lawn2);
 
   // Stylized Low-Poly Campus Trees
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
-  const foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+  const foliageMat = new THREE.MeshStandardMaterial({
+    color: isDay ? 0x15803d : 0x047857,
+    roughness: 0.65,
+  });
 
   const treePositions = [
     [-16, 0, 14],
@@ -405,22 +457,118 @@ function buildEnvironment(scene: THREE.Scene) {
     [18, 0, -32],
   ];
 
-  treePositions.forEach(([x, y, z]) => {
+  treePositions.forEach(([x, y, z], idx) => {
     const treeGroup = new THREE.Group();
     treeGroup.position.set(x, y, z);
+    treeGroup.name = `tree-${idx}`;
 
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.45, 2.8, 6), trunkMat);
     trunk.position.y = 1.4;
     trunk.castShadow = true;
+    trunk.userData.defaultMaterial = trunkMat;
     treeGroup.add(trunk);
 
     const foliage = new THREE.Mesh(new THREE.ConeGeometry(2, 4.2, 7), foliageMat);
     foliage.position.y = 4.2;
     foliage.castShadow = true;
+    foliage.userData.defaultMaterial = foliageMat;
     treeGroup.add(foliage);
 
     scene.add(treeGroup);
   });
+}
+
+function buildThermalHotspots(scene: THREE.Scene, animatedList: THREE.Object3D[]) {
+  const thermalGroup = new THREE.Group();
+  thermalGroup.name = "thermal-hotspots-group";
+  thermalGroup.visible = false; // Activated exclusively in thermal FLIR mode
+
+  // 1. HB-3 Wing B Distribution Board Junction #4 (84.6°C CRITICAL HOTSPOT)
+  const hb3Hotspot = new THREE.Group();
+  hb3Hotspot.position.set(-13.5, 6.5, -9.8);
+
+  const core1 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.55, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  hb3Hotspot.add(core1);
+
+  const flame1 = new THREE.Mesh(
+    new THREE.SphereGeometry(1.2, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.85 })
+  );
+  hb3Hotspot.add(flame1);
+
+  const corona1 = new THREE.Mesh(
+    new THREE.SphereGeometry(2.4, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.45, wireframe: true })
+  );
+  corona1.userData.animatePulse = true;
+  hb3Hotspot.add(corona1);
+
+  const heatLight1 = new THREE.PointLight(0xff2200, 3.2, 16);
+  heatLight1.userData.animateLightPulse = true;
+  heatLight1.userData.baseIntensity = 3.2;
+  hb3Hotspot.add(heatLight1);
+
+  thermalGroup.add(hb3Hotspot);
+
+  // 2. Substation Transformer T-2 Core (89.2°C PEAK ANOMALY)
+  const subHotspot = new THREE.Group();
+  subHotspot.position.set(35.5, 4.0, 12);
+
+  const core2 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.75, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xfef08a })
+  );
+  subHotspot.add(core2);
+
+  const flame2 = new THREE.Mesh(
+    new THREE.SphereGeometry(1.7, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.85 })
+  );
+  subHotspot.add(flame2);
+
+  const corona2 = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.4, wireframe: true })
+  );
+  corona2.userData.animatePulse = true;
+  subHotspot.add(corona2);
+
+  const heatLight2 = new THREE.PointLight(0xff3b00, 3.8, 18);
+  heatLight2.userData.animateLightPulse = true;
+  heatLight2.userData.baseIntensity = 3.8;
+  subHotspot.add(heatLight2);
+
+  thermalGroup.add(subHotspot);
+
+  // 3. Streetlight SL-04 LED Driver & Choke (62.5°C)
+  const slHotspot = new THREE.Group();
+  slHotspot.position.set(-8.3, 7.8, -4);
+
+  const core3 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xfde047 })
+  );
+  slHotspot.add(core3);
+
+  const flame3 = new THREE.Mesh(
+    new THREE.SphereGeometry(1.0, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.75 })
+  );
+  flame3.userData.animatePulse = true;
+  slHotspot.add(flame3);
+
+  const heatLight3 = new THREE.PointLight(0xf97316, 2.0, 10);
+  heatLight3.userData.animateLightPulse = true;
+  heatLight3.userData.baseIntensity = 2.0;
+  slHotspot.add(heatLight3);
+
+  thermalGroup.add(slHotspot);
+
+  animatedList.push(corona1, corona2, flame3, heatLight1, heatLight2, heatLight3);
+  scene.add(thermalGroup);
 }
 
 function buildAssets(scene: THREE.Scene, assetMap: Map<string, THREE.Group>) {
@@ -432,9 +580,9 @@ function buildAssets(scene: THREE.Scene, assetMap: Map<string, THREE.Group>) {
 
   // Main Building Block (Wing A, B, C)
   const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x334155,
-    roughness: 0.6,
-    metalness: 0.1,
+    color: 0x475569, // Clean modern architectural slate paneling
+    roughness: 0.55,
+    metalness: 0.12,
   });
 
   const mainWing = new THREE.Mesh(new THREE.BoxGeometry(24, 12, 14), wallMat);
@@ -717,31 +865,175 @@ function buildUtilityNetworks(scene: THREE.Scene, animatedList: THREE.Object3D[]
    SPECTRUM SHADER & THEME TRANSFORMATION
    ========================================================================= */
 
-function applySpectrumToScene(scene: THREE.Scene, spectrum: ViewSpectrum, step: WorkStep) {
+function applySpectrumToScene(
+  scene: THREE.Scene,
+  spectrum: ViewSpectrum,
+  step: WorkStep,
+  environmentMode: "day" | "night" = "day"
+) {
   const ambientLight = scene.getObjectByName("ambient-light") as THREE.AmbientLight;
   const sunLight = scene.getObjectByName("sun-light") as THREE.DirectionalLight;
+  const hemiLight = scene.getObjectByName("hemi-light") as THREE.HemisphereLight;
   const ground = scene.getObjectByName("ground-plane") as THREE.Mesh;
   const groundGrid = scene.getObjectByName("ground-grid") as THREE.GridHelper;
+  const lawn1 = scene.getObjectByName("lawn-1") as THREE.Mesh;
+  const lawn2 = scene.getObjectByName("lawn-2") as THREE.Mesh;
+  const roadSpine = scene.getObjectByName("road-spine") as THREE.Mesh;
+  const roadCross = scene.getObjectByName("road-cross") as THREE.Mesh;
   const conduit = scene.getObjectByName("electrical-conduit-network") as THREE.Mesh;
   const waterPipe = scene.getObjectByName("water-pipeline-network") as THREE.Mesh;
+  const thermalHotspots = scene.getObjectByName("thermal-hotspots-group") as THREE.Group;
 
-  if (spectrum === "xray") {
+  // Toggle thermal hotspots group (only active in Thermal FLIR mode)
+  if (thermalHotspots) {
+    thermalHotspots.visible = spectrum === "heat";
+  }
+
+  if (spectrum === "heat") {
     // -------------------------------------------------------------
-    // X-RAY / BLUEPRINT MODE:
-    // Translucent cyan glass buildings, vibrant neon conduits, internal piping visible!
+    // ADVANCED FLIR THERMAL IRONBOW HEATMAP MODE:
+    // High-contrast thermography with ambient structural absorption & radiant hotspots
     // -------------------------------------------------------------
-    if (ambientLight) ambientLight.intensity = 0.9;
-    if (sunLight) sunLight.intensity = 0.3;
+    scene.background = new THREE.Color(0x070618); // Deep FLIR dark violet
+    scene.fog = new THREE.FogExp2(0x070618, 0.005);
+
+    if (ambientLight) {
+      ambientLight.color.setHex(0x312e81);
+      ambientLight.intensity = 0.55;
+    }
+    if (sunLight) {
+      sunLight.intensity = 0.15;
+    }
+    if (hemiLight) {
+      hemiLight.color.setHex(0x1e1b4b);
+      hemiLight.groundColor.setHex(0x070618);
+      hemiLight.intensity = 0.35;
+    }
 
     if (ground && ground.material instanceof THREE.MeshStandardMaterial) {
-      ground.material.color.setHex(0x020617);
-      ground.material.roughness = 0.9;
+      ground.material.color.setHex(0x090720); // Cold terrain absorption ~22°C
+      ground.material.roughness = 0.95;
     }
     if (groundGrid) {
       groundGrid.visible = true;
     }
+    if (lawn1 && lawn1.material instanceof THREE.MeshStandardMaterial) {
+      lawn1.material.color.setHex(0x0d0928); // Cool vegetative signature ~24°C
+    }
+    if (lawn2 && lawn2.material instanceof THREE.MeshStandardMaterial) {
+      lawn2.material.color.setHex(0x0d0928);
+    }
+    if (roadSpine && roadSpine.material instanceof THREE.MeshStandardMaterial) {
+      roadSpine.material.color.setHex(0x17103a); // Pavement thermal mass ~29°C
+    }
+    if (roadCross && roadCross.material instanceof THREE.MeshStandardMaterial) {
+      roadCross.material.color.setHex(0x17103a);
+    }
 
-    // Turn building meshes into translucent holographic cyan
+    // Apply FLIR false-color gradient to building structures and assets
+    SPATIAL_ASSETS.forEach((asset) => {
+      const group = scene.children.find((c) => c.userData.assetId === asset.id);
+      if (!group) return;
+
+      const hotspotTemp = asset.thermalProfile.hotspotTempC;
+
+      group.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.name !== "light-cone") {
+          // Distinct heat mapping for various structural components
+          if (child.name.includes("body")) {
+            // Main building envelope (cooler ambient envelope 28-32°C: deep indigo to blue)
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x1e1b4b,
+              emissive: 0x312e81,
+              emissiveIntensity: 0.35,
+              roughness: 0.6,
+            });
+          } else if (child.geometry instanceof THREE.PlaneGeometry && child.scale.y < 3) {
+            // Windows: internal heat transmission through glazing (38-44°C: warm cyan to green)
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x06b6d4,
+              emissive: 0x10b981,
+              emissiveIntensity: 0.65,
+              roughness: 0.3,
+            });
+          } else if (child.name.includes("t2") || child.parent?.name.includes("t2")) {
+            // Transformer T-2 with overheating anomaly (89.2°C: blazing crimson / white-hot)
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xef4444,
+              emissive: 0xfacc15,
+              emissiveIntensity: 0.95,
+              roughness: 0.2,
+            });
+          } else if (asset.id === "asset-water-tower") {
+            // Cold water reservoir (21.8°C: deep cool azure blue)
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x0284c7,
+              emissive: 0x0369a1,
+              emissiveIntensity: 0.4,
+              roughness: 0.5,
+            });
+          } else if (asset.id === "asset-solar-array") {
+            // Solar PV heat absorption (56.4°C: warm amber/orange)
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xf59e0b,
+              emissive: 0xd97706,
+              emissiveIntensity: 0.65,
+              roughness: 0.4,
+            });
+          } else {
+            // General equipment components based on hotspot temp
+            let heatHex = 0x06b6d4;
+            if (hotspotTemp > 80) heatHex = 0xef4444;
+            else if (hotspotTemp > 60) heatHex = 0xf97316;
+            else if (hotspotTemp > 45) heatHex = 0xfacc15;
+            else if (hotspotTemp > 30) heatHex = 0x10b981;
+
+            child.material = new THREE.MeshStandardMaterial({
+              color: heatHex,
+              emissive: heatHex,
+              emissiveIntensity: hotspotTemp > 75 ? 0.8 : 0.35,
+              roughness: 0.4,
+            });
+          }
+        }
+      });
+    });
+
+    // Conduits under electrical load glow bright thermal orange-red
+    if (conduit && conduit.material instanceof THREE.MeshStandardMaterial) {
+      conduit.material.color.setHex(0xef4444);
+      conduit.material.emissive.setHex(0xf97316);
+      conduit.material.emissiveIntensity = 1.4;
+      conduit.scale.set(1.15, 1.15, 1.15);
+    }
+    // Water pipes show cold thermal flow
+    if (waterPipe && waterPipe.material instanceof THREE.MeshStandardMaterial) {
+      waterPipe.material.color.setHex(0x0284c7);
+      waterPipe.material.emissive.setHex(0x0369a1);
+      waterPipe.material.emissiveIntensity = 0.8;
+      waterPipe.scale.set(1.1, 1.1, 1.1);
+    }
+
+  } else if (spectrum === "xray") {
+    // -------------------------------------------------------------
+    // X-RAY / BLUEPRINT HOLOGRAPHIC MODE:
+    // -------------------------------------------------------------
+    scene.background = new THREE.Color(0x020617);
+    scene.fog = new THREE.FogExp2(0x020617, 0.005);
+
+    if (ambientLight) {
+      ambientLight.color.setHex(0xffffff);
+      ambientLight.intensity = 0.85;
+    }
+    if (sunLight) sunLight.intensity = 0.3;
+    if (hemiLight) hemiLight.intensity = 0.3;
+
+    if (ground && ground.material instanceof THREE.MeshStandardMaterial) {
+      ground.material.color.setHex(0x020617);
+      ground.material.roughness = 0.95;
+    }
+
+    // Translucent holographic cyan for buildings
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         if (
@@ -762,7 +1054,6 @@ function applySpectrumToScene(scene: THREE.Scene, spectrum: ViewSpectrum, step: 
       }
     });
 
-    // Conduits glow brightly
     if (conduit && conduit.material instanceof THREE.MeshStandardMaterial) {
       conduit.material.emissiveIntensity = 1.4;
       conduit.material.color.setHex(0xfbbf24);
@@ -773,61 +1064,40 @@ function applySpectrumToScene(scene: THREE.Scene, spectrum: ViewSpectrum, step: 
       waterPipe.material.color.setHex(0x38bdf8);
       waterPipe.scale.set(1.2, 1.2, 1.2);
     }
-  } else if (spectrum === "heat") {
-    // -------------------------------------------------------------
-    // THERMAL (FLIR) HEATMAP MODE:
-    // False-color gradient based on temperature:
-    // Blue (20°C) -> Green (40°C) -> Amber (65°C) -> Blazing Crimson/White-Hot (90°C+)
-    // -------------------------------------------------------------
-    if (ambientLight) ambientLight.intensity = 0.6;
-    if (sunLight) sunLight.intensity = 0.4;
 
-    if (ground && ground.material instanceof THREE.MeshStandardMaterial) {
-      ground.material.color.setHex(0x030712);
+  } else if (spectrum === "night" || environmentMode === "night") {
+    // -------------------------------------------------------------
+    // NIGHT ENVIRONMENT / LUX SENSOR MODE:
+    // -------------------------------------------------------------
+    scene.background = new THREE.Color(0x020617);
+    scene.fog = new THREE.FogExp2(0x020617, 0.006);
+
+    if (ambientLight) {
+      ambientLight.color.setHex(0xffffff);
+      ambientLight.intensity = 0.18;
+    }
+    if (sunLight) {
+      sunLight.color.setHex(0x93c5fd);
+      sunLight.intensity = 0.25; // Soft moonlight
+    }
+    if (hemiLight) {
+      hemiLight.color.setHex(0x1e293b);
+      hemiLight.groundColor.setHex(0x020617);
+      hemiLight.intensity = 0.2;
     }
 
-    // Apply FLIR color to assets based on their real thermal profiles
-    SPATIAL_ASSETS.forEach((asset) => {
-      const group = scene.children.find((c) => c.userData.assetId === asset.id);
-      if (!group) return;
-
-      const temp = asset.thermalProfile.hotspotTempC;
-      let heatColorHex = 0x1e3a8a; // Default cool blue
-
-      if (temp > 85) {
-        heatColorHex = 0xef4444; // Critical White-Hot / Crimson
-      } else if (temp > 70) {
-        heatColorHex = 0xf97316; // Orange Heat Anomaly
-      } else if (temp > 50) {
-        heatColorHex = 0xfacc15; // Yellow Warm
-      } else if (temp > 35) {
-        heatColorHex = 0x22c55e; // Green Medium
-      } else {
-        heatColorHex = 0x06b6d4; // Cool Cyan
-      }
-
-      group.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.name !== "light-cone") {
-          child.material = new THREE.MeshStandardMaterial({
-            color: heatColorHex,
-            emissive: heatColorHex,
-            emissiveIntensity: temp > 80 ? 0.7 : 0.25,
-            roughness: 0.5,
-          });
-        }
-      });
-    });
-  } else if (spectrum === "night") {
-    // -------------------------------------------------------------
-    // NIGHT SENSOR MODE:
-    // Dark sky with luminous smart streetlight cones casting soft road illumination
-    // -------------------------------------------------------------
-    if (ambientLight) ambientLight.intensity = 0.15;
-    if (sunLight) sunLight.intensity = 0.1;
-
     if (ground && ground.material instanceof THREE.MeshStandardMaterial) {
-      ground.material.color.setHex(0x020617);
+      ground.material.color.setHex(0x0a0f1d);
+      ground.material.roughness = 0.9;
     }
+    if (lawn1 && lawn1.material instanceof THREE.MeshStandardMaterial) {
+      lawn1.material.color.setHex(0x064e3b);
+    }
+    if (lawn2 && lawn2.material instanceof THREE.MeshStandardMaterial) {
+      lawn2.material.color.setHex(0x064e3b);
+    }
+
+    restoreDefaultMaterials(scene);
 
     // Streetlight cones become luminous
     scene.traverse((obj) => {
@@ -837,29 +1107,79 @@ function applySpectrumToScene(scene: THREE.Scene, spectrum: ViewSpectrum, step: 
         }
       }
     });
+
   } else {
     // -------------------------------------------------------------
-    // STANDARD / REALISTIC 3D ARCHITECTURAL MODE:
+    // CRISP SUNNY DAYTIME ARCHITECTURAL ENVIRONMENT (DEFAULT):
     // -------------------------------------------------------------
-    if (ambientLight) ambientLight.intensity = 0.7;
-    if (sunLight) sunLight.intensity = 1.2;
+    scene.background = new THREE.Color(0xbde0fe); // Clear sunny sky blue
+    scene.fog = new THREE.FogExp2(0xbde0fe, 0.0035); // Soft atmospheric haze
+
+    if (ambientLight) {
+      ambientLight.color.setHex(0xffffff);
+      ambientLight.intensity = 0.75;
+    }
+    if (sunLight) {
+      sunLight.color.setHex(0xfffaed); // Warm direct sunlight
+      sunLight.intensity = 2.0;
+    }
+    if (hemiLight) {
+      hemiLight.color.setHex(0xbde0fe); // Sky dome down
+      hemiLight.groundColor.setHex(0x86efac); // Grass bounce up
+      hemiLight.intensity = 0.75;
+    }
 
     if (ground && ground.material instanceof THREE.MeshStandardMaterial) {
-      ground.material.color.setHex(0x0f172a);
-      ground.material.roughness = 0.85;
+      ground.material.color.setHex(0xe2e8f0); // Clean modern architectural stone
+      ground.material.roughness = 0.75;
     }
+    if (lawn1 && lawn1.material instanceof THREE.MeshStandardMaterial) {
+      lawn1.material.color.setHex(0x16a34a); // Lush emerald green
+    }
+    if (lawn2 && lawn2.material instanceof THREE.MeshStandardMaterial) {
+      lawn2.material.color.setHex(0x16a34a);
+    }
+    if (roadSpine && roadSpine.material instanceof THREE.MeshStandardMaterial) {
+      roadSpine.material.color.setHex(0x334155);
+    }
+    if (roadCross && roadCross.material instanceof THREE.MeshStandardMaterial) {
+      roadCross.material.color.setHex(0x334155);
+    }
+
+    restoreDefaultMaterials(scene);
 
     if (conduit && conduit.material instanceof THREE.MeshStandardMaterial) {
       conduit.material.emissiveIntensity = 0.4;
       conduit.material.color.setHex(0xf97316);
       conduit.scale.set(1, 1, 1);
     }
+    if (waterPipe && waterPipe.material instanceof THREE.MeshStandardMaterial) {
+      waterPipe.material.emissiveIntensity = 0.35;
+      waterPipe.material.color.setHex(0x06b6d4);
+      waterPipe.scale.set(1, 1, 1);
+    }
+
+    // Streetlight cones are faint in daytime
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj.name === "light-cone") {
+        if (obj.material instanceof THREE.MeshBasicMaterial) {
+          obj.material.opacity = 0.06;
+        }
+      }
+    });
   }
 
-  // Step-Specific Work Visuals (e.g. Scaffolding, Laser Scans)
+  // Step-Specific Work Visuals (Scaffolding visibility)
   const scaffold = scene.getObjectByName("hb3-scaffolding") as THREE.Mesh;
   if (scaffold) {
-    // In Step 1 (Triage), scaffolding is not yet staged; In Step 2-4 it's fully active; in Step 5 it's cleared
     scaffold.visible = step.stepNumber >= 2 && step.stepNumber <= 4;
   }
+}
+
+function restoreDefaultMaterials(scene: THREE.Scene) {
+  scene.traverse((obj) => {
+    if (obj instanceof THREE.Mesh && obj.userData.defaultMaterial) {
+      obj.material = obj.userData.defaultMaterial;
+    }
+  });
 }

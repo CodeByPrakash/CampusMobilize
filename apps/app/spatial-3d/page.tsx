@@ -23,6 +23,9 @@ import {
   LayersIcon,
   FlameIcon,
   MoonIcon,
+  SunIcon,
+  CrosshairIcon,
+  ThermometerIcon,
   PlayIcon,
   PauseIcon,
   ChevronLeftIcon,
@@ -48,6 +51,7 @@ export default function Spatial3DDigitalTwinPage() {
 
   // Mode & Step States
   const [spectrum, setSpectrum] = useState<ViewSpectrum>("standard");
+  const [environmentMode, setEnvironmentMode] = useState<"day" | "night">("day");
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlayingSteps, setIsPlayingSteps] = useState<boolean>(false);
   const [selectedAsset, setSelectedAsset] = useState<SpatialAsset | null>(SPATIAL_ASSETS[0]);
@@ -208,7 +212,10 @@ export default function Spatial3DDigitalTwinPage() {
           <Button
             size="sm"
             variant={spectrum === "night" ? "default" : "ghost"}
-            onClick={() => setSpectrum("night")}
+            onClick={() => {
+              setSpectrum("night");
+              setEnvironmentMode("night");
+            }}
             className={`h-7 text-xs font-semibold gap-1.5 px-2.5 ${
               spectrum === "night"
                 ? "bg-indigo-600 hover:bg-indigo-500 text-white"
@@ -217,6 +224,35 @@ export default function Spatial3DDigitalTwinPage() {
           >
             <MoonIcon className="size-3.5" />
             <span className="hidden sm:inline">Night Lux</span>
+          </Button>
+
+          <Separator orientation="vertical" className="h-4 mx-1" />
+
+          {/* Environment Lighting Day / Night Toggle */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const nextEnv = environmentMode === "day" ? "night" : "day";
+              setEnvironmentMode(nextEnv);
+              if (spectrum === "night" && nextEnv === "day") {
+                setSpectrum("standard");
+              }
+            }}
+            className="h-7 text-xs font-semibold gap-1.5 px-2.5 hover:bg-background/80"
+            title={environmentMode === "day" ? "Switch environment to Night" : "Switch environment to Day"}
+          >
+            {environmentMode === "day" ? (
+              <>
+                <SunIcon className="size-3.5 text-amber-500 fill-amber-500/20" />
+                <span>Day ☀️</span>
+              </>
+            ) : (
+              <>
+                <MoonIcon className="size-3.5 text-indigo-400 fill-indigo-400/20" />
+                <span>Night 🌙</span>
+              </>
+            )}
           </Button>
         </div>
 
@@ -268,7 +304,15 @@ export default function Spatial3DDigitalTwinPage() {
       {/* =========================================================================
           MAIN 3D VIEWPORT CONTAINER
           ========================================================================= */}
-      <div className="relative flex-1 w-full overflow-hidden bg-slate-950">
+      <div
+        className={`relative flex-1 w-full overflow-hidden transition-colors duration-500 ${
+          spectrum === "heat"
+            ? "bg-[#070618]"
+            : spectrum === "xray" || spectrum === "night" || environmentMode === "night"
+            ? "bg-slate-950"
+            : "bg-[#bde0fe]"
+        }`}
+      >
         {/* Three.js Engine Canvas */}
         <DigitalTwinViewer
           spectrum={spectrum}
@@ -279,6 +323,7 @@ export default function Spatial3DDigitalTwinPage() {
             setIsInspectorOpen(true);
           }}
           filteredCategory={categoryFilter}
+          environmentMode={environmentMode}
         />
 
         {/* Spectrum Mode Watermark Banner */}
@@ -294,21 +339,95 @@ export default function Spatial3DDigitalTwinPage() {
               ? "Infrared Thermal FLIR (Anomaly Hotspots)"
               : spectrum === "night"
               ? "Smart Streetlight Lux Sensor Grid"
-              : "Standard PBR Architectural Scene"}
+              : environmentMode === "day"
+              ? "Daytime Sunny Architectural PBR Scene"
+              : "Standard Night Architectural Scene"}
           </span>
         </div>
 
-        {/* FLIR Thermal Legend Bar (Visible in Heat Mode) */}
+        {/* FLIR Thermal Thermogram HUD (Visible in Heat Mode) */}
         {spectrum === "heat" && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-500/30 bg-card/90 backdrop-blur-md shadow-xl text-[11px] font-mono text-card-foreground">
-            <div className="flex items-center justify-between w-64 text-[10px] text-muted-foreground">
-              <span>20°C (Safe)</span>
-              <span>45°C (Warm)</span>
-              <span>75°C (Warning)</span>
-              <span className="text-red-500 font-bold">95°C+ (Hotspot)</span>
+          <>
+            {/* Top Thermal Gradient Scale & Quick Hotspots */}
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 px-5 py-2.5 rounded-2xl border border-amber-500/30 bg-card/95 backdrop-blur-xl shadow-2xl text-[11px] font-mono text-card-foreground max-w-lg w-full">
+              <div className="flex items-center justify-between w-full text-[10px] text-muted-foreground font-sans">
+                <div className="flex items-center gap-1.5 text-amber-500 font-semibold font-mono">
+                  <FlameIcon className="size-3.5" />
+                  <span>FLIR T1020 HD THERMAL SCALE</span>
+                </div>
+                <span className="font-mono text-[10px] text-muted-foreground">ε = 0.95 • LWIR 7.5-14 µm</span>
+              </div>
+
+              {/* Temperature Scale Bar with Precise Ticks */}
+              <div className="w-full flex flex-col gap-1">
+                <div className="h-3 w-full rounded-full bg-gradient-to-r from-[#1e3a8a] via-[#06b6d4] via-[#10b981] via-[#facc15] via-[#f97316] to-[#ef4444] border border-border shadow-inner" />
+                <div className="flex items-center justify-between w-full text-[10px] font-mono text-muted-foreground">
+                  <span className="text-cyan-400">20°C (Cold)</span>
+                  <span className="text-emerald-400">38°C</span>
+                  <span className="text-yellow-400">55°C (Warm)</span>
+                  <span className="text-orange-400">70°C</span>
+                  <span className="text-red-400 font-bold">85°C+ (HOTSPOT)</span>
+                </div>
+              </div>
+
+              {/* Quick Anomaly Target Shortcuts */}
+              <div className="flex items-center gap-1.5 w-full pt-1 border-t border-border/60">
+                <span className="text-[10px] text-muted-foreground mr-1">Hotspots:</span>
+                {[
+                  { id: "asset-hb3", label: "HB-3 DB-4", temp: "84.6°C", color: "text-red-400 border-red-500/40 bg-red-500/10" },
+                  { id: "asset-substation", label: "Substation T-2", temp: "89.2°C", color: "text-red-400 border-red-500/40 bg-red-500/10" },
+                  { id: "asset-sl-04", label: "Streetlight SL-04", temp: "62.5°C", color: "text-amber-400 border-amber-500/40 bg-amber-500/10" },
+                ].map((target) => (
+                  <button
+                    key={target.id}
+                    onClick={() => {
+                      const found = SPATIAL_ASSETS.find((a) => a.id === target.id);
+                      if (found) {
+                        setSelectedAsset(found);
+                        setIsInspectorOpen(true);
+                      }
+                    }}
+                    className={`text-[10px] px-2 py-0.5 rounded-md border font-mono flex items-center gap-1 hover:brightness-125 transition-all ${target.color}`}
+                  >
+                    <span className="size-1.5 rounded-full bg-current animate-ping" />
+                    <span>{target.label}</span>
+                    <span className="font-bold">({target.temp})</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="h-2.5 w-64 rounded-full bg-gradient-to-r from-blue-700 via-cyan-400 via-yellow-400 via-orange-500 to-red-600 border border-border shadow-inner" />
-          </div>
+
+            {/* High-Tech FLIR Spot-Meter Reticle HUD (Top-Right / Floating) */}
+            <div className="absolute bottom-28 right-4 sm:right-96 z-20 pointer-events-none flex flex-col gap-1.5 p-3 rounded-xl border border-cyan-500/40 bg-slate-950/85 backdrop-blur-md text-xs font-mono text-cyan-300 shadow-xl shadow-cyan-950/40 max-w-[260px]">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground border-b border-cyan-500/30 pb-1">
+                <span className="flex items-center gap-1 text-cyan-400">
+                  <CrosshairIcon className="size-3 text-cyan-400 animate-spin" style={{ animationDuration: "12s" }} />
+                  SPOT-METER RETICLE
+                </span>
+                <span className="text-emerald-400">LOCK: ACTIVE</span>
+              </div>
+              <div className="text-[11px] text-slate-100 font-semibold truncate">
+                {selectedAsset ? selectedAsset.name : "Homi Bhabha Hall (HB-3)"}
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] text-slate-400">Peak Thermal:</span>
+                <span className={`text-base font-bold ${
+                  (selectedAsset?.thermalProfile.hotspotTempC || 84.6) > 75 ? "text-red-400 animate-pulse" : "text-amber-400"
+                }`}>
+                  {selectedAsset ? `${selectedAsset.thermalProfile.hotspotTempC}°C` : "84.6°C"}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between text-[10px] text-slate-400">
+                <span>Ambient ΔT:</span>
+                <span className="text-amber-300 font-semibold">
+                  +{((selectedAsset?.thermalProfile.hotspotTempC || 84.6) - 28.0).toFixed(1)}°C
+                </span>
+              </div>
+              <div className="text-[9px] text-slate-400 truncate pt-1 border-t border-cyan-500/20">
+                Loc: {selectedAsset?.thermalProfile.hotspotLocation || "Wing B DB Junction #4"}
+              </div>
+            </div>
+          </>
         )}
 
         {/* =========================================================================
